@@ -18,6 +18,7 @@ public class UserApiController : ControllerBase
     }
 
     // READ
+    [Authorize(Policy = "USER_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
@@ -25,6 +26,7 @@ public class UserApiController : ControllerBase
     }
 
     // READ BY ID
+    [Authorize(Policy = "USER_VIEW")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -36,6 +38,7 @@ public class UserApiController : ControllerBase
     }
 
     // CREATE
+    [Authorize(Policy = "USER_CREATE")]
     [HttpPost]
     public async Task<IActionResult> Create(UserDto dto)
     {
@@ -45,6 +48,7 @@ public class UserApiController : ControllerBase
     }
 
     // UPDATE
+    [Authorize(Policy = "USER_UPDATE")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, UpdateUserDto dto)
     {
@@ -54,6 +58,7 @@ public class UserApiController : ControllerBase
     }
 
     // DELETE
+    [Authorize(Policy = "USER_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

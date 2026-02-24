@@ -47,14 +47,20 @@ namespace InventoryControl.Services.Implementations
                     DailyFileLogger.Warn($"LoginAsync gagal: Password salah untuk Username '{dto.Username}'.");
                     throw new Exception("Invalid password");
                 }
-                var permissions = await _db.UserRoles
-              .Where(ur => ur.UroId == user.UserId)
-              .SelectMany(ur => ur.Role.RolePermissions)
-              .Select(rp => rp.Permission.Code)
-              .Distinct()
-              .ToListAsync();
+                var roles = await _db.UserRoles
+                    .Where(ur => ur.UroId == user.UserId)
+                    .Select(ur => ur.Role.Code)
+                    .Distinct()
+                    .ToListAsync();
 
-                var token = await _jwt.GenerateTokenAsync(user,permissions);
+                var permissions = await _db.UserRoles
+                    .Where(ur => ur.UroId == user.UserId)
+                    .SelectMany(ur => ur.Role.RolePermissions)
+                    .Select(rp => rp.Permission.Code)
+                    .Distinct()
+                    .ToListAsync();
+
+                var token = await _jwt.GenerateTokenAsync(user, permissions, roles);
                 DailyFileLogger.Info($"LoginAsync berhasil untuk Username '{dto.Username}', UserId: {user.UserId}.");
 
                 return token;
@@ -97,18 +103,21 @@ namespace InventoryControl.Services.Implementations
         }
 
         // LOGOUT
-        public async Task LogoutAsync(int userId)
+        public async Task LogoutAsync(string userId)
         {
             try
             {
-                var user = await _db.Users.FindAsync(userId);
+                var user = await _db.Users
+                    .FirstOrDefaultAsync(u => u.UserId == userId && u.IsDelete == 0);
+
                 if (user == null)
                 {
                     DailyFileLogger.Warn($"LogoutAsync gagal: UserId {userId} tidak ditemukan.");
                     throw new Exception("User not found");
                 }
 
-                await _db.SaveChangesAsync();
+                var redisDb = _redis.GetDatabase();
+                await redisDb.KeyDeleteAsync($"jwt:{userId}");
 
                 DailyFileLogger.Info($"LogoutAsync berhasil untuk UserId {userId}.");
             }

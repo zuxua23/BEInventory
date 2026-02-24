@@ -47,9 +47,12 @@ public class AuthApiController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        var userId = int.Parse(
-            User.FindFirstValue(ClaimTypes.NameIdentifier)
-        );
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized(new { message = "User tidak valid" });
+        }
 
         await _authService.LogoutAsync(userId);
 
