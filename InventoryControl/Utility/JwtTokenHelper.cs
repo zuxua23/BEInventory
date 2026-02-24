@@ -17,8 +17,10 @@ public class JwtTokenHelper
         _redis = redis;
     }
 
-  public async Task<string> GenerateTokenAsync(User user, 
+  public async Task<string> GenerateTokenAsync(
+    User user,
     List<string> permissions,
+    List<string> roles,
     int expireMinutes = 30)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
@@ -30,6 +32,11 @@ public class JwtTokenHelper
         new Claim(ClaimTypes.Name, user.Username),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
+
+    foreach (var role in roles.Distinct())
+    {
+        claims.Add(new Claim(ClaimTypes.Role, role));
+    }
 
     // Tambahkan permission ke claim
     foreach (var permission in permissions.Distinct())

@@ -174,11 +174,23 @@ builder.Services.AddAuthentication(options =>
     });
 #endregion
 
-#region AUTHORIZATION (ROLE)
+#region AUTHORIZATION (ROLE + PERMISSION)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly",
         policy => policy.RequireRole("ADMIN"));
+
+    options.AddPolicy("USER_VIEW", policy =>
+        policy.RequireClaim("permission", "MASTER_ITEM_VIEW"));
+
+    options.AddPolicy("USER_CREATE", policy =>
+        policy.RequireClaim("permission", "MASTER_ITEM_CREATE"));
+
+    options.AddPolicy("USER_UPDATE", policy =>
+        policy.RequireClaim("permission", "MASTER_ITEM_UPDATE"));
+
+    options.AddPolicy("USER_DELETE", policy =>
+        policy.RequireClaim("permission", "MASTER_ITEM_DELETE"));
 });
 #endregion
 

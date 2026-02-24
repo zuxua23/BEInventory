@@ -7,7 +7,7 @@ namespace InventoryControl.Services.Interfaces
     {
         Task<string> LoginAsync(LoginDTO dto);
         Task<User> LoginWebAsync(LoginDTO dto);
-        Task LogoutAsync(int userid);
+        Task LogoutAsync(string userId);
     }
 
 }

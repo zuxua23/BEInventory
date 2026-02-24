@@ -11,8 +11,6 @@ public class SeedAccess
         using var context = new AppDBContext(
             serviceProvider.GetRequiredService<DbContextOptions<AppDBContext>>());
 
-        var systemUser = await context.Users
-    .FirstOrDefaultAsync(u => u.Username == "SYSTEM");
         if (!context.Permissions.Any())
         {
             var permissions = new List<Permission>
@@ -30,6 +28,27 @@ public class SeedAccess
             };
 
             context.Permissions.AddRange(permissions);
+            await context.SaveChangesAsync();
+        }
+
+        var adminUser = await context.Users
+            .FirstOrDefaultAsync(u => u.Username == "admin" && u.IsDelete == 0);
+
+        if (adminUser == null)
+        {
+            adminUser = new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserId = "USR001",
+                Fullname = "Administrator",
+                Username = "admin",
+                Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                CreatedBy = "SYSTEM",
+                CreatedAt = DateTime.UtcNow,
+                IsDelete = 0
+            };
+
+            context.Users.Add(adminUser);
             await context.SaveChangesAsync();
         }
 
@@ -60,20 +79,46 @@ public class SeedAccess
 
             context.RolePermissions.Add(new Role_Permission
             {
+                Id = Guid.NewGuid().ToString(),
+                Code = "RPR001",
                 RolId = operatorRole.RolId,
-                PerId = stockInPermission.PerId
+                PerId = stockInPermission.PerId,
+                CreatedBy = "SYSTEM",
+                CreatedAt = DateTime.UtcNow
             });
 
             var allPermissions = context.Permissions.ToList();
-
+            var index = 2;
             foreach (var permission in allPermissions)
             {
                 context.RolePermissions.Add(new Role_Permission
                 {
+                    Id = Guid.NewGuid().ToString(),
+                    Code = $"RPR{index:000}",
                     RolId = adminRole.RolId,
-                    PerId = permission.PerId
+                    PerId = permission.PerId,
+                    CreatedBy = "SYSTEM",
+                    CreatedAt = DateTime.UtcNow
                 });
+                index++;
             }
+
+            await context.SaveChangesAsync();
+        }
+
+        var hasAdminRole = await context.UserRoles.AnyAsync(ur =>
+            ur.UroId == adminUser.UserId && ur.RolId == "ROL002");
+
+        if (!hasAdminRole)
+        {
+            context.UserRoles.Add(new User_Role
+            {
+                Id = Guid.NewGuid().ToString(),
+                UroId = adminUser.UserId,
+                RolId = "ROL002",
+                CreatedBy = "SYSTEM",
+                CreatedAt = DateTime.UtcNow
+            });
 
             await context.SaveChangesAsync();
         }
