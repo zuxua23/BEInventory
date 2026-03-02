@@ -36,5 +36,5 @@ public class Location
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
     [Column("isDelete")]
-    public int? IsDelete { get; set; }
+    public bool IsDelete { get; set; } = false;
 }

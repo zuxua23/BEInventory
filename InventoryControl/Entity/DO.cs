@@ -25,5 +25,6 @@ public class DO
     [Column("created_at")]
     public DateTime? CreatedAt { get; set; }
     [Column("isDelete")]
-    public int? IsDelete { get; set; }
+    public bool IsDelete { get; set; } = false;
+    public ICollection<DODetail>? Details { get; set; }
 }

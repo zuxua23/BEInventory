@@ -15,7 +15,7 @@ public class Item
 
     [Required]
     [Column("itm_id")]
-    public string ItemId { get; set; }
+    public string ItmId { get; set; }
     [Required]
     [Column("itm_name")]
     public string Name { get; set; }
@@ -33,8 +33,8 @@ public class Item
 
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
-    [Column("isDelete")]
-    public int? IsDelete { get; set; }
+    [Column("isDelete")]    
+    public bool IsDelete { get; set; }
 
     public ICollection<Transaction_Detail>? TransactionDetails { get; set; }
 

@@ -1,9 +1,9 @@
 ﻿using InventoryControl.Database;
 using InventoryControl.Database.Seeder;
 using InventoryControl.Entity;
+using InventoryControl.Permission;
 using InventoryControl.Services.Implementations;
 using InventoryControl.Services.Interfaces;
-using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -217,20 +217,11 @@ builder.Services.AddAuthentication(options =>
 #endregion
 
 #region AUTHORIZATION (ROLE + PERMISSION)
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("USER_VIEW",
-        policy => policy.RequireClaim("permission", "USER_VIEW"));
+builder.Services.AddAuthorization();
 
-    options.AddPolicy(PermissionPolicies.MasterUserCreate,
-        policy => policy.RequireClaim("permission", "MASTER_USER_CREATE"));
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
-    options.AddPolicy("USER_UPDATE",
-        policy => policy.RequireClaim("permission", "USER_UPDATE"));
-
-    options.AddPolicy("USER_DELETE",
-        policy => policy.RequireClaim("permission", "USER_DELETE"));
-});
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 #endregion
 
 #region DEPENDENCY INJECTION

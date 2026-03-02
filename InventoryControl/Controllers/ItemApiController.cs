@@ -1,25 +1,26 @@
-﻿using InventoryControl.DTO;
-using InventoryControl.Permission;
+﻿namespace InventoryControl.Controllers;
+
+using InventoryControl.DTO;
+using InventoryControl.Service.Interfaces;
 using InventoryControl.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize]
 [ApiController]
-[Route("user")]
-public class UserApiController : ControllerBase
+[Route("item")]
+public class ItemApiController : ControllerBase
 {
-    private readonly IUserService _service;
+    private readonly IItemService _service;
 
-    public UserApiController(IUserService service)
+    public ItemApiController(IItemService service)
     {
         _service = service;
     }
 
-    // READ
-    [Authorize(Policy = PermissionPoliciesProvider.UserView)]
+    // READ ALL
+    [Authorize(Policy = "MASTER_ITEM_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
@@ -27,7 +28,7 @@ public class UserApiController : ControllerBase
     }
 
     // READ BY ID
-    [Authorize(Policy = PermissionPoliciesProvider.UserView)]
+    [Authorize(Policy = "MASTER_ITEM_VIEW")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -39,31 +40,33 @@ public class UserApiController : ControllerBase
     }
 
     // CREATE
-    [Authorize(Policy = PermissionPoliciesProvider.MasterUserCreate)]
+    [Authorize(Policy = "MASTER_ITEM_CREATE")]
     [HttpPost]
-    public async Task<IActionResult> Create(UserDto dto)
+    public async Task<IActionResult> Create(ItemDto dto)
     {
         var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+
         await _service.CreateAsync(dto, createdBy);
-        return Ok(new { message = "User berhasil dibuat" });
+        return Ok(new { message = "Item berhasil dibuat" });
     }
 
     // UPDATE
-    [Authorize(Policy = PermissionPoliciesProvider.UserUpdate)]
+    [Authorize(Policy = "MASTER_ITEM_UPDATE")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, UpdateUserDto dto)
+    public async Task<IActionResult> Update(string id, UpdateItemDto dto)
     {
         var updatedBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+
         await _service.UpdateAsync(id, dto, updatedBy);
-        return Ok(new { message = "User berhasil diperbarui" });
+        return Ok(new { message = "Item berhasil diperbarui" });
     }
 
     // DELETE
-    [Authorize(Policy = PermissionPoliciesProvider.UserDelete)]
+    [Authorize(Policy = "MASTER_ITEM_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);
-        return Ok(new { message = "User berhasil dihapus" });
+        return Ok(new { message = "Item berhasil dihapus" });
     }
 }
