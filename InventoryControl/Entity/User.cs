@@ -42,8 +42,10 @@ public class User
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
+    [Column("isActive")]
+    public bool IsActive { get; set; } = true;
     [Column("isDelete")]
-    public int? IsDelete { get; set; }
+    public bool IsDelete { get; set; } = false;
 
     public ICollection<User_Role> UserRoles { get; set; }
 

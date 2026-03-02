@@ -1,8 +1,9 @@
-using InventoryControl.Database;
+﻿using InventoryControl.Database;
 using InventoryControl.Database.Seeder;
 using InventoryControl.Entity;
 using InventoryControl.Services.Implementations;
 using InventoryControl.Services.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -32,9 +33,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
 #region DATABASE
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 #endregion
 builder.Services.AddScoped<JwtTokenHelper>();
 
@@ -135,38 +134,81 @@ builder.Services.AddAuthentication(options =>
 
                 return context.Response.WriteAsync(result);
             },
-            OnTokenValidated = async context =>
-            {
-                var redis = context.HttpContext.RequestServices
-                    .GetRequiredService<IConnectionMultiplexer>();
-
-                var userId = context.Principal?
-                    .FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-                var rawToken = authHeader?
-                    .Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase)
-                    .Trim();
-
-                var db = redis.GetDatabase(0);
-                var storedToken = await db.StringGetAsync($"jwt:{userId}");
-
-                Console.WriteLine("=== REDIS JWT CHECK ===");
-                Console.WriteLine($"UserId     : {userId}");
-                Console.WriteLine($"Stored     : {storedToken}");
-                Console.WriteLine($"Incoming   : {rawToken}");
-
-                if (string.IsNullOrEmpty(rawToken))
+                OnTokenValidated = async context =>
                 {
-                    context.Fail("Authorization header tidak mengandung token");
-                    return;
-                }
+                    var redis = context.HttpContext.RequestServices
+                        .GetRequiredService<IConnectionMultiplexer>();
 
-                if (storedToken.IsNullOrEmpty || storedToken != rawToken)
-                {
-                    context.Fail("Token tidak ditemukan / tidak valid di Redis");
+                    var principal = context.Principal;
+
+                    var userId = principal?
+                        .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                    var username = principal?
+                        .FindFirst(ClaimTypes.Name)?.Value;
+
+                    var roles = principal?
+                        .FindAll(ClaimTypes.Role)
+                        .Select(r => r.Value)
+                        .ToList();
+
+                    var permissions = principal?
+                        .FindAll("permission")
+                        .Select(p => p.Value)
+                        .ToList();
+
+                    Console.WriteLine("===== JWT TOKEN VALIDATED =====");
+                    Console.WriteLine($"UserId     : {userId}");
+                    Console.WriteLine($"Username   : {username}");
+                    Console.WriteLine($"Roles      : {string.Join(", ", roles ?? new List<string>())}");
+                    Console.WriteLine($"Permissions: {string.Join(", ", permissions ?? new List<string>())}");
+
+
+
+                    var authHeader = context.Request.Headers["Authorization"]
+                        .FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(authHeader) ||
+                        !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Authorization header tidak valid");
+                        context.Fail("Authorization header tidak valid");
+                        return;
+                    }
+
+                    var rawToken = authHeader
+                        .Substring("Bearer ".Length)
+                        .Trim();
+
+                    var db = redis.GetDatabase();
+                    var storedToken = await db.StringGetAsync($"jwt:{userId}");
+
+                    Console.WriteLine("===== REDIS CHECK =====");
+                    Console.WriteLine($"Redis Key  : jwt:{userId}");
+                    Console.WriteLine($"Stored JWT : {storedToken}");
+                    Console.WriteLine($"Incoming   : {rawToken}");
+
+                    if (storedToken.IsNullOrEmpty)
+                    {
+                        Console.WriteLine("Token tidak ditemukan di Redis");
+                        context.Fail("Token tidak valid / sudah logout");
+                        return;
+                    }
+
+                    if (storedToken != rawToken)
+                    {
+                        Console.WriteLine("Token tidak cocok dengan Redis");
+                        context.Fail("Token mismatch");
+                        return;
+                    }
+                    Console.WriteLine("===== ALL CLAIMS =====");
+                    foreach (var claim in principal.Claims)
+                    {
+                        Console.WriteLine($"Type: {claim.Type} | Value: {claim.Value}");
+                    }
+                    Console.WriteLine("JWT VALID & REDIS MATCH ✅");
                 }
-            }
+            
 
 
         };
@@ -177,20 +219,17 @@ builder.Services.AddAuthentication(options =>
 #region AUTHORIZATION (ROLE + PERMISSION)
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly",
-        policy => policy.RequireRole("ADMIN"));
+    options.AddPolicy("USER_VIEW",
+        policy => policy.RequireClaim("permission", "USER_VIEW"));
 
-    options.AddPolicy("USER_VIEW", policy =>
-        policy.RequireClaim("permission", "MASTER_ITEM_VIEW"));
+    options.AddPolicy(PermissionPolicies.MasterUserCreate,
+        policy => policy.RequireClaim("permission", "MASTER_USER_CREATE"));
 
-    options.AddPolicy("USER_CREATE", policy =>
-        policy.RequireClaim("permission", "MASTER_ITEM_CREATE"));
+    options.AddPolicy("USER_UPDATE",
+        policy => policy.RequireClaim("permission", "USER_UPDATE"));
 
-    options.AddPolicy("USER_UPDATE", policy =>
-        policy.RequireClaim("permission", "MASTER_ITEM_UPDATE"));
-
-    options.AddPolicy("USER_DELETE", policy =>
-        policy.RequireClaim("permission", "MASTER_ITEM_DELETE"));
+    options.AddPolicy("USER_DELETE",
+        policy => policy.RequireClaim("permission", "USER_DELETE"));
 });
 #endregion
 

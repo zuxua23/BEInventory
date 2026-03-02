@@ -21,7 +21,6 @@ public static class UserSeeder
                 Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
                 CreatedAt = DateTime.Now,
                 CreatedBy = "SYSTEM",
-                IsDelete = 0
             });
 
             await db.SaveChangesAsync();

@@ -1,14 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Services.Interfaces;
 using InventoryControl.Utility;
 using StackExchange.Redis;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace InventoryControl.Services.Implementations
 {
@@ -34,7 +30,7 @@ namespace InventoryControl.Services.Implementations
             try
             {
                 var user = await _db.Users
-                    .FirstOrDefaultAsync(u => u.Username == dto.Username && u.IsDelete == 0);
+                    .FirstOrDefaultAsync(u => u.Username == dto.Username && u.IsDelete == false);
 
                 if (user == null)
                 {
@@ -47,18 +43,24 @@ namespace InventoryControl.Services.Implementations
                     DailyFileLogger.Warn($"LoginAsync gagal: Password salah untuk Username '{dto.Username}'.");
                     throw new Exception("Invalid password");
                 }
+                // Roles (1 query)
                 var roles = await _db.UserRoles
-                    .Where(ur => ur.UroId == user.UserId)
+                    .Where(ur => ur.UserId == user.Id)
                     .Select(ur => ur.Role.Code)
                     .Distinct()
                     .ToListAsync();
 
-                var permissions = await _db.UserRoles
-                    .Where(ur => ur.UroId == user.UserId)
-                    .SelectMany(ur => ur.Role.RolePermissions)
-                    .Select(rp => rp.Permission.Code)
-                    .Distinct()
-                    .ToListAsync();
+                // Permissions (1 query JOIN)
+                var permissions = await (
+                    from ur in _db.UserRoles
+                    join rp in _db.RolePermissions on ur.RoleId equals rp.RoleId
+                    where ur.UserId == user.Id
+                        && !rp.Permission.IsDelete
+                        && rp.Permission.IsActive
+                    select rp.Permission.Code
+                )
+                .Distinct()
+                .ToListAsync();
 
                 var token = await _jwt.GenerateTokenAsync(user, permissions, roles);
                 DailyFileLogger.Info($"LoginAsync berhasil untuk Username '{dto.Username}', UserId: {user.UserId}.");
@@ -78,7 +80,7 @@ namespace InventoryControl.Services.Implementations
             try
             {
                 var user = await _db.Users
-                    .FirstOrDefaultAsync(x => x.Username == dto.Username && x.IsDelete == 0);
+                    .FirstOrDefaultAsync(x => x.Username == dto.Username && x.IsDelete);
 
                 if (user == null)
                 {
@@ -108,7 +110,7 @@ namespace InventoryControl.Services.Implementations
             try
             {
                 var user = await _db.Users
-                    .FirstOrDefaultAsync(u => u.UserId == userId && u.IsDelete == 0);
+                    .FirstOrDefaultAsync(u => u.UserId == userId && u.IsDelete);
 
                 if (user == null)
                 {
@@ -117,7 +119,7 @@ namespace InventoryControl.Services.Implementations
                 }
 
                 var redisDb = _redis.GetDatabase();
-                await redisDb.KeyDeleteAsync($"jwt:{userId}");
+                await redisDb.KeyDeleteAsync($"jwt:{user.Id}");
 
                 DailyFileLogger.Info($"LogoutAsync berhasil untuk UserId {userId}.");
             }

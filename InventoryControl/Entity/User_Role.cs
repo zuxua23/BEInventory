@@ -11,12 +11,12 @@ public class User_Role
     public string Id { get; set; }
 
     [Required]
-    [Column("uro_id")]
-    public string UroId { get; set; }
+    [Column("role_id")]
+    public string RoleId { get; set; }
 
     [Required]
-    [Column("rol_id")]
-    public string RolId { get; set; }
+    [Column("user_id")]
+    public string UserId { get; set; }
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }
@@ -33,6 +33,6 @@ public class User_Role
     public DateTime? UpdatedAt { get; set; }
 
     public Role Role { get; set; }
-
+    public User User { get; set; }
 
 }

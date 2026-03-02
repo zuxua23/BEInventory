@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InventoryControl.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20260223084210_v3")]
-    partial class v3
+    [Migration("20260302070203_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -254,18 +254,24 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Desc")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("per_desc");
 
-                    b.Property<int>("Group")
+                    b.Property<int?>("Group")
                         .HasColumnType("int")
                         .HasColumnName("per_group");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
+                        .HasColumnName("isDelete");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -274,10 +280,13 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("PerId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("per_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PerId")
+                        .IsUnique();
 
                     b.ToTable("tb_Permission");
                 });
@@ -350,8 +359,12 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("rol_desc");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
                     b.Property<string>("Name")
@@ -359,11 +372,14 @@ namespace InventoryControl.Migrations
                         .HasColumnName("rol_name");
 
                     b.Property<string>("RolId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("rol_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RolId")
+                        .IsUnique()
+                        .HasFilter("[rol_id] IS NOT NULL");
 
                     b.ToTable("tb_Role");
                 });
@@ -373,11 +389,6 @@ namespace InventoryControl.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rpr_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -391,22 +402,15 @@ namespace InventoryControl.Migrations
                         .HasColumnType("int")
                         .HasColumnName("is_override");
 
-                    b.Property<string>("PerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("per_id");
-
                     b.Property<string>("PermissionId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RolId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rol_id");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("permission_id");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("role_id");
 
                     b.HasKey("Id");
 
@@ -624,8 +628,12 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("usr_fullname");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
                     b.Property<string>("Password")
@@ -673,14 +681,10 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("RolId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rol_id");
-
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("role_id");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -690,13 +694,10 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
-                    b.Property<string>("UroId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("uro_id");
-
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
@@ -757,14 +758,16 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Role_Permission", b =>
                 {
                     b.HasOne("InventoryControl.Entity.Permission", "Permission")
-                        .WithMany()
+                        .WithMany("RolePermissions")
                         .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("InventoryControl.Entity.Role", "Role")
                         .WithMany("RolePermissions")
-                        .HasForeignKey("RoleId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Permission");
 
@@ -848,19 +851,28 @@ namespace InventoryControl.Migrations
                     b.HasOne("InventoryControl.Entity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("InventoryControl.Entity.User", null)
+                    b.HasOne("InventoryControl.Entity.User", "User")
                         .WithMany("UserRoles")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InventoryControl.Entity.Item", b =>
                 {
                     b.Navigation("TransactionDetails");
+                });
+
+            modelBuilder.Entity("InventoryControl.Entity.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("InventoryControl.Entity.Role", b =>

@@ -9,16 +9,12 @@ public class Role_Permission
     [Key]
     [Column("id")]
     public string Id { get; set; } 
-
     [Required]
-    [Column("rpr_id")]
-    public string Code { get; set; }
+    [Column("permission_id")]
+    public string PermissionId { get; set; }
     [Required]
-    [Column("per_id")]
-    public string PerId { get; set; }
-    [Required]
-    [Column("rol_id")]
-    public string RolId { get; set; }
+    [Column("role_id")]
+    public string RoleId { get; set; }
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }

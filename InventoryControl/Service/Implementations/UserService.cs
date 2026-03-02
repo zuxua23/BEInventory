@@ -19,7 +19,7 @@ public class UserService : IUserService
         try
         {
             var result = await _db.Users
-                .Where(x => x.IsDelete == 0)
+                .Where(x => x.IsDelete)
                 .Select(x => new UserResponseDto
                 {
                     Id = x.Id,
@@ -45,7 +45,7 @@ public class UserService : IUserService
         try
         {
             var user = await _db.Users
-                .Where(x => x.Id == id && x.IsDelete == 0)
+                .Where(x => x.Id == id && x.IsDelete)
                 .Select(x => new UserResponseDto
                 {
                     Id = x.Id,
@@ -103,7 +103,7 @@ public class UserService : IUserService
         try
         {
             var user = await _db.Users.FindAsync(id);
-            if (user == null || user.IsDelete == 1)
+            if (user == null || user.IsDelete == true)
             {
                 DailyFileLogger.Warn($"UpdateAsync: User dengan ID {id} tidak ditemukan.");
                 throw new Exception("User tidak ditemukan");
@@ -135,7 +135,7 @@ public class UserService : IUserService
                 throw new Exception("User tidak ditemukan");
             }
 
-            user.IsDelete = 1;
+            user.IsDelete = true;
             await _db.SaveChangesAsync();
 
             DailyFileLogger.Info($"DeleteAsync berhasil untuk ID {id} (soft delete).");

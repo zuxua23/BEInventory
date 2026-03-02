@@ -54,8 +54,22 @@ public class JwtTokenHelper
             new SymmetricSecurityKey(key),
             SecurityAlgorithms.HmacSha256)
     };
+        Console.WriteLine("===== DEBUG LOGIN =====");
+        Console.WriteLine("User.Id     : " + user.Id);
+        Console.WriteLine("User.UserId : " + user.UserId);
 
-    var token = tokenHandler.CreateToken(tokenDescriptor);
+        Console.WriteLine("ROLES COUNT: " + roles.Count);
+        foreach (var r in roles)
+        {
+            Console.WriteLine("ROLE: " + r);
+        }
+
+        Console.WriteLine("PERMISSIONS COUNT: " + permissions.Count);
+        foreach (var p in permissions)
+        {
+            Console.WriteLine("PERMISSION: " + p);
+        }
+        var token = tokenHandler.CreateToken(tokenDescriptor);
     var jwt = tokenHandler.WriteToken(token);
 
     var db = _redis.GetDatabase();

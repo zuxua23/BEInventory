@@ -8,7 +8,7 @@ public class Permission
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; }
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
     [Required]
     [Column("per_id")]
@@ -34,6 +34,11 @@ public class Permission
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
+    
+    [Column("isActive")]
+    public bool IsActive { get; set; } = true;
+    [Column("isDelete")]
+    public bool IsDelete { get; set; } = false;
 
-
+    public ICollection<Role_Permission> RolePermissions { get; set; }
 }

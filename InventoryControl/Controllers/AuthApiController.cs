@@ -29,17 +29,26 @@ public class AuthApiController : ControllerBase
             token
         });
     }
-
     [Authorize]
     [HttpGet("me")]
     public IActionResult Me()
     {
+        var permissions = User.FindAll("permission")
+            .Select(c => c.Value)
+            .Distinct()
+            .ToList();
+
+        var roles = User.FindAll(ClaimTypes.Role)
+            .Select(c => c.Value)
+            .Distinct()
+            .ToList();
+
         return Ok(new
         {
-            id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            userId = User.FindFirst("user_Id")?.Value,
-            name = User.Identity?.Name,
-
+            userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+            username = User.Identity?.Name,
+            roles,
+            permissions
         });
     }
 
