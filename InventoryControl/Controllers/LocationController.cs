@@ -1,11 +1,14 @@
-﻿using InventoryControl.Entity;
+﻿using InventoryControl.DTO;
+using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
 
-[Authorize]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
 [Route("location")]
 public class LocationApiController : ControllerBase
@@ -24,20 +27,21 @@ public class LocationApiController : ControllerBase
 
     [Authorize(Policy = "MASTER_LOCATION_CREATE")]
     [HttpPost]
-    public async Task<IActionResult> Create(Location dto)
+    public async Task<IActionResult> Create(LocationDTO dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.CreateAsync(dto, user);
-        return Ok();
+        var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+
+        await _service.CreateAsync(dto, createdBy);
+        return Ok(new { message = "Location berhasil dibuat" });
     }
 
     [Authorize(Policy = "MASTER_LOCATION_UPDATE")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, Location dto)
+    public async Task<IActionResult> Update(string id, LocationDTO dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.UpdateAsync(id, dto, user);
-        return Ok();
+        var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+        await _service.UpdateAsync(id, dto, createdBy);
+        return Ok(new { message = "Location berhasil diubah" });
     }
 
     [Authorize(Policy = "MASTER_LOCATION_DELETE")]
@@ -45,6 +49,6 @@ public class LocationApiController : ControllerBase
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);
-        return Ok();
+        return Ok(new { message = "Location berhasil dihapus" });
     }
 }

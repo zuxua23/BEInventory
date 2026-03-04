@@ -3,7 +3,6 @@ using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using static InventoryControl.Service.Implementations.PrintTagRegisService;
 
 namespace InventoryControl.Service.Implementations;
 

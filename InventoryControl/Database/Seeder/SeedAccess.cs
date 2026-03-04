@@ -12,19 +12,49 @@ public class SeedAccess
 
         await context.Database.MigrateAsync();
 
-        //Permission seeding
         var permissionSeeds = new List<(string Code, string Name, string PerId)>
-        {
-            ("MASTER_USER_VIEW", "View Master User","PER001"),
-            ("MASTER_USER_CREATE", "Create Master User", "PER002"),
-            ("MASTER_USER_UPDATE", "Update Master User", "PER003"),
-            ("MASTER_USER_DELETE", "Delete Master User", "PER004"),
-            ("TRANS_STOCK_IN", "Stock In", "PER005"),
-            ("TRANS_STOCK_OUT", "Stock Out", "PER006"),
-            ("PRINT_TAG", "Print Tag", "PER007"),
-            ("REPRINT_TAG", "Reprint Tag", "PER008")
-        };
+{
+    // MASTER ITEM
+    ("MASTER_ITEM_VIEW", "View Master Item", "PER001"),
+    ("MASTER_ITEM_CREATE", "Create Master Item", "PER002"),
+    ("MASTER_ITEM_UPDATE", "Update Master Item", "PER003"),
+    ("MASTER_ITEM_DELETE", "Delete Master Item", "PER004"),
 
+    // TAG
+    ("PRINT_TAG", "Print Tag", "PER005"),
+    ("REPRINT_TAG", "Reprint Tag", "PER006"),
+    ("TAG_REGISTRATION", "Tag Registration", "PER007"),
+
+    // STOCK
+    ("TRANS_STOCK_IN", "Stock In", "PER008"),
+    ("TRANS_STOCK_PREPARATION", "Stock Preparation", "PER009"),
+    ("TRANS_STOCK_OUT", "Stock Out", "PER010"),
+
+    // DO
+    ("MASTER_DO_VIEW", "View DO", "PER011"),
+    ("MASTER_DO_CREATE", "Create DO", "PER012"),
+
+    // LOCATION
+    ("MASTER_LOCATION_VIEW", "View Location", "PER013"),
+    ("MASTER_LOCATION_CREATE", "Create Location", "PER014"),
+    ("MASTER_LOCATION_UPDATE", "Update Location", "PER025"),
+    ("MASTER_LOCATION_DELETE", "Delete Location", "PER026"),
+
+    // READER
+    ("MASTER_READER_VIEW", "View Reader", "PER015"),
+    ("MASTER_READER_CREATE", "Create Reader", "PER016"),
+
+    // STOCK TAKING
+    ("TRANS_STOCK_TAKING_CREATE", "Create Stock Taking", "PER017"),
+    ("TRANS_STOCK_TAKING_SCAN", "Scan Stock Taking", "PER018"),
+    ("TRANS_STOCK_TAKING_REMOVE", "Remove Stock Taking", "PER019"),
+    ("TRANS_STOCK_TAKING_FINALIZE", "Finalize Stock Taking", "PER020"),
+
+                ("MASTER_USER_VIEW", "View Master User","PER021"),
+            ("MASTER_USER_CREATE", "Create Master User", "PER022"),
+            ("MASTER_USER_UPDATE", "Update Master User", "PER023"),
+            ("MASTER_USER_DELETE", "Delete Master User", "PER024"),
+};
         foreach (var (code, name, perid) in permissionSeeds)
         {
             bool exists = await context.Permissions
@@ -46,7 +76,6 @@ public class SeedAccess
 
         await context.SaveChangesAsync();
 
-        //Role seeding
 
         var adminRole = await context.Roles
             .FirstOrDefaultAsync(r => r.Code == "ADMIN");
@@ -83,7 +112,6 @@ public class SeedAccess
 
         var allPermissions = await context.Permissions.ToListAsync();
         var index = 2;
-        //ADMIN → semua permission
         foreach (var permission in allPermissions)
         {
             bool exists = await context.RolePermissions.AnyAsync(rp =>

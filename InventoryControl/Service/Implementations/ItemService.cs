@@ -104,7 +104,7 @@ public class ItemService : IItemService
     }
 
     // UPDATE
-    public async Task UpdateAsync(string id, UpdateItemDto dto, string updatedBy)
+    public async Task UpdateAsync(string id, ItemDto dto, string updatedBy)
     {
         try
         {
@@ -112,7 +112,7 @@ public class ItemService : IItemService
 
             if (item == null || item.IsDelete == true)
                 throw new Exception("Item tidak ditemukan");
-
+            item.ItmId = dto.ItemId;
             item.Name = dto.ItemName;
             item.UpdatedBy = updatedBy;
             item.UpdatedAt = DateTime.UtcNow;

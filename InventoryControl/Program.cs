@@ -2,6 +2,8 @@
 using InventoryControl.Database.Seeder;
 using InventoryControl.Entity;
 using InventoryControl.PermissionHelper;
+using InventoryControl.Service.Implementations;
+using InventoryControl.Service.Interfaces;
 using InventoryControl.Services.Implementations;
 using InventoryControl.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -227,6 +229,19 @@ builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProv
 #region DEPENDENCY INJECTION
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<IReaderService, ReaderService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IStockInService, StockInService>();
+builder.Services.AddScoped<IStockOutService, StockOutService>();
+builder.Services.AddScoped<IStockPreparationService, StockPreparationService>();
+builder.Services.AddScoped<IReaderService, ReaderService>();
+builder.Services.AddScoped<IDOService, DOService>();
+builder.Services.AddScoped<IStockTakingService, StockTakingService>();
+
 
 #endregion
 

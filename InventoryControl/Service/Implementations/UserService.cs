@@ -13,13 +13,12 @@ public class UserService : IUserService
         _db = db;
     }
 
-    // READ ALL
     public async Task<List<UserResponseDto>> GetAllAsync()
     {
         try
         {
             var result = await _db.Users
-                .Where(x => x.IsDelete)
+                .Where(x => x.IsDelete == false)
                 .Select(x => new UserResponseDto
                 {
                     Id = x.Id,
@@ -35,17 +34,16 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             DailyFileLogger.Error("Error di GetAllAsync.", ex);
-            throw; // lempar exception agar tetap bisa ditangani caller
+            throw; 
         }
     }
 
-    // READ BY ID
     public async Task<UserResponseDto?> GetByIdAsync(string id)
     {
         try
         {
             var user = await _db.Users
-                .Where(x => x.Id == id && x.IsDelete)
+                .Where(x => x.Id == id && x.IsDelete == false)
                 .Select(x => new UserResponseDto
                 {
                     Id = x.Id,
@@ -69,7 +67,6 @@ public class UserService : IUserService
         }
     }
 
-    // CREATE
     public async Task CreateAsync(UserDto dto, string createdBy)
     {
         try
@@ -97,7 +94,6 @@ public class UserService : IUserService
         }
     }
 
-    // UPDATE
     public async Task UpdateAsync(string id, UpdateUserDto dto, string updatedBy)
     {
         try
@@ -123,7 +119,6 @@ public class UserService : IUserService
         }
     }
 
-    // DELETE (SOFT)
     public async Task DeleteAsync(string id)
     {
         try

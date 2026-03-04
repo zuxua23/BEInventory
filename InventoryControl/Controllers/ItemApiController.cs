@@ -53,7 +53,7 @@ public class ItemApiController : ControllerBase
     // UPDATE
     [Authorize(Policy = "MASTER_ITEM_UPDATE")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, UpdateItemDto dto)
+    public async Task<IActionResult> Update(string id, ItemDto dto)
     {
         var updatedBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
 

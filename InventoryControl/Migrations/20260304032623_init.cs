@@ -21,7 +21,7 @@ namespace InventoryControl.Migrations
                     status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isDelete = table.Column<int>(type: "int", nullable: true)
+                    isDelete = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -39,7 +39,7 @@ namespace InventoryControl.Migrations
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isDelete = table.Column<int>(type: "int", nullable: true)
+                    isDelete = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,7 +58,7 @@ namespace InventoryControl.Migrations
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isDelete = table.Column<int>(type: "int", nullable: true)
+                    isDelete = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -106,7 +106,7 @@ namespace InventoryControl.Migrations
                 name: "tb_Stock_Taking",
                 columns: table => new
                 {
-                    st_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    stt_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     remark = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -114,7 +114,7 @@ namespace InventoryControl.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tb_Stock_Taking", x => x.st_id);
+                    table.PrimaryKey("PK_tb_Stock_Taking", x => x.stt_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -196,6 +196,7 @@ namespace InventoryControl.Migrations
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     tag_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    itm_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     tag_epc = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     loc_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -283,22 +284,23 @@ namespace InventoryControl.Migrations
                     trs_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     trs_type = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     reference_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    rdr_id = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    rdr_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReaderId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_Transaction", x => x.trs_id);
                     table.ForeignKey(
-                        name: "FK_tb_Transaction_tb_Reader_rdr_id",
-                        column: x => x.rdr_id,
+                        name: "FK_tb_Transaction_tb_Reader_ReaderId",
+                        column: x => x.ReaderId,
                         principalTable: "tb_Reader",
                         principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "tb_History",
+                name: "tb_History_Print",
                 columns: table => new
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -310,18 +312,19 @@ namespace InventoryControl.Migrations
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    cycle_count = table.Column<int>(type: "int", nullable: false),
                     ItemId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tb_History", x => x.id);
+                    table.PrimaryKey("PK_tb_History_Print", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tb_History_tb_Item_ItemId",
+                        name: "FK_tb_History_Print_tb_Item_ItemId",
                         column: x => x.ItemId,
                         principalTable: "tb_Item",
                         principalColumn: "id");
                     table.ForeignKey(
-                        name: "FK_tb_History_tb_Tag_tag_id",
+                        name: "FK_tb_History_Print_tb_Tag_tag_id",
                         column: x => x.tag_id,
                         principalTable: "tb_Tag",
                         principalColumn: "id",
@@ -333,25 +336,33 @@ namespace InventoryControl.Migrations
                 columns: table => new
                 {
                     st_detail_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    st_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    stt_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     tag_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    item_id = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    remark = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     action = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_Stock_Taking_Detail", x => x.st_detail_id);
                     table.ForeignKey(
-                        name: "FK_tb_Stock_Taking_Detail_tb_Stock_Taking_st_id",
-                        column: x => x.st_id,
+                        name: "FK_tb_Stock_Taking_Detail_tb_Item_item_id",
+                        column: x => x.item_id,
+                        principalTable: "tb_Item",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_tb_Stock_Taking_Detail_tb_Stock_Taking_stt_id",
+                        column: x => x.stt_id,
                         principalTable: "tb_Stock_Taking",
-                        principalColumn: "st_id",
+                        principalColumn: "stt_id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_tb_Stock_Taking_Detail_tb_Tag_tag_id",
                         column: x => x.tag_id,
                         principalTable: "tb_Tag",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -394,13 +405,13 @@ namespace InventoryControl.Migrations
                 column: "itm_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_History_ItemId",
-                table: "tb_History",
+                name: "IX_tb_History_Print_ItemId",
+                table: "tb_History_Print",
                 column: "ItemId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_History_tag_id",
-                table: "tb_History",
+                name: "IX_tb_History_Print_tag_id",
+                table: "tb_History_Print",
                 column: "tag_id");
 
             migrationBuilder.CreateIndex(
@@ -438,9 +449,14 @@ namespace InventoryControl.Migrations
                 column: "role_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Stock_Taking_Detail_st_id",
+                name: "IX_tb_Stock_Taking_Detail_item_id",
                 table: "tb_Stock_Taking_Detail",
-                column: "st_id");
+                column: "item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tb_Stock_Taking_Detail_stt_id",
+                table: "tb_Stock_Taking_Detail",
+                column: "stt_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_Stock_Taking_Detail_tag_id",
@@ -464,9 +480,9 @@ namespace InventoryControl.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Transaction_rdr_id",
+                name: "IX_tb_Transaction_ReaderId",
                 table: "tb_Transaction",
-                column: "rdr_id");
+                column: "ReaderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_Transaction_Detail_itm_id",
@@ -507,7 +523,7 @@ namespace InventoryControl.Migrations
                 name: "tb_DO_Detail");
 
             migrationBuilder.DropTable(
-                name: "tb_History");
+                name: "tb_History_Print");
 
             migrationBuilder.DropTable(
                 name: "tb_Role_Permission");

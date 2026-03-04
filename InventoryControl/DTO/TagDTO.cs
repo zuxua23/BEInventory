@@ -35,3 +35,9 @@ public class PrintHistoryResponseDto
     public string BatchNo { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
 }
+
+public class PrintDto
+{
+    public string ItemName { get; set; }
+    public int Qty { get; set; }
+}

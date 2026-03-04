@@ -6,10 +6,7 @@ public class ItemDto
     public string ItemName { get; set; } = null!;
 }
 
-public class UpdateItemDto
-{
-    public string ItemName { get; set; } = null!;
-}
+
 
 public class ItemResponseDto
 {

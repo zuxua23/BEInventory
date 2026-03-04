@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InventoryControl.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20260302070203_init")]
+    [Migration("20260304032623_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -43,8 +43,8 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("do_number");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
                     b.Property<string>("ScannerType")
@@ -89,7 +89,7 @@ namespace InventoryControl.Migrations
                     b.ToTable("tb_DO_Detail");
                 });
 
-            modelBuilder.Entity("InventoryControl.Entity.History", b =>
+            modelBuilder.Entity("InventoryControl.Entity.HistoryPrint", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)")
@@ -108,6 +108,10 @@ namespace InventoryControl.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
+
+                    b.Property<int>("CycleCount")
+                        .HasColumnType("int")
+                        .HasColumnName("cycle_count");
 
                     b.Property<string>("HisId")
                         .IsRequired()
@@ -143,7 +147,7 @@ namespace InventoryControl.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("tb_History");
+                    b.ToTable("tb_History_Print");
                 });
 
             modelBuilder.Entity("InventoryControl.Entity.Item", b =>
@@ -161,11 +165,11 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
-                    b.Property<string>("ItemId")
+                    b.Property<string>("ItmId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("itm_id");
@@ -185,7 +189,7 @@ namespace InventoryControl.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemId")
+                    b.HasIndex("ItmId")
                         .IsUnique();
 
                     b.ToTable("tb_Item");
@@ -211,14 +215,19 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("loc_desc");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
                     b.Property<string>("LocId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("loc_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("loc_name");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -227,11 +236,6 @@ namespace InventoryControl.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
-
-                    b.Property<string>("name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("loc_name");
 
                     b.HasKey("Id");
 
@@ -324,7 +328,7 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("rdr_name");
 
-                    b.Property<string>("ReaderId")
+                    b.Property<string>("RdrId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("rdr_id");
@@ -423,9 +427,9 @@ namespace InventoryControl.Migrations
 
             modelBuilder.Entity("InventoryControl.Entity.StockTaking", b =>
                 {
-                    b.Property<string>("StockTakingId")
+                    b.Property<string>("SttId")
                         .HasColumnType("nvarchar(450)")
-                        .HasColumnName("st_id");
+                        .HasColumnName("stt_id");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -443,14 +447,14 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("status");
 
-                    b.HasKey("StockTakingId");
+                    b.HasKey("SttId");
 
                     b.ToTable("tb_Stock_Taking");
                 });
 
             modelBuilder.Entity("InventoryControl.Entity.StockTakingDetail", b =>
                 {
-                    b.Property<string>("StockTakingDetailId")
+                    b.Property<string>("StdId")
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("st_detail_id");
 
@@ -458,19 +462,29 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("action");
 
-                    b.Property<string>("StockTakingId")
+                    b.Property<string>("ItemId")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("item_id");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("remark");
+
+                    b.Property<string>("SttId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)")
-                        .HasColumnName("st_id");
+                        .HasColumnName("stt_id");
 
                     b.Property<string>("TagId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("tag_id");
 
-                    b.HasKey("StockTakingDetailId");
+                    b.HasKey("StdId");
 
-                    b.HasIndex("StockTakingId");
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SttId");
 
                     b.HasIndex("TagId");
 
@@ -492,6 +506,11 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
+                    b.Property<string>("Curent_Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("loc_id");
+
                     b.Property<string>("EpcTag")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -501,13 +520,13 @@ namespace InventoryControl.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("LocationId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Lokasi")
+                    b.Property<string>("ItmId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("loc_id");
+                        .HasColumnName("itm_id");
+
+                    b.Property<string>("LocationId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -545,7 +564,7 @@ namespace InventoryControl.Migrations
 
             modelBuilder.Entity("InventoryControl.Entity.Transaction", b =>
                 {
-                    b.Property<string>("TransactionId")
+                    b.Property<string>("TrsId")
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("trs_id");
 
@@ -557,19 +576,22 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("ReaderId")
-                        .HasColumnType("nvarchar(450)")
+                    b.Property<string>("RdrId")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("rdr_id");
+
+                    b.Property<string>("ReaderId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ReferenceId")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("reference_id");
 
-                    b.Property<string>("TransactionType")
+                    b.Property<string>("TrsType")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("trs_type");
 
-                    b.HasKey("TransactionId");
+                    b.HasKey("TrsId");
 
                     b.HasIndex("ReaderId");
 
@@ -578,7 +600,7 @@ namespace InventoryControl.Migrations
 
             modelBuilder.Entity("InventoryControl.Entity.Transaction_Detail", b =>
                 {
-                    b.Property<string>("TransactionDetailId")
+                    b.Property<string>("TrdId")
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("trs_detail_id");
 
@@ -592,18 +614,18 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("tag_id");
 
-                    b.Property<string>("TransactionId")
+                    b.Property<string>("TrsId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("trs_id");
 
-                    b.HasKey("TransactionDetailId");
+                    b.HasKey("TrdId");
 
                     b.HasIndex("ItemId");
 
                     b.HasIndex("TagId");
 
-                    b.HasIndex("TransactionId");
+                    b.HasIndex("TrsId");
 
                     b.ToTable("tb_Transaction_Detail");
                 });
@@ -711,7 +733,7 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.DODetail", b =>
                 {
                     b.HasOne("InventoryControl.Entity.DO", "DO")
-                        .WithMany()
+                        .WithMany("Details")
                         .HasForeignKey("DoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -727,7 +749,7 @@ namespace InventoryControl.Migrations
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("InventoryControl.Entity.History", b =>
+            modelBuilder.Entity("InventoryControl.Entity.HistoryPrint", b =>
                 {
                     b.HasOne("InventoryControl.Entity.Item", "Item")
                         .WithMany()
@@ -776,17 +798,24 @@ namespace InventoryControl.Migrations
 
             modelBuilder.Entity("InventoryControl.Entity.StockTakingDetail", b =>
                 {
-                    b.HasOne("InventoryControl.Entity.StockTaking", "StockTaking")
+                    b.HasOne("InventoryControl.Entity.Item", "Item")
                         .WithMany()
-                        .HasForeignKey("StockTakingId")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryControl.Entity.StockTaking", "StockTaking")
+                        .WithMany("Details")
+                        .HasForeignKey("SttId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("InventoryControl.Entity.Tag", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Item");
 
                     b.Navigation("StockTaking");
 
@@ -835,7 +864,7 @@ namespace InventoryControl.Migrations
 
                     b.HasOne("InventoryControl.Entity.Transaction", "Transaction")
                         .WithMany("TransactionDetails")
-                        .HasForeignKey("TransactionId")
+                        .HasForeignKey("TrsId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -865,6 +894,11 @@ namespace InventoryControl.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("InventoryControl.Entity.DO", b =>
+                {
+                    b.Navigation("Details");
+                });
+
             modelBuilder.Entity("InventoryControl.Entity.Item", b =>
                 {
                     b.Navigation("TransactionDetails");
@@ -880,6 +914,11 @@ namespace InventoryControl.Migrations
                     b.Navigation("RolePermissions");
 
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("InventoryControl.Entity.StockTaking", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("InventoryControl.Entity.Tag", b =>

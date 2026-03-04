@@ -1,8 +1,10 @@
 ﻿namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.Database;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
 
 public class LocationService : ILocationService
@@ -27,43 +29,83 @@ public class LocationService : ILocationService
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDelete);
     }
 
-    public async Task CreateAsync(Location dto, string createdBy)
+    public async Task CreateAsync(LocationDTO dto, string createdBy)
     {
-        dto.Id = Guid.NewGuid().ToString();
-        dto.CreatedBy = createdBy;
-        dto.CreatedAt = DateTime.UtcNow;
-        dto.IsDelete = false;
+        try
+        {
+            var location = new Location
+            {
+                Id = Guid.NewGuid().ToString(),
+                LocId = dto.LocId,
+                Name = dto.Name,
+                Description = dto.Description,
+                CreatedBy = createdBy,
+                CreatedAt = DateTime.UtcNow
+            };
 
-        _db.Locations.Add(dto);
-        await _db.SaveChangesAsync();
+            _db.Locations.Add(location);
+            await _db.SaveChangesAsync();
+
+            DailyFileLogger.Info($"CreateAsync berhasil untuk LocationID {dto.LocId}.");
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Error di CreateAsync untuk LocationID {dto.LocId}.", ex);
+            throw;
+        }
     }
 
-    public async Task UpdateAsync(string id, Location dto, string updatedBy)
+    public async Task UpdateAsync(string id, LocationDTO dto, string updatedBy)
     {
-        var location = await _db.Locations.FindAsync(id);
+        try
+        {
+            var location = await _db.Locations.FindAsync(id);
 
-        if (location == null || location.IsDelete)
-            throw new Exception("Location tidak ditemukan");
+            if (location == null || location.IsDelete)
+            {
+                DailyFileLogger.Warn($"UpdateAsync: Location dengan ID {id} tidak ditemukan.");
+                throw new Exception("Location tidak ditemukan");
+            }
 
-        location.LocId = dto.LocId;
-        location.Name = dto.Name;
-        location.Description = dto.Description;
-        location.UpdatedBy = updatedBy;
-        location.UpdatedAt = DateTime.UtcNow;
+            location.LocId = dto.LocId;
+            location.Name = dto.Name;
+            location.Description = dto.Description;
+            location.UpdatedBy = updatedBy;
+            location.UpdatedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
+            DailyFileLogger.Info($"UpdateAsync berhasil untuk ID {id}.");
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Error di UpdateAsync untuk ID {id}.", ex);
+            throw;
+        }
     }
 
     public async Task DeleteAsync(string id)
     {
-        var location = await _db.Locations.FindAsync(id);
+        try
+        {
+            var location = await _db.Locations.FindAsync(id);
 
-        if (location == null || location.IsDelete)
-            throw new Exception("Location tidak ditemukan");
+            if (location == null || location.IsDelete)
+            {
+                DailyFileLogger.Warn($"DeleteAsync: Location dengan ID {id} tidak ditemukan.");
+                throw new Exception("Location tidak ditemukan");
 
-        location.IsDelete = true;
-        location.UpdatedAt = DateTime.UtcNow;
+            }
 
-        await _db.SaveChangesAsync();
+            location.IsDelete = true;
+            location.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+            DailyFileLogger.Info($"DeleteAsync berhasil untuk ID {id} (soft delete).");
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Error di DeleteAsync untuk ID {id}.", ex);
+            throw;
+        }
     }
 }
