@@ -19,7 +19,6 @@ public class StockPreparationService : IStockPreparationService
     {
         using var trx = await _db.Database.BeginTransactionAsync();
 
-        var lasNumber = await _db.Tags.CountAsync();
 
         var doData = await _db.DOs
             .Include(d => d.Details)
@@ -86,13 +85,11 @@ public class StockPreparationService : IStockPreparationService
         tag.UpdatedBy = user;
         tag.UpdatedAt = DateTime.UtcNow;
 
-        lasNumber++;
-        var hisId = $"HIS{lasNumber:D5}";
+    
 
         _db.Histories.Add(new HistoryPrint
         {
             Id = Guid.NewGuid().ToString(),
-            HisId = hisId,
             TagId = tag.Id,
             ItemId = tag.ItemId,
             Type = "STOCK_PREPARATION",

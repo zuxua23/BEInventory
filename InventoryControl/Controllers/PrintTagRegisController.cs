@@ -29,7 +29,7 @@ public class PrintTagRegisController: ControllerBase
         return Ok(new { message = "Print berhasil", batchNo = batch });
     }
 
-    [Authorize(Policy = "TAG_REGISTER")]
+    [Authorize(Policy = "REGISTER_TAG")]
     [HttpPost("register")]
     public async Task<IActionResult> Register(TagRegistrationDto dto)
     {
@@ -40,7 +40,7 @@ public class PrintTagRegisController: ControllerBase
         return Ok(new { message = "Tag berhasil di-standby-kan" });
     }
 
-    [Authorize(Policy = "TAG_REGISTER")]
+    [Authorize(Policy = "REGISTER_TAG")]
     [HttpGet("print-history")]
     public async Task<IActionResult> GetPrintHistory()
     {

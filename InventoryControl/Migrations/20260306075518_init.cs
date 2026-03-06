@@ -73,7 +73,6 @@ namespace InventoryControl.Migrations
                     per_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     per_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     per_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    per_group = table.Column<int>(type: "int", nullable: true),
                     per_desc = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -90,10 +89,8 @@ namespace InventoryControl.Migrations
                 columns: table => new
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    rol_id = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     rol_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     rol_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    rol_desc = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: false),
                     isDelete = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -169,22 +166,23 @@ namespace InventoryControl.Migrations
                 columns: table => new
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    rdr_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    loc_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    rdr_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    loc_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     rdr_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ip_address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isDelete = table.Column<int>(type: "int", nullable: true),
-                    LocationNavigationId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    isDelete = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_Reader", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tb_Reader_tb_Location_LocationNavigationId",
-                        column: x => x.LocationNavigationId,
+                        name: "FK_tb_Reader_tb_Location_loc_id",
+                        column: x => x.loc_id,
                         principalTable: "tb_Location",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -196,32 +194,31 @@ namespace InventoryControl.Migrations
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     tag_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    itm_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    itm_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     tag_epc = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    loc_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    loc_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isDelete = table.Column<int>(type: "int", nullable: true),
-                    LocationId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    ItemId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    isDelete = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_Tag", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tb_Tag_tb_Item_ItemId",
-                        column: x => x.ItemId,
+                        name: "FK_tb_Tag_tb_Item_itm_id",
+                        column: x => x.itm_id,
                         principalTable: "tb_Item",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_tb_Tag_tb_Location_LocationId",
-                        column: x => x.LocationId,
+                        name: "FK_tb_Tag_tb_Location_loc_id",
+                        column: x => x.loc_id,
                         principalTable: "tb_Location",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -284,17 +281,16 @@ namespace InventoryControl.Migrations
                     trs_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     trs_type = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     reference_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    rdr_id = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    rdr_id = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ReaderId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_Transaction", x => x.trs_id);
                     table.ForeignKey(
-                        name: "FK_tb_Transaction_tb_Reader_ReaderId",
-                        column: x => x.ReaderId,
+                        name: "FK_tb_Transaction_tb_Reader_rdr_id",
+                        column: x => x.rdr_id,
                         principalTable: "tb_Reader",
                         principalColumn: "id");
                 });
@@ -304,23 +300,20 @@ namespace InventoryControl.Migrations
                 columns: table => new
                 {
                     id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    his_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    itm_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    itm_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     tag_id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     trs_type = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ref_no = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    action = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    cycle_count = table.Column<int>(type: "int", nullable: false),
-                    ItemId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    action = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tb_History_Print", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tb_History_Print_tb_Item_ItemId",
-                        column: x => x.ItemId,
+                        name: "FK_tb_History_Print_tb_Item_itm_id",
+                        column: x => x.itm_id,
                         principalTable: "tb_Item",
                         principalColumn: "id");
                     table.ForeignKey(
@@ -405,9 +398,9 @@ namespace InventoryControl.Migrations
                 column: "itm_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_History_Print_ItemId",
+                name: "IX_tb_History_Print_itm_id",
                 table: "tb_History_Print",
-                column: "ItemId");
+                column: "itm_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_History_Print_tag_id",
@@ -427,16 +420,15 @@ namespace InventoryControl.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Reader_LocationNavigationId",
+                name: "IX_tb_Reader_loc_id",
                 table: "tb_Reader",
-                column: "LocationNavigationId");
+                column: "loc_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Role_rol_id",
-                table: "tb_Role",
-                column: "rol_id",
-                unique: true,
-                filter: "[rol_id] IS NOT NULL");
+                name: "IX_tb_Reader_rdr_id",
+                table: "tb_Reader",
+                column: "rdr_id",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_Role_Permission_permission_id",
@@ -464,14 +456,14 @@ namespace InventoryControl.Migrations
                 column: "tag_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Tag_ItemId",
+                name: "IX_tb_Tag_itm_id",
                 table: "tb_Tag",
-                column: "ItemId");
+                column: "itm_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Tag_LocationId",
+                name: "IX_tb_Tag_loc_id",
                 table: "tb_Tag",
-                column: "LocationId");
+                column: "loc_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_Tag_tag_id",
@@ -480,9 +472,9 @@ namespace InventoryControl.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tb_Transaction_ReaderId",
+                name: "IX_tb_Transaction_rdr_id",
                 table: "tb_Transaction",
-                column: "ReaderId");
+                column: "rdr_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tb_Transaction_Detail_itm_id",

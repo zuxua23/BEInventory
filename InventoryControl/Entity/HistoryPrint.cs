@@ -11,10 +11,6 @@ public class HistoryPrint
     public string Id { get; set; }
 
     [Required]
-    [Column("his_id")]
-    public string HisId { get; set; }
-
-    [Required]
     [Column("itm_id")]
     public string ItemId { get; set; }
 
@@ -38,7 +34,6 @@ public class HistoryPrint
     [Column("action")]
     public string Action { get; set; }
     [Column("cycle_count")]
-    public int CycleCount { get; set; } = 0;
 
     public Item Item { get; set; }
     public Tag Tag { get; set; }

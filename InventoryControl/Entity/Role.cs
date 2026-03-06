@@ -10,18 +10,12 @@ public class Role
     [Column("id")]
     public string Id { get; set; }
 
-    [Column("rol_id")]
-    public string? RolId { get; set; }
-
     [Required]
     [Column("rol_code")]
     public string Code { get; set; }
 
     [Column("rol_name")]
     public string? Name { get; set; }
-
-    [Column("rol_desc")]
-    public string? Description { get; set; }
 
     [Column("isActive")]
     public bool IsActive { get; set; } = true;

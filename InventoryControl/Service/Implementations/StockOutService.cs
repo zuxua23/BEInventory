@@ -3,6 +3,7 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Helpers;
 using InventoryControl.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,21 +52,13 @@ public class StockOutService : IStockOutService
             TrsId = Guid.NewGuid().ToString(),
             TrsType = "STOCK_OUT",
             ReferenceId = dto.DoId,
-            RdrId = dto.ReaderId,
+            ReaderId = dto.ReaderId,
             CreatedBy = user,
             CreatedAt = DateTime.UtcNow
         };
 
         _db.Transactions.Add(trxHeader);
 
-        var lastHistory = await _db.Histories
-            .OrderByDescending(x => x.HisId)
-            .FirstOrDefaultAsync();
-
-        int lastNumber = 0;
-
-        if (lastHistory != null)
-            lastNumber = int.Parse(lastHistory.HisId.Substring(3));
 
         foreach (var detail in reservedDetails)
         {
@@ -86,12 +79,10 @@ public class StockOutService : IStockOutService
                 ItemId = detail.ItemId
             });
 
-            lastNumber++;
 
             _db.Histories.Add(new HistoryPrint
             {
                 Id = Guid.NewGuid().ToString(),
-                HisId = $"HIS{lastNumber:D5}",
                 TagId = detail.TagId,
                 ItemId = detail.ItemId,
                 Type = "STOCK_OUT",
@@ -107,4 +98,57 @@ public class StockOutService : IStockOutService
         await _db.SaveChangesAsync();
         await trx.CommitAsync();
     }
+
+
+    public async Task ScanStockOutAsync(string doId, string readerId, string epc, string user)
+    {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
+        var tag = await _db.Tags
+            .FirstOrDefaultAsync(t => t.EpcTag == epc);
+
+        if (tag == null)
+            return;
+
+        if (tag.Status != "RESERVED")
+            return;
+
+        var reserved = await _db.TransactionDetails
+            .Include(x => x.Transaction)
+            .FirstOrDefaultAsync(x =>
+                x.TagId == tag.Id &&
+                x.Transaction.TrsType == "STOCK_PREPARATION" &&
+                x.Transaction.ReferenceId == doId);
+
+        if (reserved == null)
+            return;
+
+        tag.Status = "OUT";
+        tag.UpdatedBy = user;
+        tag.UpdatedAt = DateTime.UtcNow;
+
+        var trxHeader = new Transaction
+        {
+            TrsId = Guid.NewGuid().ToString(),
+            TrsType = "STOCK_OUT",
+            ReferenceId = doId,
+            ReaderId = readerId,
+            CreatedBy = user,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Transactions.Add(trxHeader);
+
+        _db.TransactionDetails.Add(new Transaction_Detail
+        {
+            TrdId = Guid.NewGuid().ToString(),
+            TrsId = trxHeader.TrsId,
+            TagId = tag.Id,
+            ItemId = tag.ItemId
+        });
+
+        await _db.SaveChangesAsync();
+        await trx.CommitAsync();
+    }
+
 }

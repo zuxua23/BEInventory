@@ -22,9 +22,6 @@ public class Permission
     [Column("per_name")]
     public string Name { get; set; }
 
-    [Column("per_group")]
-    public int? Group { get; set; }
-
     [Column("per_desc")]
     public string? Desc { get; set; }
 

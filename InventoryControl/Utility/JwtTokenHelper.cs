@@ -21,7 +21,7 @@ public class JwtTokenHelper
     User user,
     List<string> permissions,
     List<string> roles,
-    int expireMinutes = 30)
+    int expireMinutes = 60)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
     var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);

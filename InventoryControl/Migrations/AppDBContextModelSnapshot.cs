@@ -106,15 +106,6 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<int>("CycleCount")
-                        .HasColumnType("int")
-                        .HasColumnName("cycle_count");
-
-                    b.Property<string>("HisId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("his_id");
-
                     b.Property<string>("ItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)")
@@ -259,10 +250,6 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("per_desc");
 
-                    b.Property<int?>("Group")
-                        .HasColumnType("int")
-                        .HasColumnName("per_group");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -304,8 +291,13 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<int?>("IsDelete")
-                        .HasColumnType("int")
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ip_address");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
                     b.Property<string>("LocationId")
@@ -320,8 +312,13 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("RdrId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("rdr_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -334,6 +331,9 @@ namespace InventoryControl.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LocationId");
+
+                    b.HasIndex("RdrId")
+                        .IsUnique();
 
                     b.ToTable("tb_Reader");
                 });
@@ -349,10 +349,6 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("rol_code");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rol_desc");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -365,15 +361,7 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("rol_name");
 
-                    b.Property<string>("RolId")
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("rol_id");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RolId")
-                        .IsUnique()
-                        .HasFilter("[rol_id] IS NOT NULL");
 
                     b.ToTable("tb_Role");
                 });
@@ -559,12 +547,9 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("RdrId")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("rdr_id");
-
                     b.Property<string>("ReaderId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("rdr_id");
 
                     b.Property<string>("ReferenceId")
                         .HasColumnType("nvarchar(max)")

@@ -1,7 +1,7 @@
 ﻿using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
-using InventoryControl.PermissionHelper;
+using InventoryControl.Helpers;
 using InventoryControl.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Sockets;
@@ -43,10 +43,8 @@ public class PrintTagRegisService : IPrintTagRegisService
 
         for (int i = 0; i < dto.Qty; i++)
         {
-            lastNumber++;
 
             var tagId = $"TAG{lastNumber:D5}";
-            var hisId = $"HIS{lastNumber:D5}";
 
             var epc = $"A{item.ItmId}{lastNumber:D10}";
 
@@ -75,7 +73,6 @@ public class PrintTagRegisService : IPrintTagRegisService
             _db.Histories.Add(new HistoryPrint
             {
                 Id = Guid.NewGuid().ToString(),
-                HisId = hisId,
                 TagId = tag.Id,
                 ItemId = dto.ItemId,
                 Type = "PRINT",
@@ -137,10 +134,20 @@ public class PrintTagRegisService : IPrintTagRegisService
             var tags = await _db.Tags
                 .Where(t => dto.TagIds.Contains(t.TagId))
                 .ToListAsync();
+        if(!tags.Any())
+            throw new Exception("Tag tidak ditemukan");
 
-            foreach (var tag in tags)
+        var foundTagIds = tags.Select(t => t.TagId).ToHashSet();
+        var missingTags = dto.TagIds.Where(id => !foundTagIds.Contains(id)).ToList();
+
+        if (missingTags.Any())
+            throw new Exception($"Tag tidak ditemukan: {string.Join(",", missingTags)}");
+
+        var reference = $"REG-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+
+        foreach (var tag in tags)
             {
-                // Guard
                 if (tag.Status != "PRINTED" && tag.Status != "OUT")
                     throw new Exception($"Tag {tag.TagId} tidak bisa diregister");
 
@@ -150,11 +157,11 @@ public class PrintTagRegisService : IPrintTagRegisService
 
                 _db.Histories.Add(new HistoryPrint
                 {
-                    HisId = Guid.NewGuid().ToString(),
-                    TagId = tag.TagId,
+                    Id = Guid.NewGuid().ToString(),
+                    TagId = tag.Id,
                     ItemId = tag.ItemId,
-                    Type = "TAG_REGISTER",
-                    Reference = $"REG-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    Type = "REGISTER_TAG",
+                    Reference = reference,
                     Action = "STANDBY",
                     CreatedBy = user,
                     CreatedAt = DateTime.UtcNow
@@ -166,24 +173,23 @@ public class PrintTagRegisService : IPrintTagRegisService
 
     public async Task<List<PrintHistoryResponseDto>> GetAvailableTagsAsync()
     {
-        var result = await _db.Histories
-            .Where(h => h.Type == "PRINT")
-            .Join(_db.Tags,
-                h => h.TagId,
-                t => t.TagId,
-                (h, t) => new { h, t })
-            .Where(x => x.t.Status == "PRINTED" || x.t.Status == "OUT")
+        var result = await _db.Tags
+            .Where(t => t.Status == "PRINTED" || t.Status == "OUT")
             .Join(_db.Items,
-                ht => ht.t.ItemId,
+                t => t.ItemId,
                 i => i.Id,
-                (ht, i) => new PrintHistoryResponseDto
+                (t, i) => new { t, i })
+            .Join(_db.Histories.Where(h => h.Type == "PRINT"),
+                ti => ti.t.TagId,
+                h => h.TagId,
+                (ti, h) => new PrintHistoryResponseDto
                 {
-                    TagId = ht.t.TagId,
-                    ItemId = ht.t.ItemId,
-                    ItemName = i.Name,
-                    Status = ht.t.Status,
-                    BatchNo = ht.h.Reference,
-                    CreatedAt = ht.h.CreatedAt
+                    TagId = ti.t.TagId,
+                    ItemId = ti.t.ItemId,
+                    ItemName = ti.i.Name,
+                    Status = ti.t.Status,
+                    BatchNo = h.Reference,
+                    CreatedAt = h.CreatedAt
                 })
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();

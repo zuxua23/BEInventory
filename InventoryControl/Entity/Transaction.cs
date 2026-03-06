@@ -17,7 +17,7 @@ public class Transaction
     public string? ReferenceId { get; set; }
 
     [Column("rdr_id")]
-    public string? RdrId { get; set; }
+    public string? ReaderId { get; set; }
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }

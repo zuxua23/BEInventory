@@ -8,7 +8,7 @@ public class StockTakingCreateDto
 public class StockTakingScanDto
 {
     public string SttId { get; set; }
-    public string TagId { get; set; }
+    public string Epc { get; set; }
 }
 public class StockTakingRemoveDto
 {

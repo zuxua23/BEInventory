@@ -45,15 +45,15 @@ public class AppDBContext : DbContext
             modelBuilder.Entity<Permission>()
         .HasQueryFilter(u => !u.IsDelete);
 
+            modelBuilder.Entity<Reader>()
+        .HasQueryFilter(r => !r.IsDelete);
+
 
 
         modelBuilder.Entity<User>()
         .HasIndex(u => u.UserId)
         .IsUnique();
 
-        modelBuilder.Entity<Role>()
-            .HasIndex(r => r.RolId)
-            .IsUnique();
 
         modelBuilder.Entity<Permission>()
             .HasIndex(p => p.PerId)

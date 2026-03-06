@@ -18,7 +18,6 @@ public class StockInService : IStockInService
     public async Task StockInAsync(StockInDto dto, string user)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
-        var lastNumber = await _db.Tags.CountAsync();
 
         if (!dto.ScannedCodes.Any())
             throw new Exception("Tidak ada tag yang discan");
@@ -70,8 +69,6 @@ public class StockInService : IStockInService
 
         foreach (var tag in tags)
         {
-            lastNumber++;
-            var hisId = $"HIS{lastNumber:D5}";
 
             _db.TransactionDetails.Add(new Transaction_Detail
             {
@@ -84,7 +81,6 @@ public class StockInService : IStockInService
             _db.Histories.Add(new HistoryPrint
             {
                 Id = Guid.NewGuid().ToString(),
-                HisId = hisId,
                 TagId = tag.Id,
                 ItemId = tag.ItemId,
                 Type = "STOCK_IN",

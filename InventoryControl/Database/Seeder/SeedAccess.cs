@@ -22,8 +22,7 @@ public class SeedAccess
 
     // TAG
     ("PRINT_TAG", "Print Tag", "PER005"),
-    ("REPRINT_TAG", "Reprint Tag", "PER006"),
-    ("TAG_REGISTRATION", "Tag Registration", "PER007"),
+    ("REGISTER_TAG", "Reprint Tag", "PER029"),
 
     // STOCK
     ("TRANS_STOCK_IN", "Stock In", "PER008"),
@@ -43,6 +42,8 @@ public class SeedAccess
     // READER
     ("MASTER_READER_VIEW", "View Reader", "PER015"),
     ("MASTER_READER_CREATE", "Create Reader", "PER016"),
+    ("MASTER_READER_DELETE", "Delete Reader", "PER027"),
+    ("MASTER_READER_UPDATE", "Update Reader", "PER028"),
 
     // STOCK TAKING
     ("TRANS_STOCK_TAKING_CREATE", "Create Stock Taking", "PER017"),
