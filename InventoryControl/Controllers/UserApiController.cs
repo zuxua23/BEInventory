@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
-[Route("user")]
+[Route("core/user")]
 public class UserApiController : ControllerBase
 {
     private readonly IUserService _service;
@@ -18,16 +17,12 @@ public class UserApiController : ControllerBase
         _service = service;
     }
 
-    // READ
-    [Authorize(Policy = "MASTER_USER_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
-    // READ BY ID
-    [Authorize(Policy = "MASTER_USER_VIEW")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
@@ -38,19 +33,16 @@ public class UserApiController : ControllerBase
         return Ok(data);
     }
 
-    // CREATE
-    [Authorize(Policy = "MASTER_USER_CREATE")]
 
     [HttpPost]
     public async Task<IActionResult> Create(UserDto dto)
     {
         var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+
         await _service.CreateAsync(dto, createdBy);
         return Ok(new { message = "User berhasil dibuat" });
     }
 
-    // UPDATE
-    [Authorize(Policy = "MASTER_USER_UPDATE")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, UpdateUserDto dto)
     {
@@ -59,8 +51,6 @@ public class UserApiController : ControllerBase
         return Ok(new { message = "User berhasil diperbarui" });
     }
 
-    // DELETE
-    [Authorize(Policy = "MASTER_USER_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

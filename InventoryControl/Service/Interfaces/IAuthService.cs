@@ -5,9 +5,8 @@ namespace InventoryControl.Services.Interfaces
 {
     public interface IAuthService
     {
-        Task<string> LoginAsync(LoginDTO dto);
-        Task<User> LoginWebAsync(LoginDTO dto);
-        Task LogoutAsync(string userId);
+        Task<LoginResultDto> ValidateUserAsync(LoginDTO dto);
+
     }
 
 }

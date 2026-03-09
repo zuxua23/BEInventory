@@ -1,30 +1,20 @@
-﻿using InventoryControl.Database;
+﻿using InventoryControl.Consumers;
+using InventoryControl.Database;
 using InventoryControl.Database.Seeder;
-using InventoryControl.Entity;
-using InventoryControl.PermissionHelper;
+using InventoryControl.Handler;
 using InventoryControl.Service.Implementations;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Services.Implementations;
 using InventoryControl.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-
-using Serilog;
-using Serilog.Enrichers.CallerInfo;
-using Serilog.Events;
 using StackExchange.Redis;
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Host.UseSerilog();
+
+builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect(
@@ -37,194 +27,27 @@ builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 #endregion
-builder.Services.AddScoped<JwtTokenHelper>();
 
-
-
+builder.Services.AddHostedService<RedisConsumer>();
+builder.Services.AddSingleton<JwtTokenHelper>();
+builder.Services.AddScoped<CommandDispatcher>();
 #region MVC + API
-builder.Services.AddControllersWithViews();
+//builder.Services.AddControllersWithViews();
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    options.JsonSerializerOptions.WriteIndented = true;
-});
-#endregion
-
-#region SESSION (WEB ONLY)
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromHours(8);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
+    //options.JsonSerializerOptions.WriteIndented = true;
 });
 #endregion
 
 
+//#region AUTHORIZATION (ROLE + PERMISSION)
+//builder.Services.AddAuthorization();
 
+//builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
-#region AUTHENTICATION
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-        ),
-
-        };
-
-        //  JWT CUSTOM ERROR (API ONLY)
-        options.Events = new JwtBearerEvents
-        {
-            OnChallenge = context =>
-            {
-                if (!context.Request.Path.StartsWithSegments("/api"))
-                    return Task.CompletedTask;
-
-                if (context.Response.HasStarted)
-                    return Task.CompletedTask;
-
-                context.HandleResponse();
-
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-
-                var result = JsonConvert.SerializeObject(new
-                {
-                    status = 401,
-                    code = "TOKEN_REQUIRED",
-                    message = "Token tidak ditemukan"
-                });
-
-                return context.Response.WriteAsync(result);
-            },
-
-            OnAuthenticationFailed = context =>
-            {
-                if (!context.Request.Path.StartsWithSegments("/api"))
-                    return Task.CompletedTask;
-
-                if (context.Response.HasStarted)
-                    return Task.CompletedTask;
-
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-
-                var isExpired =
-                    context.Exception is SecurityTokenExpiredException;
-
-                var result = JsonConvert.SerializeObject(new
-                {
-                    status = 401,
-                    code = isExpired ? "TOKEN_EXPIRED" : "TOKEN_INVALID",
-                    message = isExpired
-                        ? "Token sudah kadaluarsa"
-                        : "Token tidak valid"
-                });
-
-                return context.Response.WriteAsync(result);
-            },
-                OnTokenValidated = async context =>
-                {
-                    var redis = context.HttpContext.RequestServices
-                        .GetRequiredService<IConnectionMultiplexer>();
-
-                    var principal = context.Principal;
-
-                    var userId = principal?
-                        .FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                    var username = principal?
-                        .FindFirst(ClaimTypes.Name)?.Value;
-
-                    var roles = principal?
-                        .FindAll(ClaimTypes.Role)
-                        .Select(r => r.Value)
-                        .ToList();
-
-                    var permissions = principal?
-                        .FindAll("permission")
-                        .Select(p => p.Value)
-                        .ToList();
-
-                    Console.WriteLine("===== JWT TOKEN VALIDATED =====");
-                    Console.WriteLine($"UserId     : {userId}");
-                    Console.WriteLine($"Username   : {username}");
-                    Console.WriteLine($"Roles      : {string.Join(", ", roles ?? new List<string>())}");
-                    Console.WriteLine($"Permissions: {string.Join(", ", permissions ?? new List<string>())}");
-
-
-
-                    var authHeader = context.Request.Headers["Authorization"]
-                        .FirstOrDefault();
-
-                    if (string.IsNullOrEmpty(authHeader) ||
-                        !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Console.WriteLine("Authorization header tidak valid");
-                        context.Fail("Authorization header tidak valid");
-                        return;
-                    }
-
-                    var rawToken = authHeader
-                        .Substring("Bearer ".Length)
-                        .Trim();
-
-                    var db = redis.GetDatabase();
-                    var storedToken = await db.StringGetAsync($"jwt:{userId}");
-
-                    Console.WriteLine("===== REDIS CHECK =====");
-                    Console.WriteLine($"Redis Key  : jwt:{userId}");
-                    Console.WriteLine($"Stored JWT : {storedToken}");
-                    Console.WriteLine($"Incoming   : {rawToken}");
-
-                    if (storedToken.IsNullOrEmpty)
-                    {
-                        Console.WriteLine("Token tidak ditemukan di Redis");
-                        context.Fail("Token tidak valid / sudah logout");
-                        return;
-                    }
-
-                    if (storedToken != rawToken)
-                    {
-                        Console.WriteLine("Token tidak cocok dengan Redis");
-                        context.Fail("Token mismatch");
-                        return;
-                    }
-                    Console.WriteLine("===== ALL CLAIMS =====");
-                    foreach (var claim in principal.Claims)
-                    {
-                        Console.WriteLine($"Type: {claim.Type} | Value: {claim.Value}");
-                    }
-                    Console.WriteLine("JWT VALID & REDIS MATCH ✅");
-                }
-            
-
-
-        };
-
-    });
-#endregion
-
-#region AUTHORIZATION (ROLE + PERMISSION)
-builder.Services.AddAuthorization();
-
-builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
-
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-#endregion
+//builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+//#endregion
 
 #region DEPENDENCY INJECTION
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -241,17 +64,17 @@ builder.Services.AddScoped<IReaderService, ReaderService>();
 builder.Services.AddScoped<IDOService, DOService>();
 builder.Services.AddScoped<IStockTakingService, StockTakingService>();
 builder.Services.AddScoped<IPrintTagRegisService, PrintTagRegisService>();
-
+builder.Services.AddScoped<UserHandler>();
 #endregion
 
 var app = builder.Build();
 
 #region MIDDLEWARE PIPELINE
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseExceptionHandler("/Error");
+//    app.UseHsts();
+//}
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -261,8 +84,6 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseSession();          // WEB
-app.UseAuthentication();   // JWT
 app.UseAuthorization();
 #endregion
 
@@ -289,18 +110,8 @@ app.Use(async (context, next) =>
 #endregion
 
 #region ROUTING
-// WEB MVC
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}"
-);
-
 // API
 app.MapControllers();
 #endregion
-
-
-
-
 
 app.Run();

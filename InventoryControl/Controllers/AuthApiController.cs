@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace InventoryControl.Controllers.Api;
 
 [ApiController]
-[Route("auth")]
+[Route("core/auth")]
 public class AuthApiController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -19,54 +19,29 @@ public class AuthApiController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginDTO dto)
+    public async Task<IActionResult> Login(LoginDTO dto)
     {
-        var token = await _authService.LoginAsync(dto);
+        var result = await _authService.ValidateUserAsync(dto);
 
-        return Ok(new
-        {
-            success = true,
-            token
-        });
-    }
-    [Authorize]
-    [HttpGet("me")]
-    public IActionResult Me()
-    {
-        var permissions = User.FindAll("permission")
-            .Select(c => c.Value)
-            .Distinct()
-            .ToList();
-
-        var roles = User.FindAll(ClaimTypes.Role)
-            .Select(c => c.Value)
-            .Distinct()
-            .ToList();
-
-        return Ok(new
-        {
-            userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            username = User.Identity?.Name,
-            roles,
-            permissions
-        });
+        return Ok(result);
     }
 
-    [Authorize]
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized(new { message = "User tidak valid" });
-        }
+    //[Authorize]
+    //[HttpPost("logout")]
+    //public async Task<IActionResult> Logout()
+    //{
+    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        await _authService.LogoutAsync(userId);
+    //    if (string.IsNullOrWhiteSpace(userId))
+    //    {
+    //        return Unauthorized(new { message = "User tidak valid" });
+    //    }
 
-        return Ok(new { message = "Logout berhasil" });
-    }
+    //    await _authService.LogoutAsync(userId);
+
+    //    return Ok(new { message = "Logout berhasil" });
+    //}
 }
     
 
