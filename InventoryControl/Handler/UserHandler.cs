@@ -1,5 +1,4 @@
 ﻿using InventoryControl.DTO;
-using InventoryControl.Models;
 using System.Text.Json;
 
 namespace InventoryControl.Handler; 
@@ -18,7 +17,6 @@ public class UserHandler : ICommandHandler
             { "CREATE", CreateUser },
             { "UPDATE", UpdateUser },
             { "DELETE", DeleteUser },
-            { "GET", GetUser }
         };
     }
 
@@ -67,9 +65,4 @@ public class UserHandler : ICommandHandler
         await _service.DeleteAsync(id);
     }
 
-    private async Task GetUser(JsonElement data)
-    {
-        var id = data.GetProperty("userId").GetString();
-        await _service.GetByIdAsync(id);
-    }
 }

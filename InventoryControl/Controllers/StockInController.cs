@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 
-[Authorize]
 [ApiController]
-[Route("stock/in")]
+[Route("stockin")]
 public class StockApiController : ControllerBase
 {
     private readonly IStockInService _service;
@@ -18,7 +17,6 @@ public class StockApiController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "TRANS_STOCK_IN")]
     [HttpPost]
     public async Task<IActionResult> StockIn(StockInDto dto)
     {

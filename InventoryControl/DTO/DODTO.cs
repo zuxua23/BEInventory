@@ -1,7 +1,14 @@
 ﻿namespace InventoryControl.DTO;
 
-public class DOCreateRequest
+public class DODTO
 {
+    public string DoNumber { get; set; } = null!;
+    public string ScannerType { get; set; } = null!;
+    public List<DODetailCreateDto> Details { get; set; } = new();
+}
+public class DOUpdateDTO
+{
+    public string DoId { get; set; } = null!;
     public string DoNumber { get; set; } = null!;
     public string ScannerType { get; set; } = null!;
     public List<DODetailCreateDto> Details { get; set; } = new();

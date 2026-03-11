@@ -5,18 +5,18 @@ using StackExchange.Redis;
 using System.Text.Json;
 
 namespace InventoryControl.Consumers;
-public class RedisConsumer : BackgroundService
+public class ItemConsumer : BackgroundService
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    private const string STREAM = "stream:user";
-    private const string GROUP = "user-group";
+    private const string STREAM = "stream:item";
+    private const string GROUP = "item-group";
 
     private readonly string _consumerName =
         Environment.MachineName + "-" + Guid.NewGuid();
 
-    public RedisConsumer(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory)
+    public ItemConsumer(IConnectionMultiplexer redis, IServiceScopeFactory scopeFactory)
     {
                 _redis = redis;
         _scopeFactory = scopeFactory;

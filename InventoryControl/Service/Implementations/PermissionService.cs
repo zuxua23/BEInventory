@@ -104,7 +104,7 @@ public class PermissionService : IPermissionService
         }
     }
 
-    public async Task UpdateAsync(string id, PermissionDto dto, string updatedBy)
+    public async Task UpdateAsync(string id, PermissionUpdateDto dto, string updatedBy)
     {
         try
         {

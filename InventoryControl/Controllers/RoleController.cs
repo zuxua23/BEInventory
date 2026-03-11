@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize]
 [ApiController]
 [Route("role")]
 public class RoleApiController : ControllerBase
@@ -18,14 +17,12 @@ public class RoleApiController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "MASTER_ROLE_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
-    [Authorize(Policy = "MASTER_ROLE_CREATE")]
     [HttpPost]
     public async Task<IActionResult> Create(RoleDto dto)
     {
@@ -34,7 +31,6 @@ public class RoleApiController : ControllerBase
         return Ok(new { message = "Role berhasil dibuat" });
     }
 
-    [Authorize(Policy = "MASTER_ROLE_ASSIGN_PERMISSION")]
     [HttpPost("{roleId}/permissions")]
     public async Task<IActionResult> AssignPermission(string roleId, AssignPermissionDto dto)
     {
@@ -42,7 +38,6 @@ public class RoleApiController : ControllerBase
         return Ok(new { message = "Permission berhasil ditambahkan ke role" });
     }
 
-    [Authorize(Policy = "MASTER_USER_ASSIGN_ROLE")]
     [HttpPost("user/{userId}")]
     public async Task<IActionResult> AssignRoleToUser(string userId, AssignRoleDto dto)
     {

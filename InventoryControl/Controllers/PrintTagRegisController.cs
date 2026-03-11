@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
 [Route("tag")]
 public class PrintTagRegisController: ControllerBase
@@ -19,8 +18,7 @@ public class PrintTagRegisController: ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "PRINT_TAG")]
-    [HttpPost("print")]
+    [HttpPost]
     public async Task<IActionResult> Print(PrintTagDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -29,8 +27,7 @@ public class PrintTagRegisController: ControllerBase
         return Ok(new { message = "Print berhasil", batchNo = batch });
     }
 
-    [Authorize(Policy = "REGISTER_TAG")]
-    [HttpPost("register")]
+    [HttpPost]
     public async Task<IActionResult> Register(TagRegistrationDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -40,8 +37,7 @@ public class PrintTagRegisController: ControllerBase
         return Ok(new { message = "Tag berhasil di-standby-kan" });
     }
 
-    [Authorize(Policy = "REGISTER_TAG")]
-    [HttpGet("print-history")]
+    [HttpGet]
     public async Task<IActionResult> GetPrintHistory()
     {
         var data = await _service.GetAvailableTagsAsync();

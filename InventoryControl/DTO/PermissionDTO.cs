@@ -5,6 +5,12 @@ public class PermissionDto
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
 }
+public class PermissionUpdateDto
+{
+    public string PermissionId { get; set; } = null!;
+    public string Code { get; set; } = null!;
+    public string Name { get; set; } = null!;
+}
 
 public class PermissionResponseDto
 {

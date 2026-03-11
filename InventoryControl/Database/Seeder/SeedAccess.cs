@@ -15,46 +15,48 @@ public class SeedAccess
         var permissionSeeds = new List<(string Code, string Name, string PerId)>
 {
     // MASTER ITEM
-    ("MASTER_ITEM_VIEW", "View Master Item", "PER001"),
-    ("MASTER_ITEM_CREATE", "Create Master Item", "PER002"),
-    ("MASTER_ITEM_UPDATE", "Update Master Item", "PER003"),
-    ("MASTER_ITEM_DELETE", "Delete Master Item", "PER004"),
+    ("ITEM_GET", "View Master Item", "PER001"),
+    ("ITEM_CREATE", "Create Master Item", "PER002"),
+    ("ITEM_UPDATE", "Update Master Item", "PER003"),
+    ("ITEM_DELETE", "Delete Master Item", "PER004"),
 
     // TAG
-    ("PRINT_TAG", "Print Tag", "PER005"),
-    ("REGISTER_TAG", "Reprint Tag", "PER029"),
+    ("TAG_PRINT", "Print Tag", "PER005"),
+    ("TAG_REGISTER", "Reprint Tag", "PER006"),
 
     // STOCK
-    ("TRANS_STOCK_IN", "Stock In", "PER008"),
-    ("TRANS_STOCK_PREPARATION", "Stock Preparation", "PER009"),
-    ("TRANS_STOCK_OUT", "Stock Out", "PER010"),
+    ("STOCK_IN", "Stock In", "PER007"),
+    ("STOCK_PREPARATION", "Stock Preparation", "PER008"),
+    ("STOCK_OUT", "Stock Out", "PER009"),
 
     // DO
-    ("MASTER_DO_VIEW", "View DO", "PER011"),
-    ("MASTER_DO_CREATE", "Create DO", "PER012"),
+    ("DO_GET", "View DO", "PER010"),
+    ("DO_CREATE", "Create DO", "PER011"),
+    ("DO_UPDATE", "Update DO", "PER012"),
 
     // LOCATION
-    ("MASTER_LOCATION_VIEW", "View Location", "PER013"),
-    ("MASTER_LOCATION_CREATE", "Create Location", "PER014"),
-    ("MASTER_LOCATION_UPDATE", "Update Location", "PER025"),
-    ("MASTER_LOCATION_DELETE", "Delete Location", "PER026"),
+    ("LOCATION_GET", "View Location", "PER013"),
+    ("LOCATION_CREATE", "Create Location", "PER014"),
+    ("LOCATION_UPDATE", "Update Location", "PER015"),
+    ("LOCATION_DELETE", "Delete Location", "PER016"),
 
     // READER
-    ("MASTER_READER_VIEW", "View Reader", "PER015"),
-    ("MASTER_READER_CREATE", "Create Reader", "PER016"),
-    ("MASTER_READER_DELETE", "Delete Reader", "PER027"),
-    ("MASTER_READER_UPDATE", "Update Reader", "PER028"),
+    ("READER_VIEW", "View Reader", "PER017"),
+    ("READER_CREATE", "Create Reader", "PER018"),
+    ("READER_DELETE", "Delete Reader", "PER019"),
+    ("READER_UPDATE", "Update Reader", "PER020"),
 
     // STOCK TAKING
-    ("TRANS_STOCK_TAKING_CREATE", "Create Stock Taking", "PER017"),
-    ("TRANS_STOCK_TAKING_SCAN", "Scan Stock Taking", "PER018"),
-    ("TRANS_STOCK_TAKING_REMOVE", "Remove Stock Taking", "PER019"),
-    ("TRANS_STOCK_TAKING_FINALIZE", "Finalize Stock Taking", "PER020"),
+    ("STOCK_TAKING_CREATE", "Create Stock Taking", "PER021"),
+    ("STOCK_TAKING_SCAN", "Scan Stock Taking", "PER022"),
+    ("STOCK_TAKING_REMOVE", "Remove Stock Taking", "PER023"),
+    ("STOCK_TAKING_MANUAL", "Manual Stock Taking", "PER024"),
+    ("STOCK_TAKING_FINALIZE", "Finalize Stock Taking", "PER025"),
 
-                ("USER_GET", "View Master User","PER021"),
-            ("USER_CREATE", "Create Master User", "PER022"),
-            ("USER_UPDATE", "Update Master User", "PER023"),
-            ("USER_DELETE", "Delete Master User", "PER024"),
+                ("USER_GET", "View Master User","PER026"),
+            ("USER_CREATE", "Create Master User", "PER027"),
+            ("USER_UPDATE", "Update Master User", "PER028"),
+            ("USER_DELETE", "Delete Master User", "PER029"),
 };
         foreach (var (code, name, perid) in permissionSeeds)
         {
@@ -132,7 +134,7 @@ public class SeedAccess
         }
 
         var stockInPermission = allPermissions
-            .FirstOrDefault(p => p.Code == "TRANS_STOCK_IN");
+            .FirstOrDefault(p => p.Code == "STOCK_IN");
 
         if (stockInPermission != null)
         {

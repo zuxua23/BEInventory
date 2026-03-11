@@ -7,7 +7,6 @@ using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("do")]
 public class DOApiController : ControllerBase
@@ -19,16 +18,14 @@ public class DOApiController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "MASTER_DO_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
-    [Authorize(Policy = "MASTER_DO_CREATE")]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] DOCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] DODTO request)
     {
         if (request.Details == null || !request.Details.Any())
             return BadRequest("Detail DO tidak boleh kosong");
@@ -40,7 +37,6 @@ public class DOApiController : ControllerBase
         return Ok(new { message = "DO berhasil dibuat" });
     }
 
-    [Authorize(Policy = "TRANS_DO_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
@@ -48,8 +44,7 @@ public class DOApiController : ControllerBase
         return Ok(new { message = "User berhasil dihapus" });
     }
 
-    [Authorize(Policy = "TRANS_DO_UPDATE_STATUS")]
-    [HttpPut("status/{id}")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
     {
         await _service.UpdateStatusAsync(id, dto.Status);

@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize]
 [ApiController]
-[Route("stock-taking")]
+[Route("stocktaking")]
 public class StockTakingController : ControllerBase
 {
     private readonly IStockTakingService _service;
@@ -18,7 +17,7 @@ public class StockTakingController : ControllerBase
         _service = service;
     }
 
-    [HttpPost("create")]
+    [HttpPost]
     public async Task<IActionResult> Create(StockTakingCreateDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -26,35 +25,35 @@ public class StockTakingController : ControllerBase
         return Ok(new { StockTakingId = id });
     }
 
-    [HttpGet("stock-data")]
+    [HttpGet]
     public async Task<IActionResult> GetStockData()
     {
         var data = await _service.GetStockDataAsync();
         return Ok(data);
     }
 
-    [HttpPost("scan")]
+    [HttpPost]
     public async Task<IActionResult> Scan(StockTakingScanDto dto)
     {
         await _service.ScanAsync(dto);
         return Ok(new { message = "Tag discan" });
     }
 
-    [HttpPost("remove")]
+    [HttpPost]
     public async Task<IActionResult> Remove(StockTakingRemoveDto dto)
     {
         await _service.RemoveAsync(dto);
         return Ok(new { message = "Tag ditandai remove" });
     }
 
-    [HttpPost("manual-add")]
+    [HttpPost]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
         await _service.ManualAddAsync(dto);
         return Ok(new { message = "Manual add dicatat" });
     }
 
-    [HttpPost("finalize")]
+    [HttpPost]
     public async Task<IActionResult> Finalize(StockTakingFinalizeDto dto)
     {
         var user = User.Identity?.Name ?? "system";

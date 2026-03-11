@@ -1,9 +1,10 @@
-﻿using System.Collections.Concurrent;
-using InventoryControl.Database;
+﻿using InventoryControl.Database;
+using InventoryControl.DTO;
 using InventoryControl.Helpers;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 public class ReaderScan
 {
@@ -21,14 +22,14 @@ public class ReaderScan
     }
     private static HashSet<string> allowedTags = new();
 
-    public async Task StartScanAsync(string readerId, string doId, string user)
+    public async Task StartScanAsync(StockOutResponseDto dto, string user)
     {
         var reader = await _db.Readers
-            .FirstOrDefaultAsync(r => r.RdrId == readerId && !r.IsDelete);
+            .FirstOrDefaultAsync(r => r.RdrId == dto.ReaderId && !r.IsDelete);
 
         if (reader == null)
         {
-            DailyFileLogger.Warn($"Reader dengan RdrId {readerId} tidak ditemukan.");
+            DailyFileLogger.Warn($"Reader dengan RdrId {dto.ReaderId} tidak ditemukan.");
             throw new Exception("Reader tidak ditemukan");
         }
 
@@ -38,7 +39,7 @@ public class ReaderScan
             .Include(x => x.Tag)
             .Where(x =>
                 x.Transaction.TrsType == "STOCK_PREPARATION" &&
-                x.Transaction.ReferenceId == doId)
+                x.Transaction.ReferenceId == dto.DoId)
             .Select(x => x.Tag.EpcTag)
             .ToListAsync())
             .ToHashSet();
@@ -52,7 +53,7 @@ public class ReaderScan
             if (!scannedTags.TryAdd(epc, true))
                 return;
 
-            await _stockOutService.ScanStockOutAsync(doId, readerId, epc, user);
+            await _stockOutService.ScanStockOutAsync(dto, user);
         });
     }
 

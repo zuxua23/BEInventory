@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 
-[Authorize]
 [ApiController]
-[Route("stock/preparation")]
+[Route("stockpreparation")]
 public class StockPreparationController : ControllerBase
 {
     private readonly IStockPreparationService _service;
@@ -18,7 +17,6 @@ public class StockPreparationController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "TRANS_STOCK_PREPARATION")]
     [HttpPost]
     public async Task<IActionResult> Prepare(StockPreparationRequestDto dto)
     {

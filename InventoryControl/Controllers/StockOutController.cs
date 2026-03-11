@@ -7,9 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 
-[Authorize]
 [ApiController]
-[Route("stock/out")]
+[Route("stockout")]
 public class StockOutController : ControllerBase
 {
     private readonly IStockOutService _service;
@@ -20,7 +19,6 @@ public class StockOutController : ControllerBase
         _readerScan = scan;
     }
 
-    [Authorize(Policy = "TRANS_STOCK_OUT")]
     [HttpPost]
     public async Task<IActionResult> Finalize(StockOutDto dto)
     {
@@ -29,13 +27,20 @@ public class StockOutController : ControllerBase
 
         return Ok(new { message = "Stock Out berhasil difinalisasi" });
     }
-
-    [HttpPost("start")]
-    public async Task<IActionResult> StartScan(string readerId, string doId)
+    [HttpPost]
+    public async Task<IActionResult> Scan(StockOutResponseDto dto)
     {
         var user = User.Identity?.Name ?? "system";
+         await _service.ScanStockOutAsync(dto, user);
+        return Ok(new { message = "Stock Out berhasil dibuat" });
+    }
 
-        await _readerScan.StartScanAsync(readerId, doId, user);
+
+    [HttpPost("start")]
+    public async Task<IActionResult> StartScan(StockOutResponseDto dto, string doId)
+    {
+
+        await _readerScan.StartScanAsync(dto, doId);
 
         return Ok("Reader scanning started");
     }

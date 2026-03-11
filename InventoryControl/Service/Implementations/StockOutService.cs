@@ -126,18 +126,18 @@ public class StockOutService : IStockOutService
     }
 
 
-    public async Task ScanStockOutAsync(string doId, string readerId, string epc, string user)
+    public async Task ScanStockOutAsync(StockOutResponseDto dto, string user)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
 
         try
         {
             var tag = await _db.Tags
-                .FirstOrDefaultAsync(t => t.EpcTag == epc);
+                .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
 
             if (tag == null)
             {
-                DailyFileLogger.Warn($"ScanStockOut: EPC {epc} tidak ditemukan");
+                DailyFileLogger.Warn($"ScanStockOut: EPC {dto.Epc} tidak ditemukan");
                 return;
             }
 
@@ -152,11 +152,11 @@ public class StockOutService : IStockOutService
                 .FirstOrDefaultAsync(x =>
                     x.TagId == tag.Id &&
                     x.Transaction.TrsType == "STOCK_PREPARATION" &&
-                    x.Transaction.ReferenceId == doId);
+                    x.Transaction.ReferenceId == dto.DoId);
 
             if (reserved == null)
             {
-                DailyFileLogger.Warn($"ScanStockOut: Tag {tag.TagId} tidak termasuk DO {doId}");
+                DailyFileLogger.Warn($"ScanStockOut: Tag {tag.TagId} tidak termasuk DO {dto.DoId}");
                 return;
             }
 
@@ -168,8 +168,8 @@ public class StockOutService : IStockOutService
             {
                 TrsId = Guid.NewGuid().ToString(),
                 TrsType = "STOCK_OUT",
-                ReferenceId = doId,
-                ReaderId = readerId,
+                ReferenceId = dto.DoId,
+                ReaderId = dto.ReaderId,
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             };
@@ -187,7 +187,7 @@ public class StockOutService : IStockOutService
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
 
-            DailyFileLogger.Info($"ScanStockOut berhasil. DO={doId}, Tag={tag.TagId}, Reader={readerId}");
+            DailyFileLogger.Info($"ScanStockOut berhasil. DO={dto.DoId}, Tag={tag.TagId}, Reader={dto.ReaderId}");
         }
         catch (Exception ex)
         {

@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
@@ -31,7 +30,8 @@ builder.Services.AddSingleton<JwtTokenHelper>();
 builder.Services.AddScoped<CommandDispatcher>();
 builder.Services.AddApplicationServices();
 builder.Services.AddCommandHandlers();
-builder.Services.AddHostedService<RedisConsumer>();
+builder.Services.AddHostedService<UserConsumer>();
+builder.Services.AddHostedService<ItemConsumer>();
 
 #endregion
 

@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize]
 [ApiController]
 [Route("permission")]
 public class PermissionApiController : ControllerBase
@@ -18,14 +17,12 @@ public class PermissionApiController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "MASTER_PERMISSION_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
-    [Authorize(Policy = "MASTER_PERMISSION_CREATE")]
     [HttpPost]
     public async Task<IActionResult> Create(PermissionDto dto)
     {
@@ -34,16 +31,14 @@ public class PermissionApiController : ControllerBase
         return Ok(new { message = "Permission berhasil dibuat" });
     }
 
-    [Authorize(Policy = "MASTER_PERMISSION_UPDATE")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, PermissionDto dto)
+    public async Task<IActionResult> Update(string id, PermissionUpdateDto dto)
     {
         var updatedBy = Request.Headers["X-User-Id"].FirstOrDefault() ?? "system";
         await _service.UpdateAsync(id, dto, updatedBy);
         return Ok(new { message = "Permission berhasil diperbarui" });
     }
 
-    [Authorize(Policy = "MASTER_PERMISSION_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {

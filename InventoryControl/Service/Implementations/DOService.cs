@@ -68,7 +68,7 @@ public class DOService : IDOService
 
     }
 
-    public async Task CreateAsync(DOCreateRequest request, string createdBy)
+    public async Task CreateAsync(DODTO request, string createdBy)
     {
         try
         {
@@ -103,6 +103,51 @@ public class DOService : IDOService
             throw;
         }
         
+    }
+    public async Task UpdateAsync(string id, DOUpdateDTO dto)
+    {
+        try
+        {
+            var doEntity = await _db.DOs
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x => x.DoId == id && !x.IsDelete);
+
+            if (doEntity == null)
+            {
+                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan");
+                throw new Exception("DO tidak ditemukan");
+            }
+
+            if (doEntity.Status != "DRAFT")
+            {
+                DailyFileLogger.Warn($"DO dengan ID: {id} tidak bisa diupdate karena status bukan DRAFT");
+                throw new Exception("DO hanya bisa diupdate jika status masih DRAFT");
+            }
+
+            doEntity.DoNumber = dto.DoNumber;
+            doEntity.ScannerType = dto.ScannerType;
+
+            _db.DODetails.RemoveRange(doEntity.Details);
+
+            var newDetails = dto.Details.Select(d => new DODetail
+            {
+                DoDetailId = Guid.NewGuid().ToString(),
+                DoId = doEntity.DoId,
+                ItemId = d.ItemId,
+                QtyRequired = d.QtyRequired
+            }).ToList();
+
+            _db.DODetails.AddRange(newDetails);
+
+            await _db.SaveChangesAsync();
+
+            DailyFileLogger.Info($"Berhasil update DO dengan ID: {id}");
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Gagal update DO dengan ID: {id}", ex);
+            throw;
+        }
     }
 
     public async Task UpdateStatusAsync(string id, string status)

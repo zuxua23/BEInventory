@@ -8,7 +8,6 @@ using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
 [Route("location")]
 public class LocationApiController : ControllerBase
@@ -20,14 +19,12 @@ public class LocationApiController : ControllerBase
         _service = service;
     }
 
-    [Authorize(Policy = "MASTER_LOCATION_VIEW")]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());    
     }
 
-    [Authorize(Policy = "MASTER_LOCATION_CREATE")]
     [HttpPost]
     public async Task<IActionResult> Create(LocationDTO dto)
     {
@@ -37,7 +34,6 @@ public class LocationApiController : ControllerBase
         return Ok(new { message = "Location berhasil dibuat" });
     }
 
-    [Authorize(Policy = "MASTER_LOCATION_UPDATE")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, LocationDTO dto)
     {
@@ -46,7 +42,6 @@ public class LocationApiController : ControllerBase
         return Ok(new { message = "Location berhasil diubah" });
     }
 
-    [Authorize(Policy = "MASTER_LOCATION_DELETE")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
