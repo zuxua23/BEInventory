@@ -55,7 +55,9 @@ public class LocationHandler : ICommandHandler
             });
         if (dto == null)
             throw new Exception("Invalid location data");
-        await _service.UpdateAsync(dto.LocId, dto, "system");
+        var id = data.GetProperty("id").GetString();
+
+        await _service.UpdateAsync(id, dto, "system");
     }
 
     private async Task DeleteLocation(JsonElement data)

@@ -1,4 +1,4 @@
-﻿using InventoryControl.Consumers;
+﻿using InventoryControl.Consumer;
 using InventoryControl.Database;
 using InventoryControl.Database.Seeder;
 using InventoryControl.Handler;
@@ -12,11 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(
     ConnectionMultiplexer.Connect(
         builder.Configuration["Redis:Connection"]
     )
 );
+
 
 #region DATABASE
 builder.Services.AddDbContext<AppDBContext>(options =>
@@ -30,39 +32,27 @@ builder.Services.AddSingleton<JwtTokenHelper>();
 builder.Services.AddScoped<CommandDispatcher>();
 builder.Services.AddApplicationServices();
 builder.Services.AddCommandHandlers();
-builder.Services.AddHostedService<UserConsumer>();
-builder.Services.AddHostedService<ItemConsumer>();
 
 #endregion
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<ICommandHandler>()
+    .AddClasses(classes => classes.AssignableTo<ICommandHandler>())
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
 
-
+builder.Services.AddHostedService<RedisStreamConsumer>();
 #region MVC + API
-//builder.Services.AddControllersWithViews();
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    //options.JsonSerializerOptions.WriteIndented = true;
 });
 #endregion
 
-
-//#region AUTHORIZATION (ROLE + PERMISSION)
-//builder.Services.AddAuthorization();
-
-//builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
-
-//builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-//#endregion
 
 
 var app = builder.Build();
 
 #region MIDDLEWARE PIPELINE
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Error");
-//    app.UseHsts();
-//}
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

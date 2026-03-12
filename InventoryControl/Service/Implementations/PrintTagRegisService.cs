@@ -1,4 +1,5 @@
-﻿using InventoryControl.Database;
+﻿using InTheHand.Net.Bluetooth;
+using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Helpers;
@@ -39,7 +40,9 @@ public class PrintTagRegisService : IPrintTagRegisService
                 throw new Exception("Item tidak ditemukan");
             }
 
-            var printerName = "SATO CL4NX Plus (SmaPri)";
+            //var printerName = "SATO CL4NX Plus (SmaPri)";
+            //var printerName = "SATO PRINTER_d";
+            //var bdAddress = "84253f9fc39d";
 
             var lastTag = await _db.Tags
                 .OrderByDescending(t => t.TagId)
@@ -98,15 +101,30 @@ public class PrintTagRegisService : IPrintTagRegisService
                 var qr = tagId;
 
                 var sbpl = BuildSBPL(epc, item.Name, dto.Qty, qr);
+                BluetoothRadio.PrimaryRadio.Mode = RadioMode.Connectable;
+                //bool printed = PrinterHelper.SendStringToPrinter(printerName, sbpl);
 
-                bool printed = PrinterHelper.SendStringToPrinter(printerName, sbpl);
+                //var macAddress = "84253f9fc39d";
+                //var macAddress = "84:25:3F:9F:C3:9D";
+
+                //var bytes = SBPLStringToBytes(sbpl);
+                //bool printed = BluetoothPrinterHelper.SendRawBytes(macAddress, bytes); Console.WriteLine(sbpl);
+                //if (!printed)
+                //{
+                //    DailyFileLogger.Error($"PrintAsync gagal kirim ke printer. Tag: {tagId}", null);
+                //    throw new Exception("Gagal mengirim data ke printer SATO");
+                //}
+
+                var test = "\u0002\u001BA\u001B%1\u001BH0100\u001BV0100\u001BP02TEST\u001BQ1\u001BZ\u0003";
+
+                var bytes = Encoding.ASCII.GetBytes(test);
+
+                BluetoothPrinterHelper.SendRawBytes("84253f9fc39d", bytes);
+                Console.WriteLine("PRINT SBPL:");
                 Console.WriteLine(sbpl);
-                if (!printed)
-                {
-                    DailyFileLogger.Error($"PrintAsync gagal kirim ke printer. Tag: {tagId}", null);
-                    throw new Exception("Gagal mengirim data ke printer SATO");
-                }
 
+                Console.WriteLine("BYTES LENGTH: " + bytes.Length);
+                //Console.WriteLine("MAC: " + macAddress);
                 DailyFileLogger.Info($"Tag berhasil dibuat dan dikirim ke printer. TagId: {tagId}");
             }
 
@@ -120,30 +138,46 @@ public class PrintTagRegisService : IPrintTagRegisService
             throw;
         }
     }
+    private byte[] SBPLStringToBytes(string sbpl)
+    {
+        var bytes = new List<byte>();
 
+        foreach (char c in sbpl)
+        {
+            switch (c)
+            {
+                case '\u0002': bytes.Add(0x02); break;
+                case '\u0003': bytes.Add(0x03); break;
+                case '\u001B': bytes.Add(0x1B); break;
+                default: bytes.Add((byte)c); break;
+            }
+        }
+
+        return bytes.ToArray();
+    }
     private string BuildSBPL(string epc, string itemName, int qty, string qr)
     {
         return $@"
-            AA3V+00000H+0000CS6#F5A1V00901H0300Z
-            APSWKlabel_ajg
-            IP0e:h,epc:{epc},fsw:1;
-            %1
-            H0040
-            V00866
-            2D30,L,06,1,0
-            DN0009,{qr}
-            %1
-            H0053
-            V00701
-            P02
-            RH0,SATO0.ttf,0,022,025,Item No : {itemName}
-            %1
-            H0096
-            V00699
-            P02
-            RH0,SATO0.ttf,0,022,025,Qty : {qty}
-            Q1
-            Z";
+AA3V+00000H+0000CS6#F5A1V00901H0300Z
+APSWKlabel_ajg
+IP0e:h,epc:{epc},fsw:1;
+%1
+H0040
+V00866
+2D30,L,06,1,0
+DN0009,{qr}
+%1
+H0053
+V00701
+P02
+RH0,SATO0.ttf,0,022,025,Item No : {itemName}
+%1
+H0096
+V00699
+P02
+RH0,SATO0.ttf,0,022,025,Qty : {qty}
+Q1
+Z";
     }
 
 
