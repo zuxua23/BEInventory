@@ -29,6 +29,7 @@ public class RedisStreamConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Console.WriteLine("=== REDIS CONSUMER STARTED ===");
         var db = _redis.GetDatabase();
 
         foreach (var stream in _streams)

@@ -18,17 +18,29 @@ public class PrintTagRegisHandler : ICommandHandler
         };
     }
 
-    public string TrxType => "PRINT_TAG_REGIS";
+    public string TrxType => "TAG";
 
     public async Task HandleAsync(string action, JsonElement data)
     {
         if (!_actions.TryGetValue(action, out var handler))
             throw new Exception($"Action {action} not supported for PRINT_TAG_REGIS");
         await handler(data);
+        Console.WriteLine("=== HANDLER MASUK ===");
+        Console.WriteLine($"ACTION: {action}");
+        Console.WriteLine($"DATA: {data}");
+
+   
+
     }
 
     private async Task PrintTagRegis(JsonElement data)
     {
+        Console.WriteLine("=== MASUK PRINT TAG REGIS ===");
+
+        var raw = data.GetRawText();
+        Console.WriteLine($"RAW JSON: {raw}");
+
+
         var dto = JsonSerializer.Deserialize<PrintTagDto>(
             data.GetRawText(),
             new JsonSerializerOptions
