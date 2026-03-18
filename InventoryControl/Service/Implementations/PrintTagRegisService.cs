@@ -50,7 +50,7 @@ public class PrintTagRegisService : IPrintTagRegisService
             if (location == null)
                 throw new Exception("Location STAGING tidak ditemukan");
 
-            var printerIp = "172.20.10.3";
+            var printerIp = "10.49.238.230";
             var port = 9100;
 
             var filePath = Path.Combine(
@@ -66,7 +66,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                 var epc = $"A{item.ItmId}{lastNumber:D10}";
                 var qr = tagId;
 
-                var sbpl = BuildSBPL(epc, item.Name, qr, dto.Qty);
+                var sbpl = BuildSBPL(epc, item.ItmId, qr, dto.Qty);
 
                 var bytes = SBPLStringToBytes(sbpl);
 
@@ -75,7 +75,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                 Console.WriteLine("HEX:");
                 Console.WriteLine(string.Join(" ", bytes.Select(b => b.ToString("X2"))));
 
-                bool printed = PW4NX_Helper.SendToPrinter("172.20.10.3", 9100, bytes);
+                bool printed = PW4NX_Helper.SendToPrinter(printerIp, 9100, bytes);
 
                 if (!printed)
                 {
@@ -138,22 +138,24 @@ public class PrintTagRegisService : IPrintTagRegisService
 A
 %1
 H0040
-V00666
+V00336
 2D30,L,06,1,0
 DN0009,{QR}
 %1
 H0053
-V00501
+V00201
 P02
-RH0,SATO0.ttf,0,063,069,Item No : {ITEM}
+RH0,SATO0.ttf,0,028,031,ITEM : {ITEM}
 Q1
-Z";
+Z
+A
+PH";
 
-    private string BuildSBPL(string epc, string itemName, string qr, int qty)
+    private string BuildSBPL(string epc, string itemId, string qr, int qty)
     {
         return SBPL_TEMPLATE
             .Replace("{EPC}", epc)
-            .Replace("{ITEM}", itemName)
+            .Replace("{ITEM}", itemId)
             .Replace("{QR}", qr)
             .Replace("{QTY}", qty.ToString());
     }
