@@ -25,6 +25,16 @@ public class LocationApiController : ControllerBase
         return Ok(await _service.GetAllAsync());    
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var data = await _service.GetByIdAsync(id);
+        if (data == null)
+            return NotFound();
+
+        return Ok(data);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(LocationDTO dto)
     {
