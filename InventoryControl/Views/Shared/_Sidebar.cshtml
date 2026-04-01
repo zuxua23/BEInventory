@@ -15,7 +15,7 @@
                 <li class="nav-item">
                     <a asp-controller="Home" asp-action="Index"
                        class="nav-link @(ViewData["pages"] == "home" ? "active" : "")">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <i class="nav-icon fas fa-home"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
@@ -59,7 +59,7 @@
                                     asp-action="Index"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "item" ? "active" : "")">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Product</p>
+                                        <p>Item</p>
                                     </a>
                                 </li>
                             }
@@ -72,7 +72,7 @@
                                     asp-action="Index"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "location" ? "active" : "")">
                                         <i class="far fa-circle nav-icon"></i>
-                                        <p>Warehouse</p>
+                                        <p>Location</p>
                                     </a>
                                 </li>
                             }
@@ -168,8 +168,8 @@
                 text: "Keluar dari sistem?",
                 icon: "question",
                 showCancelButton: true,
-                confirmButtonColor: "#6c757d",
-                cancelButtonColor: "#dc3545",
+                confirmButtonColor: "#dc3545",
+                cancelButtonColor: "#6c757d",
                 confirmButtonText: "Logout",
                 cancelButtonText: "Batal"
             }).then((result) => {

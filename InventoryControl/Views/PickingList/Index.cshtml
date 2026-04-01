@@ -2,67 +2,90 @@
 
     <div class="wrapper">
 
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="~/img/sato.svg" height="200">
-        </div>
-
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
+            <section class="content-header">
                 <div class="container-fluid">
-                    <div class="row mb-2">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                        <div class="col-sm-6">
-                            <h1>Picking List</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Picking List</h1>
+                                <p class="mb-0 text-muted small">Manage delivery picking process</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Picking List</li>
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Picking List
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
+            </section>
 
             <section class="content">
                 <div class="container-fluid">
 
-                    <div class="card card-primary">
+                    <div class="row">
+                        <div class="col-12">
 
-                        <div class="card-header">
-                            <h3 class="card-title">Picking List</h3>
-                        </div>
+                            <div class="card card-primary card-outline shadow-lg">
 
-                        <div class="card-body">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Picking List Data
+                                        </h3>
 
-                            <div class="row mb-3">
-                                <div class="col-12 d-flex justify-content-end">
-                                    <button class="btn btn-primary" data-toggle="modal" data-target="#createPickingList">
-                                        Create PickingList
-                                    </button>
+                                        <button class="btn btn-primary btn-icon-split"
+                                                data-toggle="modal"
+                                                data-target="#createPickingList">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-plus"></i>
+                                            </span>
+                                            <span class="text">Create</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card-body pt-3">
+
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th>DO Number</th>
+                                                    <th>Scanner</th>
+                                                    <th>Status</th>
+                                                    <th class="text-center" width="160">Actions</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <table id="datatablesIndex" class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>DO Number</th>
-                                        <th>Scanner</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
-
                         </div>
-
                     </div>
 
                 </div>
@@ -74,13 +97,12 @@
 
     </div>
 
-    <!-- MODAL CREATE -->
     <div class="modal fade" id="createPickingList">
         <div class="modal-dialog">
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5>Create PickingList</h5>
+                    <h5>Create Picking List</h5>
                     <button class="close" data-dismiss="modal">&times;</button>
                 </div>
 
@@ -88,12 +110,18 @@
                     <div class="modal-body">
 
                         <div class="form-group">
-                            <label>DO Number</label>
+                            <label>
+                                <i class="fas fa-barcode text-muted mr-2"></i>
+                                DO Number <span class="text-danger">*</span>
+                            </label>
                             <input type="text" name="doNumber" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Scanner Type</label>
+                            <label>
+                                <i class="fas fa-qrcode text-muted mr-2"></i>
+                                Scanner Type <span class="text-danger">*</span>
+                            </label>
                             <select name="scannerType" class="form-control" required>
                                 <option value="">-- Pilih Scanner --</option>
                                 <option value="RFID">RFID</option>
@@ -103,12 +131,16 @@
 
                         <div id="detailContainer"></div>
 
-                        <button type="button" class="btn btn-sm btn-success" onclick="addDetail()">+ Item</button>
+                        <button type="button" class="btn btn-success btn-sm mt-2" onclick="addDetail()">
+                            <i class="fas fa-plus mr-1"></i>Item
+                        </button>
 
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary btn-modern">
+                            <i class="fas fa-save mr-1"></i>Create
+                        </button>
                     </div>
                 </form>
 
@@ -128,8 +160,6 @@
             });
 
             const data = await response.json();
-
-            console.log("ITEM DATA:", data); 
 
             let options = `<option value="">-- Select ITEM --</option>`;
 
@@ -157,6 +187,16 @@
                 credentials: "include"
             });
 
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return;
+            }
+
+            if (response.status === 403) {
+                Swal.fire("Akses ditolak", "", "warning");
+                return;
+            }
+
             const data = await response.json();
 
             if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
@@ -165,27 +205,55 @@
 
             table = $("#datatablesIndex").DataTable({
                 data: data,
-                columns: [
-                    { data: null, render: (d,t,r,m)=>m.row+1 },
-                    { data: "doNumber" },
-                    { data: "scannerType" },
-                    { data: "status" },
+
+                responsive: true,
+                pageLength: 25,
+
+                columnDefs: [
                     {
+                        targets: 0,
                         data: null,
-                        render: function (data) {
-                            return `
-                                <a href="/pickinglist/detail?id=${data.doId}" class="btn btn-info btn-sm">Detail</a>
-                                <button class="btn btn-danger btn-sm"
-                                    onclick="deletePickingList('${data.doId}')">
-                                    Delete
+                        render: (d, t, r, m) =>
+                            m.row + m.settings._iDisplayStart + 1,
+                        className: "text-center",
+                        orderable: false
+                    },
+                    { targets: 1, data: "doNumber" },
+                    { targets: 2, data: "scannerType" },
+                    { targets: 3, data: "status" },
+                    {
+                        targets: 4,
+                        data: null,
+                        render: data => `
+                            <div class="btn-group btn-group-sm">
+                                <a href="/pickinglist/detail?id=${data.doId}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-danger"
+                                        onclick="deletePickingList('${data.doId}')">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                            `;
-                        }
+                            </div>
+                        `,
+                        className: "text-center",
+                        orderable: false
                     }
-                ]
+                ],
+
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: " Search picking list...",
+                    lengthMenu: "Show _MENU_ Data",
+                    paginate: { first: "«", last: "»", next: "›", previous: "‹" }
+                },
+
+                dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                     "<'table-responsive card-body p-0't>" +
+                     "<'row mt-3'<'col-md-5'i><'col-md-7'p>>"
             });
         }
-         $(document).on("click", ".remove-item", function () {
+
+        $(document).on("click", ".remove-item", function () {
 
             let row = $(this).closest(".detail-item");
 
@@ -204,6 +272,7 @@
                 }
             });
         });
+
         function addDetail() {
 
             if ($("#detailContainer .item-header").length === 0) {
@@ -219,16 +288,14 @@
             $("#detailContainer").append(`
                 <div class="row mb-2 detail-item align-items-center">
                     <div class="col">
-                        <select class="form-control item-select" required>
-                            <option value="">-- Select Item --</option>
-                        </select>
+                        <select class="form-control item-select" required></select>
                     </div>
                     <div class="col">
                         <input class="form-control qty" placeholder="Qty" type="number">
                     </div>
                     <div class="col-2 text-center">
                         <button type="button" class="btn btn-danger btn-sm remove-item">
-                            Hapus
+                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
@@ -244,19 +311,18 @@
 
             let details = [];
 
-        $("#detailContainer .detail-item").each(function () {
-            details.push({
-                itemId: $(this).find(".item-select").val(),
-                qtyRequired: parseInt($(this).find(".qty").val())
+            $("#detailContainer .detail-item").each(function () {
+                details.push({
+                    itemId: $(this).find(".item-select").val(),
+                    qtyRequired: parseInt($(this).find(".qty").val())
+                });
             });
-        });
 
             const payload = {
                 doNumber: form.doNumber.value,
                 scannerType: form.scannerType.value,
                 details
             };
-        console.log("PAYLOAD:", payload);
 
             const response = await fetch("/api/pickinglist", {
                 method: "POST",
@@ -266,9 +332,11 @@
             });
 
             if (response.ok) {
+
                 Swal.fire({
                     icon: "success",
-                    title: "Picking List created",
+                    title: "Berhasil",
+                    text: "Picking List berhasil dibuat",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -276,18 +344,32 @@
                     form.reset();
                     loadDO();
                 });
+
             } else {
+
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to create Picking List"
+                    title: "Gagal",
+                    text: "Create picking list gagal"
                 });
+
             }
         });
 
         async function deletePickingList(id) {
 
-            if (!confirm("Delete Picking List ini?")) return;
+            const result = await Swal.fire({
+                title: "Yakin?",
+                text: "Data akan dihapus!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal"
+            });
+
+            if (!result.isConfirmed) return;
 
             const response = await fetch(`/api/pickinglist/${id}`, {
                 method: "DELETE",
@@ -295,20 +377,23 @@
             });
 
             if (response.ok) {
+
                 Swal.fire({
                     icon: "success",
-                    title: "Deleted",
+                    title: "Berhasil",
+                    text: "Data berhasil dihapus",
                     timer: 1500,
                     showConfirmButton: false
-                }).then(() => {
-                    loadDO();
-                });
+                }).then(() => loadDO());
+
             } else {
+
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to delete"
+                    title: "Gagal",
+                    text: "Delete gagal"
                 });
+
             }
         }
 

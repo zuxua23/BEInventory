@@ -1,0 +1,115 @@
+﻿/*==Dashboard==*/
+body {
+    background: #f4f6f9;
+}
+
+.content-wrapper {
+    background: linear-gradient(180deg, #f4f6f9 0%, #eef2f7 100%);
+}
+
+.dashboard-card {
+    padding: 18px;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    transition: all 0.25s ease;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 30px rgba(0,0,0,0.08);
+    }
+
+.dashboard-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+}
+
+.bg-item {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.bg-location {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+}
+
+.bg-reader {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+}
+
+.bg-picking {
+    background: linear-gradient(135deg, #f83600, #f9d423);
+}
+
+.kpi-number {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.kpi-label {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-draft {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.status-prep {
+    background: rgba(23, 162, 184, 0.15);
+    color: #17a2b8;
+}
+
+.status-done {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.system-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.system-online {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.row-equal-height {
+    display: flex;
+}
+
+    .row-equal-height > [class*='col-'] {
+        display: flex;
+    }
+
+.card {
+    width: 100%;
+}
+
+.card-full-height {
+    width: 100%;
+    height: 100%;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+Could you help me develop this dashboard design to make it look more professional and modern, but not monotonous in terms of colour? At the moment, it’s just white, which makes it a bit hard to see and lacks colour, so it needs to look more professional.

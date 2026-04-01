@@ -2,93 +2,98 @@
 
     <div class="wrapper">
 
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="~/img/sato.svg" height="200">
-        </div>
-
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
+            <section class="content-header">
                 <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                    <div class="row mb-2">
-
-                        <div class="col-sm-6">
-                            <h1>User</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-users nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">User Management</h1>
+                                <p class="mb-0 text-muted small">Manage system users</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item active">User</li>
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-users mr-1"></i>User
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
-
+            </section>
 
             <section class="content">
-
                 <div class="container-fluid">
 
-                    <div class="card card-primary">
+                    <div class="card card-primary card-outline shadow-lg">
 
-                        <div class="card-header">
-                            <h3 class="card-title">User List</h3>
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title font-weight-bold mb-0">
+                                    <i class="fas fa-list mr-2 text-primary"></i>
+                                    User List
+                                </h3>
+
+                                <button class="btn btn-primary btn-icon-split"
+                                        data-toggle="modal"
+                                        data-target="#createUser">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                    <span class="text">Create</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body pt-3">
 
-                            <div class="row mb-3">
-
-                                <div class="col-12 d-flex justify-content-end">
-                                    <button class="btn btn-primary" data-toggle="modal" data-target="#createUser">
-                                        Create User
-                                    </button>
-                                </div>
-
+                            <div class="table-responsive">
+                                <table id="datatablesIndex" class="table table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center" width="60">#</th>
+                                            <th>User ID</th>
+                                            <th>Full Name</th>
+                                            <th>Username</th>
+                                            <th class="text-center" width="160">Actions</th>
+                                        </tr>
+                                    </thead>
+                                </table>
                             </div>
-
-
-                            <table id="datatablesIndex" class="table table-bordered table-hover">
-
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>User ID</th>
-                                        <th>Full Name</th>
-                                        <th>Username</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-
-                            </table>
 
                         </div>
 
                     </div>
 
                 </div>
-
             </section>
 
         </div>
-
 
         @Html.Partial("_Footer")
 
     </div>
 
-
     <div class="modal fade" id="createUser">
-
         <div class="modal-dialog modal-lg">
-
             <div class="modal-content">
 
                 <div class="modal-header">
@@ -103,32 +108,32 @@
 
                             <div class="col-6">
                                 <div class="form-group">
-                                    <label>User ID</label>
+                                    <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
                                     <input type="text" id="userId" name="userId" class="form-control" readonly>
                                 </div>
                             </div>
 
                             <div class="col-6">
                                 <div class="form-group">
-                                    <label>Full Name</label>
+                                    <label><i class="fas fa-id-card mr-2"></i>Full Name</label>
                                     <input type="text" name="fullname" class="form-control" required>
                                 </div>
                             </div>
 
                         </div>
+
                         <div class="row">
 
                             <div class="col-6">
                                 <div class="form-group">
-                                    <label>Username</label>
+                                    <label><i class="fas fa-user mr-2"></i>Username</label>
                                     <input type="text" name="username" class="form-control" required>
                                 </div>
                             </div>
 
-
                             <div class="col-6">
                                 <div class="form-group">
-                                    <label>Password</label>
+                                    <label><i class="fas fa-lock mr-2"></i>Password</label>
                                     <input type="password" name="password" class="form-control" required>
                                 </div>
                             </div>
@@ -138,10 +143,9 @@
                     </div>
 
                     <div class="modal-footer">
-
-                        <button class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button class="btn btn-primary">Create</button>
-
+                        <button class="btn btn-primary btn-modern">
+                            <i class="fas fa-save mr-1"></i>Create
+                        </button>
                     </div>
 
                 </form>
@@ -150,58 +154,46 @@
         </div>
     </div>
 
-
-
-
-
     @Html.Partial("_BaseScript")
 
     <script>
-         function generateUserId(data) {
+
+        function generateUserId(data) {
 
             let max = 0;
 
             data.forEach(user => {
-
                 if (!user.userId) return;
-
                 let number = parseInt(user.userId.replace("USR", ""));
-
-                if (number > max) {
-                    max = number;
-                }
-
+                if (number > max) max = number;
             });
 
             let next = max + 1;
-
             let formatted = "USR" + String(next).padStart(5, '0');
 
             $("#userId").val(formatted);
-
         }
 
         let table;
 
         $(document).ready(function () {
-
             loadUsers();
-
         });
 
-            async function loadUsers() {
+        async function loadUsers() {
 
             const response = await fetch("/api/user", {
                 method: "GET",
                 credentials: "include"
             });
+
             if(response.status === 401){
-                alert("Session expired. Please login again.");
                 window.location.href = "/login";
                 return;
             }
-             if(response.status === 403){
-                alert("Tidak punya akses");
+
+            if(response.status === 403){
+                Swal.fire("Akses ditolak","","warning");
                 return;
             }
 
@@ -212,47 +204,49 @@
             }
 
             table = $("#datatablesIndex").DataTable({
-
                 data: data,
-
-                columns: [
-
+                responsive: true,
+                pageLength: 25,
+                columnDefs: [
                     {
+                        targets: 0,
                         data: null,
-                        render: (data, type, row, meta) => meta.row + 1
+                        render: (d,t,r,m)=>m.row + m.settings._iDisplayStart + 1,
+                        className:"text-center",
+                        orderable:false
                     },
-
-                    { data: "userId" },
-
-                    { data: "fullname" },
-
-                    { data: "username" },
-
+                    { targets:1, data:"userId" },
+                    { targets:2, data:"fullname" },
+                    { targets:3, data:"username" },
                     {
-                        data: null,
-                        render: function (data) {
-
-                            return `
-                            <a href="/user/detail?id=${data.id}"
-                               class="btn btn-info btn-sm">
-                               Detail
-                            </a>
-
-                            <button class="btn btn-danger btn-sm"
-                                onclick="deleteUser('${data.id}')">
-                                Delete
-                            </button>
-                            `;
-                        }
+                        targets:4,
+                        data:null,
+                        render:data=>`
+                            <div class="btn-group btn-group-sm">
+                                <a href="/user/detail?id=${data.id}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-danger"
+                                        onclick="deleteUser('${data.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `,
+                        className:"text-center",
+                        orderable:false
                     }
-
-                ]
-
+                ],
+                language:{
+                    search:"_INPUT_",
+                    searchPlaceholder:" Search user...",
+                    lengthMenu:"Show _MENU_ Data",
+                    paginate:{ first:"«", last:"»", next:"›", previous:"‹" }
+                },
+                dom:"<'row mb-3'<'col-md-6'l><'col-md-6'f>>"+
+                    "<'table-responsive card-body p-0't>"+
+                    "<'row mt-3'<'col-md-5'i><'col-md-7'p>>"
             });
-
         }
-
-
 
         $("#createUserForm").submit(async function (e) {
             e.preventDefault();
@@ -260,88 +254,66 @@
             const form = e.target;
 
             const payload = {
-                    username: form.username.value,
-                    fullname: form.fullname.value,
-                    password: form.password.value
-                
+                username: form.username.value,
+                fullname: form.fullname.value,
+                password: form.password.value
             };
 
             const response = await fetch("/api/user", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
+                method:"POST",
+                credentials:"include",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify(payload)
             });
 
             if (response.ok) {
-                               Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'User berhasil dibuat',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-
-                $("#createUser").modal("hide");
-
-                form.reset();
-
-                loadUsers();
-                });
-
-            } else {
-
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: 'Create User gagal'
+                    icon:'success',
+                    title:'Berhasil',
+                    timer:1500,
+                    showConfirmButton:false
+                }).then(()=>{
+                    $("#createUser").modal("hide");
+                    form.reset();
+                    loadUsers();
                 });
+            } else {
+                Swal.fire({ icon:'error', title:'Gagal create user' });
             }
-
         });
-
 
         async function deleteUser(id) {
 
-            if (!confirm("Delete user ini?"))
-                return;
+            const result = await Swal.fire({
+                title:"Yakin?",
+                text:"User akan dihapus",
+                icon:"warning",
+                showCancelButton:true,
+                confirmButtonColor:"#d33",
+                cancelButtonColor:"#6c757d"
+            });
 
+            if (!result.isConfirmed) return;
 
             const response = await fetch(`/api/user/${id}`, {
-                method: "DELETE",
-                credentials: "include"
+                method:"DELETE",
+                credentials:"include"
             });
 
             if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'User berhasil dihapus',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-
-                loadUsers();
-                });
-
-            } else {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: 'Delete user gagal'
-                });
+                    icon:'success',
+                    timer:1500,
+                    showConfirmButton:false
+                }).then(()=>loadUsers());
+            } else {
+                Swal.fire({ icon:'error', title:'Gagal delete' });
             }
-
         }
 
-                $('#createUser').on('shown.bs.modal', function () {
-
+        $('#createUser').on('shown.bs.modal', function () {
             const data = table.rows().data().toArray();
-
             generateUserId(data);
-
         });
 
     </script>

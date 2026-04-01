@@ -2,67 +2,90 @@
 
     <div class="wrapper">
 
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="~/img/sato.svg" height="200">
-        </div>
-
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
+            <section class="content-header">
                 <div class="container-fluid">
-                    <div class="row mb-2">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                        <div class="col-sm-6">
-                            <h1>Location</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-map nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Location Management</h1>
+                                <p class="mb-0 text-muted small">Manage your location data</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Location</li>
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-map mr-1"></i>Location
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
+            </section>
 
             <section class="content">
                 <div class="container-fluid">
 
-                    <div class="card card-primary">
+                    <div class="row">
+                        <div class="col-12">
 
-                        <div class="card-header">
-                            <h3 class="card-title">Location List</h3>
-                        </div>
+                            <div class="card card-primary card-outline shadow-lg">
 
-                        <div class="card-body">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Location List
+                                        </h3>
 
-                            <div class="row mb-3">
-                                <div class="col-12 d-flex justify-content-end">
-                                    <button class="btn btn-primary" data-toggle="modal" data-target="#createLocation">
-                                        Create Location
-                                    </button>
+                                        <button class="btn btn-primary btn-icon-split"
+                                                data-toggle="modal"
+                                                data-target="#createLocation">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-plus"></i>
+                                            </span>
+                                            <span class="text">Create</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card-body pt-3">
+
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th class="text-nowrap">Location ID</th>
+                                                    <th>Name</th>
+                                                    <th>Description</th>
+                                                    <th class="text-center" width="160">Actions</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <table id="datatablesIndex" class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Location ID</th>
-                                        <th>Name</th>
-                                        <th>Description</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
-
                         </div>
-
                     </div>
 
                 </div>
@@ -74,7 +97,6 @@
 
     </div>
 
-    <!-- MODAL CREATE -->
     <div class="modal fade" id="createLocation">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -88,17 +110,26 @@
                     <div class="modal-body">
 
                         <div class="form-group">
-                            <label>Location ID</label>
+                            <label>
+                                <i class="fas fa-hashtag text-muted mr-2"></i>
+                                Location ID
+                            </label>
                             <input type="text" name="locId" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Name</label>
+                            <label>
+                                <i class="fas fa-tag text-muted mr-2"></i>
+                                Name <span class="text-danger">*</span>
+                            </label>
                             <input type="text" name="name" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Description</label>
+                            <label>
+                                <i class="fas fa-align-left text-muted mr-2"></i>
+                                Description
+                            </label>
                             <textarea name="description" class="form-control"></textarea>
                         </div>
 
@@ -106,7 +137,9 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary btn-modern">
+                            <i class="fas fa-save mr-1"></i>Create
+                        </button>
                     </div>
                 </form>
 
@@ -126,25 +159,18 @@
 
         async function loadLocations() {
 
-            // const payload = {
-            //     trx_type: "LOCATION",
-            //     action: "GET",
-            //     data: {}
-            // };
-
             const response = await fetch("/api/location", {
                 method: "GET",
-        credentials: "include"  
+                credentials: "include"
             });
 
-            if(response.status === 401) {
-                alert("Session expired. Please login again.");
+            if (response.status === 401) {
                 window.location.href = "/login";
                 return;
             }
 
-            if(response.status === 403) {
-                alert("You don't have access to view locations.");
+            if (response.status === 403) {
+                Swal.fire("Akses ditolak", "", "warning");
                 return;
             }
 
@@ -156,29 +182,62 @@
 
             table = $("#datatablesIndex").DataTable({
                 data: data,
-                columns: [
-                    {
-                        data: null,
-                        render: (data, type, row, meta) => meta.row + 1
-                    },
-                    { data: "locId" },
-                    { data: "name" },
-                    { data: "description" },
-                    {
-                        data: null,
-                        render: function (data) {
-                            return `
-                                <a href="/location/detail?id=${data.id}" class="btn btn-info btn-sm">Detail</a>
-                                <button class="btn btn-danger btn-sm"
-                                    onclick="deleteLocation('${data.id}')">
-                                    Delete
-                                </button>
-                            `;
-                        }
-                    }
-                ]
-            });
 
+                responsive: true,
+                pageLength: 25,
+
+                columnDefs: [
+                    {
+                        targets: 0,
+                        data: null,
+                        render: (data, type, row, meta) =>
+                            meta.row + meta.settings._iDisplayStart + 1,
+                        className: "text-center",
+                        orderable: false
+                    },
+                    {
+                        targets: 1,
+                        data: "locId",
+                        className: "text-nowrap"
+                    },
+                    {
+                        targets: 2,
+                        data: "name"
+                    },
+                    {
+                        targets: 3,
+                        data: "description"
+                    },
+                    {
+                        targets: 4,
+                        data: null,
+                        render: data => `
+                            <div class="btn-group btn-group-sm">
+                                <a href="/location/detail?id=${data.id}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-danger"
+                                        onclick="deleteLocation('${data.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `,
+                        className: "text-center",
+                        orderable: false
+                    }
+                ],
+
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: " Search location...",
+                    lengthMenu: "Show _MENU_ Data",
+                    paginate: { first: "«", last: "»", next: "›", previous: "‹" }
+                },
+
+                dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                     "<'table-responsive card-body p-0't>" +
+                     "<'row mt-3'<'col-md-5'i><'col-md-7'p>>"
+            });
         }
 
         $("#createLocationForm").submit(async function (e) {
@@ -187,10 +246,9 @@
             const form = e.target;
 
             const payload = {
-                    locId: form.locId.value,
-                    name: form.name.value,
-                    description: form.description.value
-                
+                locId: form.locId.value,
+                name: form.name.value,
+                description: form.description.value
             };
 
             const response = await fetch("/api/location", {
@@ -201,50 +259,66 @@
             });
 
             if (response.ok) {
+
                 Swal.fire({
                     icon: "success",
-                    title: "Location created successfully",
-                    showConfirmButton: false,
-                    timer: 1500
+                    title: "Berhasil",
+                    text: "Location berhasil dibuat",
+                    timer: 1500,
+                    showConfirmButton: false
                 }).then(() => {
-
-                $("#createLocation").modal("hide");
-                form.reset();
-                loadLocations();
+                    $("#createLocation").modal("hide");
+                    form.reset();
+                    loadLocations();
                 });
+
             } else {
+
                 Swal.fire({
                     icon: "error",
-                    title: "Failed to create location",
-                    text: "Please try again."
+                    title: "Gagal",
+                    text: "Create location gagal"
                 });
+
             }
         });
 
         async function deleteLocation(id) {
 
-            if (!confirm("Delete location ini?")) return;
+            const result = await Swal.fire({
+                title: "Yakin?",
+                text: "Location akan dihapus!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Ya, hapus!",
+                cancelButtonText: "Batal"
+            });
 
+            if (!result.isConfirmed) return;
 
-        const response = await fetch(`/api/location/${id}`, {
-                    method: "DELETE",
-                credentials: "include",
+            const response = await fetch(`/api/location/${id}`, {
+                method: "DELETE",
+                credentials: "include"
             });
 
             if (response.ok) {
+
                 Swal.fire({
                     icon: "success",
-                    title: "Location deleted successfully",
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                loadLocations();
-                });
+                    title: "Berhasil",
+                    text: "Location berhasil dihapus",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => loadLocations());
+
             } else {
+
                 Swal.fire({
                     icon: "error",
-                    title: "Failed to delete location",
-                    text: "Please try again."
+                    title: "Gagal",
+                    text: "Delete location gagal"
                 });
 
             }

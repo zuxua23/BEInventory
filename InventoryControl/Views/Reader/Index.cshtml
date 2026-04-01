@@ -1,137 +1,152 @@
 <body class="hold-transition sidebar-mini layout-fixed">
 
-<div class="wrapper">
+    <div class="wrapper">
 
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="~/img/sato.svg" height="200">
-        </div>
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
-    @Html.Partial("_Navbar")
-    @Html.Partial("_Sidebar")
+        <div class="content-wrapper">
 
-    <div class="content-wrapper">
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-broadcast-tower nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Reader Management</h1>
+                                <p class="mb-0 text-muted small">Manage reader devices</p>
+                            </div>
+                        </div>
 
-                    <div class="col-sm-6">
-                        <h1>Reader</h1>
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-broadcast-tower mr-1"></i>Reader
+                                </li>
+                            </ol>
+                        </nav>
+
                     </div>
-
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Reader</li>
-                        </ol>
-                    </div>
-
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <section class="content">
-            <div class="container-fluid">
+            <section class="content">
+                <div class="container-fluid">
 
-                <div class="card card-primary">
+                    <div class="card card-primary card-outline shadow-lg">
 
-                    <div class="card-header">
-                        <h3 class="card-title">Reader List</h3>
-                    </div>
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title font-weight-bold mb-0">
+                                    <i class="fas fa-list mr-2 text-primary"></i>
+                                    Reader List
+                                </h3>
 
-                    <div class="card-body">
-
-                        <div class="row mb-3">
-                            <div class="col-12 d-flex justify-content-end">
-                                <button class="btn btn-primary" data-toggle="modal" data-target="#createReader">
-                                    Create Reader
+                                <button class="btn btn-primary btn-icon-split"
+                                        data-toggle="modal"
+                                        data-target="#createReader">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                    <span class="text">Create</span>
                                 </button>
                             </div>
                         </div>
 
-                        <table id="datatablesIndex" class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Reader ID</th>
-                                    <th>Name</th>
-                                    <th>Location</th>
-                                    <th>IP Address</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                        </table>
+                        <div class="card-body pt-3">
 
-                    </div>
+                            <div class="table-responsive">
+                                <table id="datatablesIndex" class="table table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center" width="60">#</th>
+                                            <th>Reader ID</th>
+                                            <th>Name</th>
+                                            <th>Location</th>
+                                            <th>IP Address</th>
+                                            <th class="text-center" width="160">Actions</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
 
-                </div>
-
-            </div>
-        </section>
-
-    </div>
-
-    @Html.Partial("_Footer")
-
-</div>
-
-<!-- MODAL -->
-<div class="modal fade" id="createReader">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5>Create Reader</h5>
-                <button class="close" data-dismiss="modal">&times;</button>
-            </div>
-
-            <form id="createReaderForm">
-                <div class="modal-body">
-
-                    <div class="form-group">
-                        <label>Reader ID</label>
-                        <input type="text" name="rdrId" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" name="rdrName" class="form-control" required>
-                    </div>
-
-                        <div class="form-group">
-                            <label>Location</label>
-                            <select name="locId" id="locIdSelect" class="form-control" required>
-                                <option value="">-- Select Location --</option>
-                            </select>
                         </div>
 
-                    <div class="form-group">
-                        <label>IP Address</label>
-                        <input type="text" name="ipAddress" class="form-control" required>
                     </div>
 
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
+            </section>
 
         </div>
+
+        @Html.Partial("_Footer")
+
     </div>
-</div>
 
-@Html.Partial("_BaseScript")
+    <div class="modal fade" id="createReader">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
-<script>
+                <div class="modal-header">
+                    <h5>Create Reader</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
 
+                <form id="createReaderForm">
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <label><i class="fas fa-hashtag mr-2"></i>Reader ID</label>
+                            <input type="text" name="rdrId" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-tag mr-2"></i>Name</label>
+                            <input type="text" name="rdrName" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt mr-2"></i>Location</label>
+                            <select name="locId" id="locIdSelect" class="form-control" required></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-network-wired mr-2"></i>IP Address</label>
+                            <input type="text" name="ipAddress" class="form-control" required>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary btn-modern">
+                            <i class="fas fa-save mr-1"></i>Create
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script>
 
         async function loadLocationDropdown() {
 
             const response = await fetch("/api/location", {
                 method: "GET",
-                        credentials: "include"
+                credentials: "include"
             });
 
             const data = await response.json();
@@ -145,101 +160,128 @@
             $("#locIdSelect").html(options);
         }
 
-let table;
+        let table;
 
-$(document).ready(function () {
-    loadReaders();
-});
-
-async function loadReaders() {
-
-    const response = await fetch("/api/reader", {
-        method: "GET",
-                credentials: "include"
-    });
-
-    const data = await response.json();
-
-    if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-        $('#datatablesIndex').DataTable().clear().destroy();
-    }
-
-    table = $("#datatablesIndex").DataTable({
-        data: data,
-        columns: [
-            {
-                data: null,
-                render: (data, type, row, meta) => meta.row + 1
-            },
-            { data: "rdrId" },
-            { data: "rdrName" },
-            {data: "locationName",defaultContent : "-"},
-            { data: "ipAddress" },
-            {
-                data: null,
-                render: function (data) {
-                    return `
-                        <a href="/reader/detail?id=${data.id}" class="btn btn-info btn-sm">Detail</a>
-                        <button class="btn btn-danger btn-sm"
-                            onclick="deleteReader('${data.id}')">
-                            Delete
-                        </button>
-                    `;
-                }
-            }
-        ]
-    });
-}
-
-$("#createReaderForm").submit(async function (e) {
-    e.preventDefault();
-
-    const form = e.target;
-
-    const payload = {
-            rdrId: form.rdrId.value,
-            rdrName: form.rdrName.value,
-            locId: form.locId.value,
-            ipAddress: form.ipAddress.value
-    };
-            console.log("Payload:", payload);
-            if (!form.locId.value) {
-            Swal.fire({
-                icon: "warning",
-                title: "Location wajib dipilih"
-            });
-            return;
-        }
-    const response = await fetch("/api/reader", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-        Swal.fire({
-            icon: "success",
-            title: "Reader created",
-            timer: 1500,
-            showConfirmButton: false
-         }).then(() => {
-        $("#createReader").modal("hide");
-        form.reset();
-        loadReaders();
+        $(document).ready(function () {
+            loadReaders();
         });
-    } else {
-        Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Failed to create reader"
+
+        async function loadReaders() {
+
+            const response = await fetch("/api/reader", {
+                method: "GET",
+                credentials: "include"
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await response.json();
+
+            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
+                $('#datatablesIndex').DataTable().clear().destroy();
+            }
+
+            table = $("#datatablesIndex").DataTable({
+                data: data,
+                responsive: true,
+                pageLength: 25,
+                columnDefs: [
+                    {
+                        targets: 0,
+                        data: null,
+                        render: (d,t,r,m)=>m.row + m.settings._iDisplayStart + 1,
+                        className: "text-center",
+                        orderable: false
+                    },
+                    { targets: 1, data: "rdrId" },
+                    { targets: 2, data: "rdrName" },
+                    { targets: 3, data: "locationName", defaultContent:"-" },
+                    { targets: 4, data: "ipAddress" },
+                    {
+                        targets: 5,
+                        data: null,
+                        render: data => `
+                            <div class="btn-group btn-group-sm">
+                                <a href="/reader/detail?id=${data.id}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-danger"
+                                        onclick="deleteReader('${data.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `,
+                        className: "text-center",
+                        orderable: false
+                    }
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: " Search reader...",
+                    lengthMenu: "Show _MENU_ Data",
+                    paginate: { first: "«", last: "»", next: "›", previous: "‹" }
+                },
+                dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                     "<'table-responsive card-body p-0't>" +
+                     "<'row mt-3'<'col-md-5'i><'col-md-7'p>>"
+            });
+        }
+
+        $("#createReaderForm").submit(async function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+
+            if (!form.locId.value) {
+                Swal.fire({ icon:"warning", title:"Location wajib dipilih" });
+                return;
+            }
+
+            const payload = {
+                rdrId: form.rdrId.value,
+                rdrName: form.rdrName.value,
+                locId: form.locId.value,
+                ipAddress: form.ipAddress.value
+            };
+
+            const response = await fetch("/api/reader", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                Swal.fire({
+                    icon:"success",
+                    title:"Berhasil",
+                    timer:1500,
+                    showConfirmButton:false
+                }).then(()=>{
+                    $("#createReader").modal("hide");
+                    form.reset();
+                    loadReaders();
                 });
-    }
-});
+            } else {
+                Swal.fire({ icon:"error", title:"Gagal create" });
+            }
+        });
 
         async function deleteReader(id) {
 
-            if (!confirm("Delete reader ini?")) return;
+            const result = await Swal.fire({
+                title:"Yakin?",
+                text:"Data akan dihapus",
+                icon:"warning",
+                showCancelButton:true,
+                confirmButtonColor:"#d33",
+                cancelButtonColor:"#6c757d"
+            });
+
+            if (!result.isConfirmed) return;
 
             const response = await fetch(`/api/reader/${id}`, {
                 method: "DELETE",
@@ -248,19 +290,13 @@ $("#createReaderForm").submit(async function (e) {
 
             if (response.ok) {
                 Swal.fire({
-                    icon: "success",
-                    title: "Reader deleted",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    loadReaders();
-                });
+                    icon:"success",
+                    title:"Berhasil",
+                    timer:1500,
+                    showConfirmButton:false
+                }).then(()=>loadReaders());
             } else {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to delete reader"
-                });
+                Swal.fire({ icon:"error", title:"Gagal delete" });
             }
         }
 
@@ -268,6 +304,6 @@ $("#createReaderForm").submit(async function (e) {
             loadLocationDropdown();
         });
 
-</script>
+    </script>
 
 </body>

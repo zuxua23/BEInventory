@@ -1,135 +1,200 @@
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
-<div class="wrapper">
+    <div class="wrapper">
 
-    @Html.Partial("_Navbar")
-    @Html.Partial("_Sidebar")
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
-    <div class="content-wrapper">
+        <div class="content-wrapper">
 
-        <div class="content-header">
-            <div class="container-fluid">
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                <div class="row mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-broadcast-tower nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail Reader</h1>
+                                <p class="mb-0 text-muted small">Manage reader device information</p>
+                            </div>
+                        </div>
 
-                    <div class="col-sm-6">
-                        <h1>Detail Reader</h1>
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/reader" class="text-muted">
+                                        <i class="fas fa-broadcast-tower mr-1"></i>Reader
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-info-circle mr-1"></i>Detail
+                                </li>
+                            </ol>
+                        </nav>
+
                     </div>
-
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="/reader">Reader</a></li>
-                            <li class="breadcrumb-item active">Detail</li>
-                        </ol>
-                    </div>
-
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <section class="content">
-            <div class="container-fluid">
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
 
-                <div class="card card-primary">
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
 
-                    <div class="card-header">
-                        <h3 class="card-title">Reader Detail</h3>
-                    </div>
+                                <div class="card-header">
+                                    <h3 class="card-title mb-0 font-weight-bold">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit Reader Information
+                                    </h3>
+                                </div>
 
-                    <div class="card-body">
+                                <div class="card-body">
 
-                        <div class="form-group">
-                            <label>Reader ID</label>
-                            <input id="rdrId" class="form-control" readonly>
-                        </div>
+                                    <form id="readerForm">
 
-                        <div class="form-group">
-                            <label>Name</label>
-                            <input id="rdrName" class="form-control">
-                        </div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-hashtag text-muted mr-2"></i>
+                                                Reader ID
+                                            </label>
+                                            <input id="rdrId" class="form-control" readonly>
+                                        </div>
 
-                            <div class="form-group">
-                                <label>Location</label>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-tag text-muted mr-2"></i>
+                                                Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="rdrName" class="form-control" required>
+                                        </div>
 
-                                <input type="hidden" id="locId">
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-map-marker-alt text-muted mr-2"></i>
+                                                Location
+                                            </label>
+                                            <input type="hidden" id="locId">
+                                            <input id="locationName" class="form-control" readonly>
+                                        </div>
 
-                                <input id="locationName" class="form-control" readonly>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-network-wired text-muted mr-2"></i>
+                                                IP Address <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="ipAddress" class="form-control" required>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+                                        <a href="/reader" class="btn btn-secondary btn-modern mr-3">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-primary btn-modern px-5"
+                                                onclick="updateReader()">
+                                            <i class="fas fa-save mr-2"></i>Update
+                                        </button>
+                                    </div>
+
+                                </div>
+
                             </div>
 
-                        <div class="form-group">
-                            <label>IP Address</label>
-                            <input id="ipAddress" class="form-control">
                         </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button class="btn btn-primary" onclick="updateReader()">
-                                Update
-                            </button>
-                        </div>
-
                     </div>
-
                 </div>
+            </section>
 
-            </div>
-        </section>
+        </div>
+
+        @Html.Partial("_Footer")
 
     </div>
 
-    @Html.Partial("_Footer")
+    @Html.Partial("_BaseScript")
 
-</div>
+    <script>
 
-@Html.Partial("_BaseScript")
+        let id = "@ViewData["id"]";
 
-<script>
+        $(document).ready(function () {
+            loadReader();
+        });
 
-let id = "@ViewData["id"]";
+        async function loadReader() {
 
-$(document).ready(function () {
-    loadReader();
-});
+            const response = await fetch(`/api/reader/${id}`, {
+                method: "GET",
+                credentials:"include",
+            });
 
-async function loadReader() {
+            if (!response.ok) {
+                Swal.fire({ icon: "error", title: "Gagal load data" });
+                return;
+            }
 
-    const response = await fetch(`/api/reader/${id}`, {
-        method: "GET",
-        credentials:"include",
-    });
+            const data = await response.json();
 
-    const data = await response.json();
+            $("#rdrId").val(data.rdrId);
+            $("#rdrName").val(data.rdrName);
+            $("#locId").val(data.locId);
+            $("#locationName").val(data.locationName);
+            $("#ipAddress").val(data.ipAddress);
+        }
 
-    $("#rdrId").val(data.rdrId);
-    $("#rdrName").val(data.rdrName);
-    $("#locId").val(data.locId);
-    $("#locationName").val(data.locationName);
-    $("#ipAddress").val(data.ipAddress);
-}
+        async function updateReader() {
 
-async function updateReader() {
+            const payload = {
+                rdrId: $("#rdrId").val(),
+                rdrName: $("#rdrName").val(),
+                locId: $("#locId").val(),
+                ipAddress: $("#ipAddress").val()
+            };
 
-    const payload = {
-            rdrId: $("#rdrId").val(),
-            rdrName: $("#rdrName").val(),
-            locId: $("#locId").val(),
-            ipAddress: $("#ipAddress").val()
-        
-    };
+            const response = await fetch(`/api/reader/${id}`, {
+                method: "PUT",
+                credentials:"include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-    const response = await fetch(`/api/reader/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+            if (response.ok) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Berhasil",
+                    text: "Reader berhasil diupdate",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/reader";
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Gagal",
+                    text: "Update gagal"
+                });
+            }
+        }
 
-    if (response.ok) {
-        alert("Reader updated");
-    } else {
-        alert("Update gagal");
-    }
-}
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && e.key === 'Enter') updateReader();
+            if (e.key === 'Escape') window.location.href = "/reader";
+        });
 
-</script>
+    </script>
 
 </body>

@@ -1,69 +1,84 @@
-<body class="hold-transition sidebar-mini layout-fixed">
+﻿<body class="hold-transition sidebar-mini layout-fixed">
 
     <div class="wrapper">
 
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="~/img/sato.svg" height="200">
-        </div>
 
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
+            <section class="content-header">
                 <div class="container-fluid">
-                    <div class="row mb-2">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                        <div class="col-sm-6">
-                            <h1>Item</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-boxes nav-icon text-primary" style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Item Management</h1>
+                                <p class="mb-0 text-muted small">Manage your inventory items</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item active">Item</li>
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    <i class="fas fa-box mr-1"></i>Items
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
+            </section>
 
             <section class="content">
                 <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <!-- CARD MODERN -->
+                            <div class="card card-primary card-outline shadow-lg">
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Item List
+                                        </h3>
+                                        <button class="btn btn-primary btn-icon-split" data-toggle="modal" data-target="#createItem">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-plus"></i>
+                                            </span>
+                                            <span class="text">Create</span>
+                                        </button>
+                                    </div>
+                                </div>
 
-                    <div class="card card-primary">
-
-                        <div class="card-header">
-                            <h3 class="card-title">Item List</h3>
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="row mb-3">
-                                <div class="col-12 d-flex justify-content-end">
-                                    <button class="btn btn-primary" data-toggle="modal" data-target="#createItem">
-                                        Create Item
-                                    </button>
+                                <div class="card-body pt-3">
+                                    <!-- TABLE RESPONSIVE -->
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover ">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th class="text-nowrap">Item ID</th>
+                                                    <th>Item Name</th>
+                                                    <th class="text-center" width="160">Actions</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-
-                            <table id="datatablesIndex" class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Item ID</th>
-                                        <th>Item Name</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
-
                         </div>
-
                     </div>
-
                 </div>
             </section>
 
@@ -108,6 +123,7 @@
     </div>
 
     @Html.Partial("_BaseScript")
+
 
     <script>
 
@@ -163,32 +179,83 @@
                 $('#datatablesIndex').DataTable().clear().destroy();
             }
 
-            table = $("#datatablesIndex").DataTable({
-                data: data,
-                columns: [
-                    {
-                        data: null,
-                        render: (data, type, row, meta) => meta.row + 1
-                    },
-                    { data: "itemId" },
-                    { data: "itemName" },
-                    {
-                        data: null,
-                        render: function (data) {
-                            return `
-                              <a href="/item/detail?id=${data.id}"
-                               class="btn btn-info btn-sm">
-                               Detail
+        table = $("#datatablesIndex").DataTable({
+            data: data,
+
+            responsive: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+
+            columnDefs: [
+                {
+                    targets: 0,
+                    data: null,
+                    render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1,
+                    orderable: false,
+                    searchable: false,
+                    width: "5%",
+                    className: "text-center"
+                },
+                {
+                    targets: 1,
+                    data: "itemId",
+                    width: "18%",
+                    orderable: true,
+                    className: "text-nowrap"
+                },
+                {
+                    targets: 2,
+                    data: "itemName",
+                    width: "55%",
+                    responsivePriority: 1
+                },
+                {
+                    targets: 3,
+                    data: null,
+                    render: data => `
+                        <div class="btn-group btn-group-sm">
+                            <a href="/item/detail?id=${data.id}" class="btn btn-info">
+                                <i class="fas fa-eye"></i>
                             </a>
-                                <button class="btn btn-danger btn-sm"
-                                    onclick="deleteItem('${data.id}')">
-                                    Delete
-                                </button>
-                            `;
-                        }
-                    }
-                ]
-            });
+                            <button class="btn btn-danger" onclick="deleteItem('${data.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `,
+                    orderable: false,
+                    width: "22%",
+                    className: "text-center",
+                    responsivePriority: 2
+                }
+            ],
+
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: " Search items...",
+                lengthMenu: "Show _MENU_ Items",
+                paginate: { first: "«", last: "»", next: "›", previous: "‹" },
+                info: "Showing _START_ to _END_ of _TOTAL_ items"
+            },
+
+            dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                 "<'table-responsive card-body p-0't>" +
+                 "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
+
+            scrollCollapse: true,
+            deferRender: true,
+
+            autoWidth:false,
+            fixedHeader:false,
+
+            drawCallback: function() {
+                $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
+                $('.dataTables_filter input').addClass('form-control rounded shadow-sm');
+
+                if($.fn.responsive){
+                    table.responsive.recalc();
+                }
+            }
+        });
 
         }
 
@@ -231,37 +298,49 @@
             }
         });
 
-           async function deleteItem(id) {
+             async function deleteItem(id) {
 
-            if (!confirm("Delete item ini?")) return;
+            const result = await Swal.fire({
+                title: 'Yakin?',
+                text: "Item akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            });
+
+            if (!result.isConfirmed) return;
 
             const response = await fetch(`/api/item/${id}`, {
                 method: "DELETE",
                 credentials: "include"
             });
 
-        if (response.ok) {
+            if (response.ok) {
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: 'Item berhasil dihapus',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                loadItems();
-            });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Item berhasil dihapus',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    loadItems();
+                });
 
-        } else {
+            } else {
 
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: 'Delete item gagal'
-            });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Delete item gagal'
+                });
 
             }
         }
+
          $('#createItem').on('shown.bs.modal', function () {
 
             const data = table.rows().data().toArray();
@@ -270,6 +349,25 @@
 
         });
 
+
+        $(window).on('resize', function() {
+            clearTimeout(window.datatableResizeTimeout);
+            window.datatableResizeTimeout = setTimeout(function() {
+                if (table) {
+                    table.columns.adjust().responsive.recalc();
+                }
+            }, 250); // 250ms debounce
+        });
+
+        $(document).ready(function() {
+            $(window).trigger('resize');
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && table) {
+                setTimeout(() => table.columns.adjust().responsive.recalc(), 100);
+            }
+        });
     </script>
 
 </body>

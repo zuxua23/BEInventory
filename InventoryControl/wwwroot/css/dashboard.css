@@ -1,0 +1,425 @@
+﻿/* ============================================================
+   Dashboard — Modern Redesign
+   Drop this into your site.css (or a dedicated dashboard.css)
+   and remove/replace any old /*==Dashboard==*/
+
+block.
+============================================================ */
+/* ---------- Page shell ---------- */
+.dash-content-wrapper {
+    background: #f5f6fa;
+}
+
+/* ---------- Page header ---------- */
+.dash-content-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e8eaf0;
+    padding: 14px 0;
+}
+
+.dash-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dash-page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dash-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #4f6ef7;
+}
+
+.dash-page-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1f3c;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.dash-page-sub {
+    font-size: 12px;
+    color: #8b8fa8;
+    margin: 2px 0 0;
+}
+
+.dash-page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-sync-pill {
+    font-size: 11px;
+    background: #eef2ff;
+    color: #4f6ef7;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dash-sync-dot {
+    font-size: 7px;
+    color: #22c55e;
+}
+
+/* ---------- KPI grid ---------- */
+.dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 992px) {
+    .dash-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .dash-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-kpi-card {
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .dash-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Decorative circle accent */
+    .dash-kpi-card::after {
+        content: '';
+        position: absolute;
+        right: -16px;
+        bottom: -16px;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.13);
+        pointer-events: none;
+    }
+
+.dash-kpi-blue {
+    background: linear-gradient(135deg, #4f6ef7 0%, #6d83f2 100%);
+}
+
+.dash-kpi-teal {
+    background: linear-gradient(135deg, #0ea5c2 0%, #22c9b0 100%);
+}
+
+.dash-kpi-violet {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.dash-kpi-amber {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.dash-kpi-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.78);
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.dash-kpi-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.dash-kpi-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    color: #ffffff;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- Bottom two-column grid ---------- */
+.dash-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 270px;
+    gap: 14px;
+    align-items: stretch;
+}
+
+@media (max-width: 992px) {
+    .dash-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Shared card ---------- */
+.dash-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e8eaf0;
+    overflow: hidden;
+}
+
+/* Table card stretches to match right column height */
+.dash-card-table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+    .dash-card-table .dash-table-wrap {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+.dash-card-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 18px;
+    border-bottom: 1px solid #f0f1f7;
+}
+
+.dash-card-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #4f6ef7;
+    flex-shrink: 0;
+}
+
+.dash-card-dot-green {
+    background: #22c55e;
+}
+
+.dash-card-dot-violet {
+    background: #7c3aed;
+}
+
+.dash-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1f3c;
+}
+
+/* ---------- Picking table ---------- */
+.dash-table-wrap {
+    overflow-x: auto;
+}
+
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 24px;
+}
+
+    .dash-table thead th {
+        padding: 9px 18px;
+        text-align: left;
+        color: #8b8fa8;
+        font-weight: 600;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        background: #fafbfd;
+        border-bottom: 1px solid #f0f1f7;
+    }
+
+    .dash-table tbody tr {
+        border-bottom: 1px solid #f5f6fa;
+        transition: background 0.12s;
+    }
+
+        .dash-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .dash-table tbody tr:hover {
+            background: #fafbfd;
+        }
+
+    .dash-table tbody td {
+        padding: 10px 18px;
+        color: #3a3f5c;
+        vertical-align: middle;
+    }
+
+.dash-table-empty {
+    text-align: center;
+    color: #8b8fa8;
+    font-size: 12px;
+    padding: 20px !important;
+}
+
+.dash-do-num {
+    font-weight: 600;
+    color: #1a1f3c;
+    font-size: 14px;
+}
+
+.dash-scanner-tag {
+    font-size: 14px;
+    background: #eef2ff;
+    color: #4f6ef7;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* Status badges */
+.dash-badge {
+    font-size: 1px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.dash-badge-draft {
+    background: #fff8e1;
+    color: #b45309;
+}
+
+.dash-badge-prep {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.dash-badge-done {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* ---------- Right column ---------- */
+.dash-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+}
+
+/* System status rows */
+.dash-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid #f5f6fa;
+    font-size: 13px;
+}
+
+.dash-status-row-last {
+    border-bottom: none;
+}
+
+.dash-status-label {
+    color: #6b7094;
+    font-size: 12px;
+}
+
+.dash-online-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.dash-status-online {
+    font-size: 11px;
+    font-weight: 700;
+    color: #15803d;
+}
+
+.dash-status-time {
+    font-size: 11px;
+    color: #8b8fa8;
+}
+
+/* Users card */
+.dash-card-users {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-users-body {
+    flex: 1;
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 140px;
+}
+
+.dash-users-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #4f6ef7;
+    margin-bottom: 8px;
+}
+
+.dash-users-num {
+    font-size: 34px;
+    font-weight: 700;
+    color: #1a1f3c;
+    line-height: 1;
+}
+
+.dash-users-label {
+    font-size: 11px;
+    color: #8b8fa8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}

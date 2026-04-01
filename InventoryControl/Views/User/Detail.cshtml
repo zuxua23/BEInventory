@@ -1,111 +1,107 @@
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
 
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
-
+            <section class="content-header">
                 <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                    <div class="row mb-2">
-
-                        <div class="col-sm-6">
-                            <h1>Detail User</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-user nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail User</h1>
+                                <p class="mb-0 text-muted small">Manage user information</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/user">User</a></li>
-                                <li class="breadcrumb-item active">Detail</li>
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/user" class="text-muted">
+                                        <i class="fas fa-users mr-1"></i>User
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-user mr-1"></i>Detail
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
-
+            </section>
 
             <section class="content">
-
                 <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
 
-                    <div class="card card-primary">
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
 
-                        <div class="card-header">
-                            <h3 class="card-title">User Detail</h3>
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="row">
-
-                                <div class="col-6">
-
-                                    <div class="form-group">
-                                        <label>User ID</label>
-                                        <input id="userId" class="form-control" readonly>
-                                    </div>
-
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold mb-0">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit User
+                                    </h3>
                                 </div>
 
-                                <div class="col-6">
+                                <div class="card-body">
 
-                                    <div class="form-group">
-                                        <label>Username</label>
-                                        <input id="username" class="form-control">
+                                    <form>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
+                                            <input id="userId" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-user mr-2"></i>Username</label>
+                                            <input id="username" class="form-control">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-id-card mr-2"></i>Full Name</label>
+                                            <input id="fullname" class="form-control">
+                                        </div>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+                                        <a href="/user" class="btn btn-secondary btn-modern mr-3">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                        <button class="btn btn-warning btn-modern mr-2"
+                                                data-toggle="modal"
+                                                data-target="#updatePassword">
+                                            <i class="fas fa-key mr-1"></i>Password
+                                        </button>
+                                        <button class="btn btn-primary btn-modern px-5"
+                                                onclick="updateUser()">
+                                            <i class="fas fa-save mr-2"></i>Update
+                                        </button>
                                     </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="row">
-
-                                <div class="col-12">
-
-                                    <div class="form-group">
-                                        <label>Full Name</label>
-                                        <input id="fullname" class="form-control">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="row">
-
-                                <div class="col-6"></div>
-
-                                <div class="col-6 d-flex justify-content-end">
-
-                                    <button class="btn btn-primary"
-                                            onclick="updateUser()">
-                                        Update
-                                    </button>
-
-                                    <button class="btn btn-secondary ml-2"
-                                            data-toggle="modal"
-                                            data-target="#updatePassword">
-                                        Update Password
-                                    </button>
 
                                 </div>
 
                             </div>
 
                         </div>
-
                     </div>
-
                 </div>
-
             </section>
 
         </div>
@@ -114,12 +110,8 @@
 
     </div>
 
-
-
     <div class="modal fade" id="updatePassword">
-
         <div class="modal-dialog">
-
             <div class="modal-content">
 
                 <div class="modal-header">
@@ -128,142 +120,104 @@
                 </div>
 
                 <div class="modal-body">
-
                     <div class="form-group">
-                        <label>New Password</label>
+                        <label><i class="fas fa-lock mr-2"></i>New Password</label>
                         <input type="password" id="newPassword" class="form-control">
                     </div>
-
                 </div>
 
                 <div class="modal-footer">
-
-                    <button class="btn btn-secondary" data-dismiss="modal">
-                        Close
+                    <button class="btn btn-primary btn-modern" onclick="updatePassword()">
+                        <i class="fas fa-save mr-1"></i>Update
                     </button>
-
-                    <button class="btn btn-primary"
-                            onclick="updatePassword()">
-                        Update
-                    </button>
-
                 </div>
 
             </div>
-
         </div>
-
     </div>
-
 
     @Html.Partial("_BaseScript")
 
     <script>
 
         let id = "@ViewData["id"]";
+
         $(document).ready(function(){
-
-        loadUser();
-
+            loadUser();
         });
-
-
 
         async function loadUser(){
 
-        const payload={
-        trx_type:"USER",
-        action:"GET",
-        data:{id:id}
-        };
+            const response=await fetch(`/api/user/${id}`,{
+                method:"GET",
+                credentials:"include"
+            });
 
-        const response=await fetch("/sato",{
-        method:"POST",
-        headers:{
-        "Content-Type":"application/json"
-        },
-        body:JSON.stringify(payload)
-        });
+            const user=await response.json();
 
-        const result=await response.json();
-
-        const user=result.data ?? result;
-
-        $("#userId").val(user.userId);
-        $("#username").val(user.username);
-        $("#fullname").val(user.fullname);
-
+            $("#userId").val(user.userId);
+            $("#username").val(user.username);
+            $("#fullname").val(user.fullname);
         }
-
-
 
         async function updateUser(){
 
-        const payload={
-        trx_type:"USER",
-        action:"UPDATE",
-        data:{
-            id:id,
-        userId:$("#userId").val(),
-        username:$("#username").val(),
-        fullname:$("#fullname").val()
+            const payload={
+                id:id,
+                userId:$("#userId").val(),
+                username:$("#username").val(),
+                fullname:$("#fullname").val()
+            };
+
+            const response=await fetch(`/api/user/${id}`,{
+                method:"PUT",
+                credentials:"include",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify(payload)
+            });
+
+            if(response.ok){
+                Swal.fire({
+                    icon:"success",
+                    title:"Berhasil",
+                    timer:1500,
+                    showConfirmButton:false
+                });
+            }else{
+                Swal.fire({ icon:"error", title:"Gagal update" });
+            }
         }
-        };
-
-        const response=await fetch("/sato",{
-        method:"POST",
-        headers:{
-        "Content-Type":"application/json"
-        },
-        body:JSON.stringify(payload)
-        });
-
-        if(response.ok){
-
-        alert("User updated");
-
-        }else{
-
-        alert("Update gagal");
-
-        }
-
-        }
-
-
 
         async function updatePassword(){
 
-        const payload={
-        trx_type:"USER",
-        action:"UPDATE",
-        data:{
-            id:id,
-            password:$("#newPassword").val()
-        }
-        };
+            const payload={
+                password:$("#newPassword").val()
+            };
 
-        const response=await fetch("/sato",{
-        method:"POST",
-        headers:{
-        "Content-Type":"application/json"
-        },
-        body:JSON.stringify(payload)
+            const response=await fetch(`/api/user/${id}`,{
+                method:"PUT",
+                credentials:"include",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify(payload)
+            });
+
+            if(response.ok){
+                $("#updatePassword").modal("hide");
+                Swal.fire({
+                    icon:"success",
+                    title:"Password updated",
+                    timer:1500,
+                    showConfirmButton:false
+                });
+            }else{
+                Swal.fire({ icon:"error", title:"Gagal update password" });
+            }
+        }
+
+        $(document).keydown(function(e){
+            if(e.ctrlKey && e.key==='Enter') updateUser();
+            if(e.key==='Escape') window.location.href="/user";
         });
-
-        if(response.ok){
-
-        $("#updatePassword").modal("hide");
-
-        alert("Password updated");
-
-        }else{
-
-        alert("Update password gagal");
-
-        }
-
-        }
 
     </script>
 

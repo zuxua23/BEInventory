@@ -1,64 +1,114 @@
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
 
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
 
         <div class="content-wrapper">
 
-            <div class="content-header">
-
+            <section class="content-header">
                 <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
 
-                    <div class="row mb-2">
-
-                        <div class="col-sm-6">
-                            <h1>Detail Picking List</h1>
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-check nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail Picking List</h1>
+                                <p class="mb-0 text-muted small">Manage picking list data</p>
+                            </div>
                         </div>
 
-                        <div class="col-sm-6">
-                            <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="/home">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/pickinglist">Picking List</a></li>
-                                <li class="breadcrumb-item active">Detail</li>
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/pickinglist" class="text-muted">
+                                        <i class="fas fa-clipboard-list mr-1"></i>Picking List
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-check mr-1"></i>Detail
+                                </li>
                             </ol>
-                        </div>
+                        </nav>
 
                     </div>
                 </div>
-            </div>
+            </section>
 
             <section class="content">
                 <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
 
-                    <div class="card card-primary">
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
 
-                        <div class="card-body">
+                                <div class="card-header">
+                                    <h3 class="card-title mb-0 font-weight-bold">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit Picking List
+                                    </h3>
+                                </div>
 
-                            <div class="form-group">
-                                <label>DO Number</label>
-                                <input id="doNumber" class="form-control">
-                            </div>
+                                <div class="card-body">
 
-                            <select id="scannerType" class="form-control" required>
-                                <option value="">-- Pilih Scanner --</option>
-                                <option value="RFID">RFID</option>
-                                <option value="QR">QR</option>
-                            </select>
+                                    <form id="pickingForm">
 
-                            <div id="details"></div>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-barcode text-muted mr-2"></i>
+                                                DO Number <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="doNumber" class="form-control" required>
+                                        </div>
 
-                            <button class="btn btn-success mb-2" onclick="addDetail()">+ Item</button>
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-qrcode text-muted mr-2"></i>
+                                                Scanner Type <span class="text-danger">*</span>
+                                            </label>
+                                            <select id="scannerType" class="form-control" required>
+                                                <option value="">-- Pilih Scanner --</option>
+                                                <option value="RFID">RFID</option>
+                                                <option value="QR">QR</option>
+                                            </select>
+                                        </div>
 
-                            <div class="d-flex justify-content-end">
-                                <button class="btn btn-primary" onclick="updateDO()">Update</button>
+                                        <div id="details"></div>
+
+                                        <button type="button"
+                                                class="btn btn-success btn-sm mt-2"
+                                                onclick="addDetail()">
+                                            <i class="fas fa-plus mr-1"></i>Item
+                                        </button>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+                                        <a href="/pickinglist" class="btn btn-secondary btn-modern mr-3">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-primary btn-modern px-5"
+                                                onclick="updateDO()">
+                                            <i class="fas fa-save mr-2"></i>Update
+                                        </button>
+                                    </div>
+
+                                </div>
                             </div>
 
                         </div>
-
                     </div>
-
                 </div>
             </section>
 
@@ -83,6 +133,15 @@
                 credentials: "include"
             });
 
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Gagal",
+                    text: "Gagal load data"
+                });
+                return;
+            }
+
             const data = await res.json();
 
             $("#doNumber").val(data.doNumber);
@@ -93,7 +152,7 @@
             });
         }
 
-           async function loadItemDropdown(selectedId = "") {
+        async function loadItemDropdown(selectedId = "") {
 
             const res = await fetch("/api/item", {
                 method: "GET",
@@ -115,20 +174,37 @@
                 lastSelect.val(selectedId);
             }
         }
+
+        $(document).on("click", ".remove-item", function () {
+
+            let row = $(this).closest(".detail-item");
+
+            Swal.fire({
+                title: "Hapus item?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, hapus"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    row.remove();
+                }
+            });
+        });
+
         function addDetail(selectedId = "", qty = "") {
 
             $("#details").append(`
                 <div class="row mb-2 detail-item align-items-center">
                     <div class="col">
-                        <select class="form-control item-select">
-                            <option value="">-- Select Item --</option>
-                        </select>
+                        <select class="form-control item-select"></select>
                     </div>
                     <div class="col">
                         <input class="form-control qty" value="${qty}" type="number">
                     </div>
                     <div class="col-2 text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-item">Hapus</button>
+                        <button type="button" class="btn btn-danger btn-sm remove-item">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
             `);
@@ -140,9 +216,9 @@
 
             let details = [];
 
-            $("#details .row").each(function () {
+            $("#details .detail-item").each(function () {
                 details.push({
-                    itemId: $(this).find(".itemId").val(),
+                    itemId: $(this).find(".item-select").val(),
                     qtyRequired: parseInt($(this).find(".qty").val())
                 });
             });
@@ -153,7 +229,7 @@
                 details
             };
 
-            const res = await fetch(`/api/do/${id}`, {
+            const res = await fetch(`/api/pickinglist/${id}`, {
                 method: "PUT",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
@@ -161,22 +237,32 @@
             });
 
             if (res.ok) {
+
                 Swal.fire({
                     icon: "success",
-                    title: "Updated",
+                    title: "Berhasil",
+                    text: "Picking List berhasil diupdate",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    window.location.href = "/do";
+                    window.location.href = "/pickinglist";
                 });
+
             } else {
+
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "Failed to update"
+                    title: "Gagal",
+                    text: "Update gagal"
                 });
+
             }
         }
+
+        $(document).keydown(function(e) {
+            if (e.ctrlKey && e.key === 'Enter') updateDO();
+            if (e.key === 'Escape') window.location.href = "/pickinglist";
+        });
 
     </script>
 
