@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace InventoryControlFE.Views.Auth
+namespace InventoryControl.Views.Auth
 {
     public class LoginModel : PageModel
     {

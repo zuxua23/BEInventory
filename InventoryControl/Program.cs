@@ -62,77 +62,7 @@ app.UseSession();
 app.UseAuthorization();
 #endregion
 
-
-#region SESSION AUTH MIDDLEWARE 
-app.Use(async (context, next) =>
-{
-    var path = context.Request.Path;
-
-    if (path.StartsWithSegments("/login") ||
-          path.StartsWithSegments("/auth/login") ||
-          path.StartsWithSegments("/auth/logout") ||
-          path.StartsWithSegments("/css") ||
-          path.StartsWithSegments("/js") ||
-          path.StartsWithSegments("/lib") ||
-          path.StartsWithSegments("/images"))
-    { await next();
-        return;
-    }
-        var userId = context.Session.GetString("UserId");
-
-        if (string.IsNullOrEmpty(userId))
-        {
-            context.Response.StatusCode = 401;
-
-            if (path.StartsWithSegments("/api") || path.StartsWithSegments("/auth"))
-            {
-                context.Response.ContentType = "application/json";
-
-                var result = JsonConvert.SerializeObject(new
-                {
-                    status = 401,
-                    code = "UNAUTHORIZED",
-                    message = "Silakan login terlebih dahulu"
-                });
-                await context.Response.WriteAsync(result);
-            return;
-
-            }
-
-            context.Response.Redirect("/login");
-            return;
-        }
-    
-
-    await next();
-});
-#endregion
-
-
-//#region API FORBIDDEN (403) CUSTOM
-//app.Use(async (context, next) =>
-//{
-//    await next();
-
-//    if (context.Response.StatusCode == 403 &&
-//        context.Request.Path.StartsWithSegments("/api"))
-//    {
-//        context.Response.ContentType = "application/json";
-
-//        var result = JsonConvert.SerializeObject(new
-//        {
-//            status = 403,
-//            code = "FORBIDDEN",
-//            message = "Anda tidak memiliki akses"
-//        });
-
-//        await context.Response.WriteAsync(result);
-//    }
-//});
-//#endregion
-
 #region ROUTING
-
 Web.Map(app);
 
 Api.Map(app);

@@ -17,6 +17,7 @@ public class AuthController : Controller
 
     public IActionResult Index()
     {
+        Console.WriteLine("login");
         ViewData["pages"] = "Auth";
         return View();
     }
@@ -33,8 +34,9 @@ public class AuthController : Controller
             HttpContext.Session.SetString("Roles", JsonSerializer.Serialize(result.Roles));
             HttpContext.Session.SetString("Permissions", JsonSerializer.Serialize(result.Permissions));
             HttpContext.Session.SetString("is_login", "OK");
+            Console.WriteLine("login SC" + result);
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "Home");
         }
         catch (Exception e)
         {
@@ -56,6 +58,7 @@ public class AuthController : Controller
         {
             var result = await _authService.ValidateUserAsync(dto);
             var token = await _authService.GenerateTokenAsync(result);
+            Console.WriteLine("loginHT");
 
             return Ok(new
             {

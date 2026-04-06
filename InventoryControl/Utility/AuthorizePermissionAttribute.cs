@@ -16,6 +16,20 @@ public class AuthorizePermissionAttribute : Attribute, IAuthorizationFilter
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var httpContext = context.HttpContext;
+
+        var isLogin = httpContext.Session.GetString("is_login");
+
+        if (isLogin != "OK")
+        {
+            return;
+        }
+
+        var controller = context.RouteData.Values["controller"]?.ToString();
+
+        if (controller == "Auth")
+        {
+            return;
+        }
         Console.WriteLine("=====================");
         var permissionsJson = httpContext.Session.GetString("Permissions");
 Console.WriteLine("Session JSON: " + permissionsJson);

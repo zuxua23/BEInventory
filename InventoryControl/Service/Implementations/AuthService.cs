@@ -45,7 +45,6 @@ namespace InventoryControl.Services.Implementations
                     && rp.Permission.IsActive
                 select rp.Permission.Code
             ).Distinct().ToListAsync();
-
             return new LoginResultDto
             {
                 UserId = user.UserId,
