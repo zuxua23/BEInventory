@@ -34,9 +34,10 @@ public class AuthController : Controller
             HttpContext.Session.SetString("Roles", JsonSerializer.Serialize(result.Roles));
             HttpContext.Session.SetString("Permissions", JsonSerializer.Serialize(result.Permissions));
             HttpContext.Session.SetString("is_login", "OK");
-            Console.WriteLine("login SC" + result);
+            Console.WriteLine("login SC" );
 
-            return RedirectToAction("Index", "Home");
+            //return RedirectToAction("Index", "Dashboard");
+            return Redirect("/dashboard");
         }
         catch (Exception e)
         {

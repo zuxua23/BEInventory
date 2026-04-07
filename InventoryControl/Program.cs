@@ -18,6 +18,15 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 #endregion
 
 
+#region DEPENDENCY INJECTION
+builder.Services.AddApplicationServices();
+builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
+// Mendaftarkan IHttpContextAccessor agar bisa akses Session
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddScoped<JwtTokenHelper>();
+#endregion
+
 #region SESSION CONFIG 
 builder.Services.AddDistributedMemoryCache();
 
@@ -27,12 +36,6 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-#endregion
-
-#region DEPENDENCY INJECTION
-builder.Services.AddApplicationServices();
-builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<JwtTokenHelper>();
 #endregion
 
 #region MVC + API
@@ -55,10 +58,18 @@ using (var scope = app.Services.CreateScope())
 #endregion
 
 #region MIDDLEWARE PIPELINE
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
 
-app.UseStaticFiles();
+app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
+app.UseStaticFiles();
 app.UseAuthorization();
 #endregion
 
@@ -68,4 +79,5 @@ Web.Map(app);
 Api.Map(app);
 #endregion
 
+Console.WriteLine(app.Services.GetRequiredService<EndpointDataSource>().Endpoints.Count);
 app.Run();

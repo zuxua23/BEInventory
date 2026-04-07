@@ -1,0 +1,220 @@
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Dashboard")
+
+        <div class="content-wrapper dash-content-wrapper">
+
+            <section class="content-header dash-content-header">
+                <div class="container-fluid">
+                    <div class="dash-page-header">
+                        <div class="dash-page-header-left">
+                            <div class="dash-header-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h1 class="dash-page-title">Dashboard</h1>
+                                <p class="dash-page-sub">Overview of system activity</p>
+                            </div>
+                        </div>
+                        <div class="dash-page-header-right">
+                            <span class="dash-sync-pill">
+                                <i class="fas fa-circle dash-sync-dot"></i>
+                                Last sync: <span id="lastSync">—</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="dash-kpi-grid">
+
+                        <div class="dash-kpi-card dash-kpi-blue">
+                            <div>
+                                <div class="dash-kpi-label">Total Items</div>
+                                <div class="dash-kpi-num" id="totalItems">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-teal">
+                            <div>
+                                <div class="dash-kpi-label">Locations</div>
+                                <div class="dash-kpi-num" id="totalLocations">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-violet">
+                            <div>
+                                <div class="dash-kpi-label">Readers</div>
+                                <div class="dash-kpi-num" id="totalReaders">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-amber">
+                            <div>
+                                <div class="dash-kpi-label">Picking List</div>
+                                <div class="dash-kpi-num" id="totalPicking">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="dash-bottom-grid">
+
+                        <div class="dash-card dash-card-table">
+                            <div class="dash-card-header">
+                                <span class="dash-card-dot"></span>
+                                <span class="dash-card-title">Recent Picking Activity</span>
+                            </div>
+                            <div class="dash-table-wrap">
+                                <table class="dash-table">
+                                    <thead>
+                                        <tr>
+                                            <th>DO Number</th>
+                                            <th>Scanner</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentPicking">
+                                        <tr>
+                                            <td colspan="3" class="dash-table-empty">Loading…</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="dash-right-col">
+
+                            <div class="dash-card">
+                                <div class="dash-card-header">
+                                    <span class="dash-card-dot dash-card-dot-green"></span>
+                                    <span class="dash-card-title">System Status</span>
+                                </div>
+                                <div class="dash-status-row">
+                                    <span class="dash-status-label">API Status</span>
+                                    <span class="dash-status-online">
+                                        <span class="dash-online-dot"></span> Online
+                                    </span>
+                                </div>
+                                <div class="dash-status-row">
+                                    <span class="dash-status-label">Database</span>
+                                    <span class="dash-status-online">
+                                        <span class="dash-online-dot"></span> Connected
+                                    </span>
+                                </div>
+                                <div class="dash-status-row dash-status-row-last">
+                                    <span class="dash-status-label">Last Sync</span>
+                                    <span class="dash-status-time" id="lastSyncStatus">—</span>
+                                </div>
+                            </div>
+
+                            <div class="dash-card dash-card-users">
+                                <div class="dash-card-header">
+                                    <span class="dash-card-dot dash-card-dot-violet"></span>
+                                    <span class="dash-card-title">Active Users</span>
+                                </div>
+                                <div class="dash-users-body">
+                                    <div class="dash-users-ring">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="dash-users-num" id="totalUsers">—</div>
+                                    <div class="dash-users-label">Active Users</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script>
+        $(document).ready(function () {
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            try {
+                const [items, locations, readers, picking, users] = await Promise.all([
+                    fetch("/api/item",        { credentials: "include" }),
+                    fetch("/api/location",    { credentials: "include" }),
+                    fetch("/api/reader",      { credentials: "include" }),
+                    fetch("/api/pickinglist", { credentials: "include" }),
+                    fetch("/api/user",        { credentials: "include" })
+                ]);
+
+                const itemData = await items.json();
+                const locData  = await locations.json();
+                const rdrData  = await readers.json();
+                const pickData = await picking.json();
+                const userData = await users.json();
+
+                $("#totalItems").text(itemData.length);
+                $("#totalLocations").text(locData.length);
+                $("#totalReaders").text(rdrData.length);
+                $("#totalPicking").text(pickData.length);
+                $("#totalUsers").text(userData.length);
+
+                const syncTime = new Date().toLocaleString();
+                $("#lastSync").text(syncTime);
+                $("#lastSyncStatus").text(syncTime);
+
+                let recentHtml = "";
+                if (pickData.length === 0) {
+                    recentHtml = `<tr><td colspan="3" class="dash-table-empty">No picking data found.</td></tr>`;
+                } else {
+                    pickData.slice(0, 5).forEach(p => {
+                        let badgeClass = "dash-badge-draft";
+                        if (p.status === "PREPARATION") badgeClass = "dash-badge-prep";
+                        if (p.status === "DONE")        badgeClass = "dash-badge-done";
+
+                        recentHtml += `
+                            <tr>
+                                <td><span class="dash-do-num">${p.doNumber}</span></td>
+                                <td><span class="dash-scanner-tag">${p.scannerType}</span></td>
+                                <td><span class="dash-badge ${badgeClass}">${p.status}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                $("#recentPicking").html(recentHtml);
+
+            } catch (e) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Dashboard failed to load",
+                    text: "Please check your connection and try again."
+                });
+            }
+        }
+    </script>
+
+</body>

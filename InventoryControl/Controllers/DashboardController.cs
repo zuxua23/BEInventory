@@ -2,16 +2,12 @@
 
 namespace InventoryControl.Controllers;
 
-public class HomeController : Controller
+public class DashboardController : Controller
 {
-
+        [HttpGet("/dashboard")]
     public IActionResult Index()
     {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
+        ViewData["pages"] = "dashboard";
         return View();
     }
 }

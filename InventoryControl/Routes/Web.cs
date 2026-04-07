@@ -1,12 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-
+﻿
 namespace InventoryControl.Routes;
 
 public static class Web
 {
     public static void Map(WebApplication app)
     {
+        Console.WriteLine("Web.Map executed");
+        app.MapControllerRoute(
+            name: "dashboard",
+            pattern: "/dashboard",
+            defaults: new { controller = "Dashboard", action = "Index" })
+            .AddEndpointFilter(async (context, next) =>
+            {
+                // Jika user sudah login, redirect ke dashboard
+                if (context.HttpContext.Session.GetString("is_login") != "OK")
+                {
+                    context.HttpContext.Response.Redirect("/");
+                    return Results.Empty;
+                }
+                return await next(context);
+            })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
         app.MapControllerRoute(
             name: "default",
             pattern: "/",
@@ -15,7 +30,7 @@ public static class Web
             {
                 if (context.HttpContext.Session.GetString("is_login") == "OK")
                 {
-                    context.HttpContext.Response.Redirect("/home");
+                    context.HttpContext.Response.Redirect("/dashboard");
                     return Results.Empty;
                 }
 
@@ -33,30 +48,6 @@ public static class Web
             name: "logout",
             pattern: "/auth/logout",
             defaults: new { controller = "Auth", action = "Logout" });
-
-        app.MapControllerRoute(
-            name: "home",
-            pattern: "auth/home",
-            defaults: new { controller = "Home", action = "Index" })
-            .AddEndpointFilter(AuthFilter)
-            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
-
-    //    app.MapControllerRoute(
-    //name: "home",
-    //pattern: "/home",
-    //defaults: new { controller = "Home", action = "Index" })
-    //.AddEndpointFilter(async (context, next) =>
-    //{
-    //    // Jika user sudah login, redirect ke dashboard
-    //    if (context.HttpContext.Session.GetString("is_login") != "OK")
-    //    {
-    //        context.HttpContext.Response.Redirect("/");
-    //        return Results.Empty;
-    //    }
-    //    return await next(context);
-    //})
-    //.WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
-
 
         MapCrud(app, "item", "Item");
         MapCrud(app, "location", "Location");
@@ -127,37 +118,37 @@ public static class Web
         app.MapControllerRoute($"{route}",
             $"/{route}",
             new { controller = controller, action = "Index" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute($"{route}-create",
             $"/{route}",
             new { controller = controller, action = "Create" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-data",
             $"/{route}/data",
             new { controller = controller, action = "Get" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-update",
             $"/{route}/update",
             new { controller = controller, action = "Update" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-delete-form",
             $"/{route}/delete-form",
             new { controller = controller, action = "DeleteForm" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute($"{route}-delete",
             $"/{route}/delete",
             new { controller = controller, action = "Delete" })
-            .AddEndpointFilter(AuthFilter)
+            //.AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
     }
 
@@ -166,8 +157,6 @@ public static class Web
         EndpointFilterInvocationContext context,
         EndpointFilterDelegate next)
     {
-        Console.WriteLine("FILTER: " + context.HttpContext.Request.Path);
-        Console.WriteLine("SESSION: " + context.HttpContext.Session.GetString("is_login"));
         if (context.HttpContext.Session.GetString("is_login") != "OK")
         {
             context.HttpContext.Response.Redirect("/");

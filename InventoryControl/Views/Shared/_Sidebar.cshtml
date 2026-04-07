@@ -1,7 +1,7 @@
 @using InventoryControl.Utility
 
 <aside class="main-sidebar sidebar-light-primary elevation-2 sidebar-light-industrial">
-    <a href="/home" class="brand-link">
+    <a href="/dashboard" class="brand-link">
         <img src="~/img/sato.svg" alt="Sato logo">
     </a>
 
@@ -13,8 +13,8 @@
 
                 <!-- DASHBOARD -->
                 <li class="nav-item">
-                    <a asp-route="Home"
-                       class="nav-link @(ViewData["pages"] == "home" ? "active" : "")">
+                    <a asp-route="dashboard"
+                       class="nav-link @(ViewData["pages"] == "dashboard" ? "active" : "")">
                         <i class="nav-icon fas fa-home"></i>
                         <p>Dashboard</p>
                     </a>
@@ -109,7 +109,7 @@
                 @if (PermissionHelper.HasPermission(Context, "PICKINGLIST_GET"))
                 {
                     <li class="nav-item">
-                        <a asp-route="PickingList"
+                        <a asp-controller="PickingList"
                            class="nav-link @(ViewData["pages"] == "pickinglist" ? "active" : "")">
                             <i class="nav-icon fas fa-edit"></i>
                             <p>Picking</p>

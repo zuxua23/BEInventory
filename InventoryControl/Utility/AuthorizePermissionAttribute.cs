@@ -16,7 +16,7 @@ public class AuthorizePermissionAttribute : Attribute, IAuthorizationFilter
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var httpContext = context.HttpContext;
-
+        Console.WriteLine("SESSION: " + context.HttpContext.Session.GetString("is_login"));
         var isLogin = httpContext.Session.GetString("is_login");
 
         if (isLogin != "OK")

@@ -5,20 +5,22 @@ using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Mvc;
 
-public class ItemController : Controller
+[ApiController]
+[Route("api/item")]
+public class ItemApiController : ControllerBase
 {
     private readonly IItemService _service;
 
-    public ItemController(IItemService service)
+    public ItemApiController(IItemService service)
     {
         _service = service;
     }
 
-    public IActionResult Index()
-    {
-        ViewData["pages"] = "item";
-        return View();
-    }
+    //public IActionResult Index()
+    //{
+    //    ViewData["pages"] = "item";
+    //    return View();
+    //}
 
     [HttpGet]
     [AuthorizePermission]
