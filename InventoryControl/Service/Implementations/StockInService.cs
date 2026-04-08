@@ -53,10 +53,10 @@ public class StockInService : IStockInService
                 throw new Exception("Tag tidak ditemukan");
             }
 
-            var warehouseLocation = await _db.Locations
-                .FirstOrDefaultAsync(x => x.LocId == "WAREHOUSE");
+            var location = await _db.Locations
+                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
 
-            if (warehouseLocation == null)
+            if (location == null)
             {
                 DailyFileLogger.Warn("StockInAsync gagal: Location WAREHOUSE tidak ditemukan");
                 throw new Exception("Location WAREHOUSE tidak ditemukan");
@@ -71,7 +71,7 @@ public class StockInService : IStockInService
                 }
 
                 tag.Status = "IN_STOCK";
-                tag.LocationId = warehouseLocation.Id;
+                tag.LocationId = location.Id;
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
 
@@ -105,7 +105,7 @@ public class StockInService : IStockInService
                     ItemId = tag.ItemId,
                     Type = "STOCK_IN",
                     Reference = trxHeader.TrsId,
-                    Action = "MOVE_TO_WAREHOUSE",
+                    Action = "MOVE_TO_" + location.Name.Replace(" ", "_").ToUpper(),
                     CreatedBy = user,
                     CreatedAt = DateTime.UtcNow
                 });

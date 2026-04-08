@@ -2,7 +2,7 @@
 
 namespace InventoryControl.Controllers.Web;
 
-public class PrintTagController : Controller
+public class PrintTagRegisController : Controller
 {
     [HttpGet("/printtag")]
     public IActionResult Index()
@@ -10,8 +10,8 @@ public class PrintTagController : Controller
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
             return Redirect("/login");
-        ViewData["pages"] = "print-tag";
-        ViewData["parent"] = "";
+        ViewData["pages"] = "printtag";
         return View();
-    }
+    }   
 }
+

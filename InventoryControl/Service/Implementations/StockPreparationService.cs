@@ -34,6 +34,15 @@ public class StockPreparationService : IStockPreparationService
                 throw new Exception("DO tidak ditemukan");
             }
 
+            var location = await _db.Locations
+          .FirstOrDefaultAsync(x => x.Id == dto.LocId);
+
+            if (location == null)
+            {
+                DailyFileLogger.Warn($"CreateAsync: Location dengan ID {dto.LocId} tidak ditemukan");
+                throw new Exception("Location tidak ditemukan");
+            }
+
             Tag tag;
 
             if (dto.ScannerType == "RFID")
@@ -101,6 +110,7 @@ public class StockPreparationService : IStockPreparationService
             });
 
             tag.Status = "RESERVED";
+            tag.LocationId = location.Id;
             tag.UpdatedBy = user;
             tag.UpdatedAt = DateTime.UtcNow;
 
@@ -111,7 +121,7 @@ public class StockPreparationService : IStockPreparationService
                 ItemId = tag.ItemId,
                 Type = "STOCK_PREPARATION",
                 Reference = dto.DoId,
-                Action = "RESERVED",
+                Action = "RESERVED_TO_" + location.Name.Replace(" ", "_").ToUpper(),
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             });

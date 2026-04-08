@@ -6,6 +6,7 @@ using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 
 public class StockOutService : IStockOutService
 {
@@ -127,43 +128,30 @@ public class StockOutService : IStockOutService
 
     public async Task ScanStockOutAsync(StockOutResponseDto dto, string user)
     {
-        using var trx = await _db.Database.BeginTransactionAsync();
+        var tag = await _db.Tags
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
 
-        try
+        if (tag == null || tag.Status != "RESERVED")
+            return;
+
+        var isValid = await _db.TransactionDetails
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.TagId == tag.Id &&
+                x.Transaction.TrsType == "STOCK_PREPARATION" &&
+                x.Transaction.ReferenceId == dto.DoId);
+
+        if (!isValid) return;
+
+        var trx = await _db.Transactions
+            .FirstOrDefaultAsync(x =>
+                x.TrsType == "STOCK_OUT" &&
+                x.ReferenceId == dto.DoId);
+
+        if (trx == null)
         {
-            var tag = await _db.Tags
-                .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
-
-            if (tag == null)
-            {
-                DailyFileLogger.Warn($"ScanStockOut: EPC {dto.Epc} tidak ditemukan");
-                return;
-            }
-
-            if (tag.Status != "RESERVED")
-            {
-                DailyFileLogger.Warn($"ScanStockOut: Tag {tag.TagId} status {tag.Status} bukan RESERVED");
-                return;
-            }
-
-            var reserved = await _db.TransactionDetails
-                .Include(x => x.Transaction)
-                .FirstOrDefaultAsync(x =>
-                    x.TagId == tag.Id &&
-                    x.Transaction.TrsType == "STOCK_PREPARATION" &&
-                    x.Transaction.ReferenceId == dto.DoId);
-
-            if (reserved == null)
-            {
-                DailyFileLogger.Warn($"ScanStockOut: Tag {tag.TagId} tidak termasuk DO {dto.DoId}");
-                return;
-            }
-
-            tag.Status = "OUT";
-            tag.UpdatedBy = user;
-            tag.UpdatedAt = DateTime.UtcNow;
-
-            var trxHeader = new Transaction
+            trx = new Transaction
             {
                 TrsId = Guid.NewGuid().ToString(),
                 TrsType = "STOCK_OUT",
@@ -173,26 +161,125 @@ public class StockOutService : IStockOutService
                 CreatedAt = DateTime.UtcNow
             };
 
-            _db.Transactions.Add(trxHeader);
-
-            _db.TransactionDetails.Add(new Transaction_Detail
-            {
-                TrdId = Guid.NewGuid().ToString(),
-                TrsId = trxHeader.TrsId,
-                TagId = tag.Id,
-                ItemId = tag.ItemId
-            });
-
+            _db.Transactions.Add(trx);
             await _db.SaveChangesAsync();
-            await trx.CommitAsync();
+        }
 
-            DailyFileLogger.Info($"ScanStockOut berhasil. DO={dto.DoId}, Tag={tag.TagId}, Reader={dto.ReaderId}");
+        var exists = await _db.TransactionDetails
+            .AnyAsync(x => x.TagId == tag.Id && x.TrsId == trx.TrsId);
+
+        if (exists) return;
+
+        var tagUpdate = new Tag
+        {
+            Id = tag.Id,
+            Status = "OUT",
+            UpdatedBy = user,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _db.Tags.Attach(tagUpdate);
+        _db.Entry(tagUpdate).Property(x => x.Status).IsModified = true;
+
+        _db.TransactionDetails.Add(new Transaction_Detail
+        {
+            TrdId = Guid.NewGuid().ToString(),
+            TrsId = trx.TrsId,
+            TagId = tag.Id,
+            ItemId = tag.ItemId
+        });
+
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<List<ItemListDto>> GetItemsAsync(string doId)
+    {
+        try
+        {
+            var items = await (
+                  from d in _db.DODetails
+                  join i in _db.Items on d.ItemId equals i.Id
+                  where d.DoId == doId
+
+                  select new ItemListDto
+                  {
+                      ItemId = d.ItemId,
+                      ItemCode = i.ItmId,
+                      ItemName = i.Name,
+                      Required = d.QtyRequired ?? 0,
+
+                      Reserved = _db.TransactionDetails
+                .Count(td => td.ItemId == d.ItemId &&
+                             td.Transaction.ReferenceId == doId &&
+                             td.Transaction.TrsType == "STOCK_PREPARATION"),
+
+                      Scanned = _db.TransactionDetails
+                .Count(td => td.ItemId == d.ItemId &&
+                             td.Transaction.ReferenceId == doId &&
+                             td.Transaction.TrsType == "STOCK_OUT")
+                  })
+            .ToListAsync();
+
+            if (items != null)
+                DailyFileLogger.Info($"GetByIdAsync Item berhasil untuk ID {doId}.");
+            else
+                DailyFileLogger.Warn($"GetByIdAsync Item: ID {doId} tidak ditemukan.");
+
+            return items;
         }
         catch (Exception ex)
         {
-            await trx.RollbackAsync();
-            DailyFileLogger.Error("Error di ScanStockOutAsync", ex);
+            DailyFileLogger.Error($"Error di GetItems untuk DO ID {doId}.", ex);
             throw;
+
+        }
+    }
+    public async Task<ProgressDto> GetProgressAsync(string doId)
+    {
+        var total = await _db.TransactionDetails
+            .CountAsync(x => x.Transaction.ReferenceId == doId);
+
+        var scanned = await _db.TransactionDetails
+            .CountAsync(x => x.Transaction.ReferenceId == doId &&
+                             x.Transaction.TrsType == "STOCK_OUT");
+
+        return new ProgressDto
+        {
+            Total = total,
+            Scanned = scanned
+        };
+    }
+    public async Task<List<TagDto>> GetTagsAsync(string doId)
+    {
+        var tags = await _db.TransactionDetails
+            .Where(x => x.Transaction.ReferenceId == doId &&
+                        x.Transaction.TrsType == "STOCK_OUT")
+            .Select(x => new TagDto
+            {
+                TagId = x.TagId,
+                ItemId = x.ItemId
+            })
+            .ToListAsync();
+
+        return tags;
+    }
+    public static class RfidSession
+    {
+        private static ConcurrentDictionary<string, string> _sessions = new();
+
+        public static void Set(string readerId, string doId)
+        {
+            _sessions[readerId] = doId;
+        }
+
+        public static string Get(string readerId)
+        {
+            return _sessions.ContainsKey(readerId) ? _sessions[readerId] : null;
+        }
+
+        public static void Remove(string readerId)
+        {
+            _sessions.TryRemove(readerId, out _);
         }
     }
 }

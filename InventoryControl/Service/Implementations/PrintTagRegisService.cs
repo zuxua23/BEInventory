@@ -1,5 +1,4 @@
 ﻿using InTheHand.Net.Bluetooth;
-//using InventoryControl.Constans;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;

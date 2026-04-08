@@ -5,6 +5,7 @@ using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 public class ItemService : IItemService
@@ -160,4 +161,5 @@ public class ItemService : IItemService
             throw;
         }
     }
+
 }

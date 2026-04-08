@@ -10,5 +10,7 @@ public class StockInRequestDto
 public class StockInDto
 {
     public string ScannerType { get; set; } // RFID / QR
+    public string LocId { get; set; } = null!;
+
     public List<string> ScannedCodes { get; set; }
 }

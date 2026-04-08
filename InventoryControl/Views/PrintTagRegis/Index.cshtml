@@ -1,0 +1,283 @@
+﻿<body class="hold-transition sidebar-mini layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
+        @Html.Partial("_PrintTag")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Print Tag</h1>
+                                <p class="mb-0 text-muted small">Manage print tag process</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Print Tag
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card shadow">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="fas fa-list mr-2"></i>Item List</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered table-hover" id="tagTable">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th width="60">#</th>
+                                                <th>Item</th>
+                                                <th width="120">Qty</th>
+                                                <th width="100">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>
+                                                    <select class="form-control item-select" data-row="1">
+                                                        <option value="">-- Pilih Item --</option>
+                                                        <option value="ITM001" data-name="Baju Kaos Polos">Baju Kaos Polos</option>
+                                                        <option value="ITM002" data-name="Celana Jeans">Celana Jeans</option>
+                                                        <option value="ITM003" data-name="Topi Snapback">Topi Snapback</option>
+                                                        <option value="ITM004" data-name="Sepatu Sport">Sepatu Sport</option>
+                                                        <option value="ITM005" data-name="Jaket Hoodie">Jaket Hoodie</option>
+                                                        <option value="ITM006" data-name="Tas Ransel">Tas Ransel</option>
+                                                        <option value="ITM007" data-name="Jam Tangan">Jam Tangan</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control qty-input" min="1" max="100" value="1">
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <button class="btn btn-primary mt-2" onclick="addRow()">
+                                        <i class="fas fa-plus"></i> Add Row
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-print mr-2"></i>Print Settings</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Printer</label>
+                                        <select class="form-control printer-select">
+                                            <option value="">-- Pilih Printer --</option>
+                                            <option value="Zebra_ZP450">Zebra ZP450</option>
+                                            <option value="Zebra_GK420">Zebra GK420</option>
+                                            <option value="Epson_TM_T88">Epson TM-T88</option>
+                                            <option value="Brother_QL800">Brother QL-800</option>
+                                            <option value="Default">Default Printer</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Total Tag</label>
+                                        <span class="badge badge-primary badge-lg d-block p-2 text-center" id="totalTags">0</span>
+                                    </div>
+
+                                    <button class="btn btn-success btn-block mb-2" onclick="generatePreview()">
+                                        <i class="fas fa-eye mr-2"></i>Preview
+                                    </button>
+                                    <button class="btn btn-primary btn-block" onclick="printTags()">
+                                        <i class="fas fa-print mr-2"></i>Print Tags
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div class="card shadow mt-4" id="previewCard" style="display: none;">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-tags mr-2"></i>Label Preview</h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="print-preview-container" id="previewContainer">
+                                <div class="text-center p-4 text-muted">
+                                    <i class="fas fa-eye fa-3x mb-3 opacity-50"></i>
+                                    <p>Click "Preview" to see label preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+  
+    @Html.Partial("_BaseScript")
+
+    <script>
+
+            let rowCounter = 1;
+
+        function addRow() {
+            rowCounter++;
+            const tbody = document.querySelector('#tagTable tbody');
+            const newRow = `
+                <tr>
+                    <td>${rowCounter}</td>
+                    <td>
+                        <select class="form-control item-select" data-row="${rowCounter}">
+                            <option value="">-- Pilih Item --</option>
+                            <option value="ITM001" data-name="Baju Kaos Polos">Baju Kaos Polos</option>
+                            <option value="ITM002" data-name="Celana Jeans">Celana Jeans</option>
+                            <option value="ITM003" data-name="Topi Snapback">Topi Snapback</option>
+                            <option value="ITM004" data-name="Sepatu Sport">Sepatu Sport</option>
+                            <option value="ITM005" data-name="Jaket Hoodie">Jaket Hoodie</option>
+                            <option value="ITM006" data-name="Tas Ransel">Tas Ransel</option>
+                            <option value="ITM007" data-name="Jam Tangan">Jam Tangan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control qty-input" min="1" max="100" value="1">
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', newRow);
+            updateTotalTags();
+        }
+
+        function removeRow(button) {
+            button.closest('tr').remove();
+            updateRowNumbers();
+            updateTotalTags();
+        }
+
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('#tagTable tbody tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+            rowCounter = rows.length;
+        }
+
+        function updateTotalTags() {
+            let total = 0;
+            document.querySelectorAll('.qty-input').forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            document.getElementById('totalTags').textContent = total;
+        }
+
+        function generatePreview() {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewCard = document.getElementById('previewCard');
+
+            previewContainer.innerHTML = '';
+
+            let hasValidData = false;
+
+            document.querySelectorAll('.item-select').forEach((select, rowIndex) => {
+                const qtyInput = select.closest('tr').querySelector('.qty-input');
+                const itemCode = select.value;
+                const itemName = select.selectedOptions[0]?.dataset.name;
+
+                if (itemCode && qtyInput.value > 0) {
+                    hasValidData = true;
+
+                    for (let i = 0; i < parseInt(qtyInput.value); i++) {
+                        const rfidTag = `RFID-${itemCode}-${String(rowIndex + 1).padStart(3, '0')}-${String(i + 1).padStart(3, '0')}`;
+
+                        const label = document.createElement('div');
+                        label.className = 'label-preview';
+                        label.innerHTML = `
+                            <div class="rfid-tag">${rfidTag}</div>
+                            <div class="barcode-placeholder"></div>
+                            <div class="item-number">${itemCode}</div>
+                            <div class="item-name">${itemName}</div>
+                        `;
+                        previewContainer.appendChild(label);
+                    }
+                }
+            });
+
+            if (hasValidData) {
+                previewCard.style.display = 'block';
+                previewContainer.scrollTop = 0;
+            } else {
+                previewContainer.innerHTML = `
+                    <div class="text-center p-4 text-muted">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 opacity-50"></i>
+                        <p>Pilih item dan masukkan quantity untuk melihat preview</p>
+                    </div>
+                `;
+                previewCard.style.display = 'block';
+            }
+        }
+
+        function printTags() {
+            const totalTags = document.getElementById('totalTags').textContent;
+            if (totalTags == '0') {
+                alert('⚠️ Tidak ada tag untuk dicetak. Pilih item dan quantity terlebih dahulu.');
+                return;
+            }
+
+            if (confirm(`Cetak ${totalTags} tag?`)) {
+                window.print();
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('item-select') || e.target.classList.contains('qty-input')) {
+                updateTotalTags();
+            }
+        });
+
+        // Initial calculation
+        updateTotalTags();
+    </script>
+
+</body>

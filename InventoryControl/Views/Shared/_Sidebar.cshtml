@@ -96,8 +96,8 @@
                 @if (PermissionHelper.HasAnyPermission(Context, "TAG_PRINT", "TAG_REGISTER"))
                 {
                     <li class="nav-item">
-                        <a asp-route="tag"
-                           class="nav-link">
+                        <a asp-route="PrintTag"
+                           class="nav-link @(ViewData["pages"]?.ToString() == "prtag" ? "active" : "")">
                             <i class="nav-icon fas fa-print"></i>
                             <p>Printing</p>
                         </a>
@@ -109,7 +109,7 @@
                 @if (PermissionHelper.HasPermission(Context, "PICKINGLIST_GET"))
                 {
                     <li class="nav-item">
-                        <a asp-controller="PickingList"
+                        <a asp-route="PickingList"
                            class="nav-link @(ViewData["pages"] == "pickinglist" ? "active" : "")">
                             <i class="nav-icon fas fa-edit"></i>
                             <p>Picking</p>
@@ -122,10 +122,10 @@
                 @if (PermissionHelper.HasPermission(Context, "STOCK_OUT"))
                 {
                     <li class="nav-item">
-                        <a asp-route="loading"
-                           class="nav-link">
+                        <a asp-route="StockOut"
+                           class="nav-link @(ViewData["pages"]?.ToString() == "stockOut" ? "active" : "")">
                             <i class="nav-icon fas fa-tasks"></i>
-                            <p>Loading Verification</p>
+                            <p>Stock Out</p>
                         </a>
                     </li>
                 }
@@ -170,7 +170,7 @@
                 cancelButtonText: "Batal"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = "/logout";
+                    window.location.href = "/auth/logout";
                 }
             });
         }

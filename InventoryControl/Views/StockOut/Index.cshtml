@@ -1,0 +1,405 @@
+﻿<body class="hold-transition sidebar-mini layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
+        @Html.Partial("_PrintTag")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Print Tag</h1>
+                                <p class="mb-0 text-muted small">Manage print tag process</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/home" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Print Tag
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <!-- DO Number & Reader ID -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-file-invoice mr-2"></i>DO Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>DO Number *</label>
+                                        <select name="doId" id="doIdSelect" class="form-control" required></select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Reader *</label>
+                                        <select name="rdrId" id="rdrIdSelect" class="form-control" required></select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-info-circle mr-2"></i>Status</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="status-badge status-ready mb-3" id="processStatus">
+                                        Ready to Start
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-bar bg-success" id="scanProgress" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2" id="progressText">0 / 0 scanned</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item List -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-list mr-2"></i>Item List (Qty Required vs Reserved)</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Code</th>
+                                            <th>Item Name</th>
+                                            <th width="120">Required</th>
+                                            <th width="120">Reserved</th>
+                                            <th width="120">Scanned</th>
+                                            <th width="150">Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemList">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
+                                                Load DO Number to see items
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tag List & Scanner -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-tags mr-2"></i>List Tag (Scanned / Reserved)</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="p-3" id="tagList" style="max-height: 400px; overflow-y: auto;">
+                                        <div class="text-center text-muted py-5">
+                                            <i class="fas fa-qrcode fa-3x mb-3 opacity-50"></i>
+                                            <p>Start scanning to see tags</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-qrcode mr-2"></i>RFID Scanner</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Scan RFID Tag</label>
+                                        <input type="text" class="form-control scan-input" id="rfidScanner"
+                                               placeholder="Scan RFID Tag Here..." autofocus>
+                                    </div>
+                                    <div class="text-center">
+                                        <button class="btn btn-warning btn-lg mb-2" id="startScanBtn" onclick="startScanning()">
+                                            <i class="fas fa-play mr-2"></i>Start Scan
+                                        </button>
+                                        <br>
+                                        <button class="btn btn-success btn-lg" id="processOutBtn" onclick="processOut()" disabled>
+                                            <i class="fas fa-check mr-2"></i>Process Out
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+  
+    @Html.Partial("_BaseScript")
+
+    <script>
+                $(document).ready(function () {
+            loadDODropdown();
+            loadReaderDropdown();
+        });
+         async function loadDODropdown() {
+
+            const response = await fetch("/api/pickinglist", {
+                method: "GET",
+                credentials: "include"
+            });
+
+            const data = await response.json();
+            console.log($("#doIdSelect").val());
+            let options = `<option value="">-- Select DO --</option>`;
+
+            data.forEach(data => {
+                options += `<option value="${data.id}">${data.doNumber}</option>`;
+            });
+
+            $("#doIdSelect").html(options);
+        }
+
+         async function loadReaderDropdown() {
+
+            const response = await fetch("/api/reader", {
+                method: "GET",
+                credentials: "include"
+            });
+
+            const data = await response.json();
+
+            let options = `<option value="">-- Select Reader --</option>`;
+
+            data.forEach(data => {
+                options += `<option value="${data.id}">${data.rdrName}</option>`;
+            });
+
+            $("#rdrIdSelect").html(options);
+        }
+
+
+        let pollingInterval = null;
+        let currentDo = null;
+
+                async function startScanning() {
+            const doId = $("#doIdSelect").val();
+            const readerSelect = document.getElementById("rdrIdSelect");
+            const readerId = readerSelect.value;
+            const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
+            console.log("DO SELECTED:", doId);
+            if (!doId || !readerId) {
+                alert("Pilih DO dan Reader dulu");
+                return;
+            }
+
+            currentDo = doId; 
+
+            await fetch('/stockout/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    doId: doId,
+                    readerId: readerId,
+                    ipAddress: ip
+                })
+            });
+
+            document.getElementById('processStatus').textContent = 'Scanning...';
+            document.getElementById('processStatus').className = 'status-badge status-scanning';
+
+            loadItems(doId); 
+            startPolling(doId);
+        }
+
+        // STOP SCAN
+        async function stopScan() {
+            const readerId = document.getElementById('rdrIdSelect').value;
+
+            await fetch(`/stockout/stop?readerId=${readerId}`, {
+                method: 'POST'
+            });
+
+            clearInterval(pollingInterval);
+
+            document.getElementById('processStatus').textContent = 'Stopped';
+            document.getElementById('processStatus').className = 'status-badge status-ready';
+        }
+
+        // POLLING
+        async function startPolling(doId) {
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            pollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/stockout/items?doId=${doId}`);
+                    const items = await res.json();
+
+                    updateItemProgress(items);
+                    updateGlobalProgress(items);
+
+                    await loadTags(); 
+                } catch (err) {
+                    console.error(err);
+                }
+            }, 1000);
+        }
+
+        // UPDATE PROGRESS
+        function updateItemProgress(items) {
+            items.forEach(item => {
+                const row = document.querySelector(`[data-item="${item.itemId}"]`);
+                if (!row) return;
+
+                const percent = item.required
+                    ? (item.scanned / item.required * 100)
+                    : 0;
+                            if (item.scanned >= item.required) {
+            row.style.background = "#d4edda";
+        }
+                row.querySelector(".progress-bar").style.width = percent + "%";
+                row.querySelector("small").textContent =
+                    `${item.scanned}/${item.required}`;
+
+                document.getElementById(`scan-${item.itemId}`).textContent =
+                    item.scanned;
+            });
+        }
+
+                function updateGlobalProgress(items) {
+            const totalRequired = items.reduce((sum, i) => sum + i.required, 0);
+            const totalScanned = items.reduce((sum, i) => sum + i.scanned, 0);
+
+            const percent = totalRequired
+                ? (totalScanned / totalRequired * 100)
+                : 0;
+
+            document.getElementById("scanProgress").style.width = percent + "%";
+            document.getElementById("progressText").textContent =
+                `${totalScanned} / ${totalRequired} scanned`;
+
+            if (totalScanned === totalRequired && totalRequired > 0) {
+                document.getElementById("processStatus").textContent = "Completed";
+                document.getElementById("processStatus").className =
+                    "status-badge status-completed";
+            }
+        }
+        // LOAD TAG LIST
+        async function loadTags() {
+            const res = await fetch(`/stockout/tags?doId=${currentDo}`);
+            const tags = await res.json();
+
+            const tagList = document.getElementById('tagList');
+            tagList.innerHTML = '';
+
+            tags.forEach(tag => {
+                const div = document.createElement('div');
+                div.className = 'tag-item scanned';
+
+                div.innerHTML = `
+                    <div class="tag-icon tag-scanned">✓</div>
+                    <div>
+                        <div class="font-weight-bold small">${tag.tagId}</div>
+                        <div class="text-muted small">${tag.itemId}</div>
+                    </div>
+                `;
+
+                tagList.appendChild(div);
+            });
+        }
+                async function loadItems(doId) {
+            const res = await fetch(`/stockout/items?doId=${doId}`);
+                    if (!res.ok) {
+            const text = await res.text();
+            console.error("DO SELECTED:", doId);
+            console.error("API Error:", text);
+            alert("Terjadi error di server");
+            return;
+        }
+            const items = await res.json();
+
+            const tbody = document.getElementById("itemList");
+            tbody.innerHTML = "";
+
+            if (items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Tidak ada item
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            items.forEach(item => {
+                const percent = item.required
+                    ? (item.scanned / item.required * 100)
+                    : 0;
+
+                const row = `
+                    <tr data-item="${item.itemId}">
+                        <td><strong>${item.itemCode}</strong></td>
+                        <td>${item.itemName}</td>
+                        <td><span class="badge badge-primary">${item.required}</span></td>
+                        <td><span class="badge badge-warning">${item.reserved}</span></td>
+                        <td>
+                            <span class="badge badge-success" id="scan-${item.itemId}">
+                                ${item.scanned}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress-item">
+                                <div class="progress-bar bg-info"
+                                     style="width:${percent}%">
+                                </div>
+                            </div>
+                            <small>${item.scanned}/${item.required}</small>
+                        </td>
+                    </tr>
+                `;
+
+                tbody.innerHTML += row;
+            });
+        }
+        $("#doIdSelect").on("change", function () {
+            const doId = $(this).val();
+
+            if (!doId) return;
+
+            currentDo = doId;
+            loadItems(doId);
+        });
+
+    </script>
+
+</body>

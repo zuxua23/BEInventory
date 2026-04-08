@@ -68,14 +68,14 @@
 
                                 <div class="card-body pt-3">
 
-                                    <div class="table-responsive">
+                                    <div class="table-responsive">  
                                         <table id="datatablesIndex" class="table table-hover">
                                             <thead class="thead-light">
                                                 <tr>
                                                     <th class="text-center" width="60">#</th>
                                                     <th>DO Number</th>
-                                                    <th>Scanner</th>
                                                     <th>Status</th>
+                                                    <th>Create Date</th>
                                                     <th class="text-center" width="160">Actions</th>
                                                 </tr>
                                             </thead>
@@ -115,18 +115,6 @@
                                 DO Number <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="doNumber" class="form-control" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-qrcode text-muted mr-2"></i>
-                                Scanner Type <span class="text-danger">*</span>
-                            </label>
-                            <select name="scannerType" class="form-control" required>
-                                <option value="">-- Pilih Scanner --</option>
-                                <option value="RFID">RFID</option>
-                                <option value="QR">QR</option>
-                            </select>
                         </div>
 
                         <div id="detailContainer"></div>
@@ -207,7 +195,7 @@
                 data: data,
 
                 responsive: true,
-                pageLength: 25,
+                pageLength: 10,
 
                 columnDefs: [
                     {
@@ -219,8 +207,23 @@
                         orderable: false
                     },
                     { targets: 1, data: "doNumber" },
-                    { targets: 2, data: "scannerType" },
-                    { targets: 3, data: "status" },
+                    { targets: 2, data: "status" },
+                    {
+                        targets: 3,
+                        data: "createdAt",
+                        render: function(data) {
+                            if (!data) return '-';
+
+                            const date = new Date(data);
+                            return date.toLocaleString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                    },  
                     {
                         targets: 4,
                         data: null,
@@ -320,7 +323,6 @@
 
             const payload = {
                 doNumber: form.doNumber.value,
-                scannerType: form.scannerType.value,
                 details
             };
 

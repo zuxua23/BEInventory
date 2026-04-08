@@ -1,44 +1,81 @@
 ﻿using Impinj.OctaneSdk;
+using InventoryControl.DTO;
+using InventoryControl.Service.Interfaces;
+using System.Collections.Concurrent;
+using static InventoryControl.Service.Implementations.StockOutService;
 
-namespace InventoryControl.Helpers;
-
-public class ImpinjHelper
+public class ImpinjReaderService
 {
-    private ImpinjReader _reader;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly Dictionary<string, ImpinjReader> _readers = new();
+    private readonly ConcurrentDictionary<string, DateTime> _tagCache = new();
 
-    public void Connect(string ip)
+    public ImpinjReaderService(IServiceScopeFactory scopeFactory)
     {
-        _reader = new ImpinjReader();
-        _reader.Connect(ip);
+        _scopeFactory = scopeFactory;
     }
 
-    public void StartReading(Action<string> onTagRead)
+    public void StartReader(string readerId, string ip)
     {
-        var settings = _reader.QueryDefaultSettings();
+        if (_readers.ContainsKey(readerId))
+            return;
 
-        settings.Report.IncludePeakRssi = true;
+        var reader = new ImpinjReader();
+        reader.Connect(ip);
+
+        var settings = reader.QueryDefaultSettings();
+        settings.Report.Mode = ReportMode.Individual;
         settings.Report.IncludeAntennaPortNumber = true;
 
-        _reader.ApplySettings(settings);
+        reader.ApplySettings(settings);
 
-        _reader.TagsReported += (reader, report) =>
+        reader.TagsReported += async (s, report) =>
         {
-            foreach (Tag tag in report)
-            {
-                var epc = tag.Epc.ToString();
-                onTagRead(epc);
-            }
+            await HandleTags(readerId, report);
         };
 
-        _reader.Start();
+        reader.Start();
+
+        _readers.Add(readerId, reader);
     }
 
-    public void Stop()
+    public void StopReader(string readerId)
     {
-        if (_reader != null && _reader.IsConnected)
+        if (!_readers.ContainsKey(readerId)) return;
+
+        _readers[readerId].Stop();
+        _readers[readerId].Disconnect();
+
+        _readers.Remove(readerId);
+        RfidSession.Remove(readerId);
+    }
+
+    private async Task HandleTags(string readerId, TagReport report)
+    {
+        var doId = RfidSession.Get(readerId);
+        if (doId == null) return;
+
+        using var scope = _scopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IStockOutService>();
+
+        foreach (var tag in report.Tags)
         {
-            _reader.Stop();
-            _reader.Disconnect();
+            var epc = tag.Epc.ToString();
+
+            if (tag.PeakRssiInDbm < -60) continue;
+
+            if (_tagCache.ContainsKey(epc) &&
+                (DateTime.UtcNow - _tagCache[epc]).TotalSeconds < 2)
+                continue;
+
+            _tagCache[epc] = DateTime.UtcNow;
+
+            await service.ScanStockOutAsync(new StockOutResponseDto
+            {
+                Epc = epc,
+                ReaderId = readerId,
+                DoId = doId
+            }, "RFID_SYSTEM");
         }
     }
 }

@@ -25,6 +25,7 @@ builder.Services.AddHttpContextAccessor();
 // Mendaftarkan IHttpContextAccessor agar bisa akses Session
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<JwtTokenHelper>();
+builder.Services.AddSingleton<ImpinjReaderService>();
 #endregion
 
 #region SESSION CONFIG 
@@ -71,6 +72,8 @@ app.UseRouting();
 app.UseSession();
 app.UseStaticFiles();
 app.UseAuthorization();
+//app.MapControllers();
+
 #endregion
 
 #region ROUTING

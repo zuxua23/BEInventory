@@ -76,7 +76,6 @@ public class PickingListService : IPickingListService
             {
                 DoId = Guid.NewGuid().ToString(),
                 DoNumber = request.DoNumber,
-                ScannerType = request.ScannerType,
                 Status = "DRAFT",
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow,

@@ -1,54 +1,98 @@
-﻿using InventoryControl.DTO;
+﻿using InventoryControl.Database;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Helpers;
+using InventoryControl.Service.Implementations;
 using InventoryControl.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using static InventoryControl.Service.Implementations.StockOutService;
 
 namespace InventoryControl.Controllers;
-
 [ApiController]
 [Route("stockout")]
 public class StockOutController : ControllerBase
 {
     private readonly IStockOutService _service;
-    private readonly ReaderScan _readerScan;
-    public StockOutController(IStockOutService service,ReaderScan scan)
+    private readonly ImpinjReaderService _readerService;
+    private readonly AppDBContext _db;
+
+    public StockOutController(IStockOutService service, ImpinjReaderService readerService, AppDBContext db)
     {
         _service = service;
-        _readerScan = scan;
+        _readerService = readerService;
+        _db = db;
     }
 
-    [HttpPost]
+    [HttpPost("finalize")]
     public async Task<IActionResult> Finalize(StockOutDto dto)
     {
         var user = User.Identity?.Name ?? "system";
         await _service.StockOutAsync(dto, user);
 
-        return Ok(new { message = "Stock Out berhasil difinalisasi" });
+        return Ok("Stock Out finalized");
     }
-    [HttpPost]
+
+    [HttpPost("scan")]
     public async Task<IActionResult> Scan(StockOutResponseDto dto)
     {
         var user = User.Identity?.Name ?? "system";
-         await _service.ScanStockOutAsync(dto, user);
-        return Ok(new { message = "Stock Out berhasil dibuat" });
+        await _service.ScanStockOutAsync(dto, user);
+
+        return Ok("Scanned");
     }
 
-
     [HttpPost("start")]
-    public async Task<IActionResult> StartScan(StockOutResponseDto dto, string doId)
+    public IActionResult Start(StartScanDto dto)
     {
+        RfidSession.Set(dto.ReaderId, dto.DoId);
 
-        await _readerScan.StartScanAsync(dto, doId);
+        _readerService.StartReader(dto.ReaderId, dto.IpAddress);
 
-        return Ok("Reader scanning started");
+        return Ok("Reader started");
     }
 
     [HttpPost("stop")]
-    public IActionResult StopScan()
+    public IActionResult Stop(string readerId)
     {
-        _readerScan.StopScan();
-        return Ok("Reader scanning stopped");
+        _readerService.StopReader(readerId);
+        return Ok("Reader stopped");
+    }
+
+    [HttpGet("progress")]
+    public async Task<IActionResult> Progress(string doId)
+    {
+        var total = await _db.TransactionDetails
+            .CountAsync(x => x.Transaction.ReferenceId == doId);
+
+        var scanned = await _db.TransactionDetails
+            .CountAsync(x => x.Transaction.TrsType == "STOCK_OUT"
+                          && x.Transaction.ReferenceId == doId);
+
+        return Ok(new { total, scanned });
+    }
+
+    [HttpGet("items")]
+    public async Task<IActionResult> GetItems(string doId)
+    {
+        Console.WriteLine("=============================="+doId);
+
+        var data = await _service.GetItemsAsync(doId);
+        return Ok(data);
+    }
+
+    [HttpGet("progress")]
+    public async Task<IActionResult> GetProgress(string doId)
+    {
+        var data = await _service.GetProgressAsync(doId);
+        return Ok(data);
+    }
+
+    [HttpGet("tags")]
+    public async Task<IActionResult> GetTags(string doId)
+    {
+        var data = await _service.GetTagsAsync(doId);
+        return Ok(data);
     }
 }

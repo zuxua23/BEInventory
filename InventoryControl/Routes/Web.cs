@@ -45,7 +45,7 @@ public static class Web
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute(
-            name: "logout",
+            name: "auth-logout",
             pattern: "/auth/logout",
             defaults: new { controller = "Auth", action = "Logout" });
 
@@ -55,45 +55,47 @@ public static class Web
         MapCrud(app, "user", "User");
 
         app.MapControllerRoute("printtag", "/printtag",
-            new { controller = "PrintTag", action = "Index" })
+            new { controller = "PrintTagRegis", action = "Index" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute("printtag-print", "/printtag/print",
-            new { controller = "PrintTag", action = "Print" })
+            new { controller = "PrintTagRegis", action = "Print" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
-        app.MapControllerRoute("printtag-delete", "/printtag/delete",
-            new { controller = "PrintTag", action = "Delete" })
+        app.MapControllerRoute(
+    name: "stockOut",
+    pattern: "/stockOut",
+    defaults: new { controller = "StockOut", action = "Index" })
             .AddEndpointFilter(AuthFilter)
-            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+    .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
 
-        app.MapControllerRoute("picking", "/picking",
-            new { controller = "Picking", action = "Index" })
+        app.MapControllerRoute("pickinglist", "/pickinglist",
+            new { controller = "Pickinglist", action = "Index" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
-        app.MapControllerRoute("picking-create", "/picking",
-            new { controller = "Picking", action = "Create" })
+        app.MapControllerRoute("picking-create", "/pickinglist",
+            new { controller = "PickingList", action = "Create" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
-        app.MapControllerRoute("picking-data", "/picking/data",
-            new { controller = "Picking", action = "Get" })
-            .AddEndpointFilter(AuthFilter)
-            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+        //app.MapControllerRoute("picking-data", "/pickinglist/data",
+        //    new { controller = "PickingList", action = "Get" })
+        //    .AddEndpointFilter(AuthFilter)
+        //    .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
-        app.MapControllerRoute("picking-update", "/picking/update",
-            new { controller = "Picking", action = "Update" })
-            .AddEndpointFilter(AuthFilter)
-            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+        //app.MapControllerRoute("picking-update", "/picking/update",
+        //    new { controller = "Picking", action = "Update" })
+        //    .AddEndpointFilter(AuthFilter)
+        //    .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
-        app.MapControllerRoute("picking-delete", "/picking/delete",
-            new { controller = "Picking", action = "Delete" })
-            .AddEndpointFilter(AuthFilter)
-            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+        //app.MapControllerRoute("picking-delete", "/picking/delete",
+        //    new { controller = "Picking", action = "Delete" })
+        //    .AddEndpointFilter(AuthFilter)
+        //    .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
 
         app.MapControllerRoute("permission", "/permission",
@@ -118,37 +120,37 @@ public static class Web
         app.MapControllerRoute($"{route}",
             $"/{route}",
             new { controller = controller, action = "Index" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute($"{route}-create",
             $"/{route}",
             new { controller = controller, action = "Create" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-data",
             $"/{route}/data",
             new { controller = controller, action = "Get" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-update",
             $"/{route}/update",
             new { controller = controller, action = "Update" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute($"{route}-delete-form",
             $"/{route}/delete-form",
             new { controller = controller, action = "DeleteForm" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute($"{route}-delete",
             $"/{route}/delete",
             new { controller = controller, action = "Delete" })
-            //.AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
     }
 
