@@ -75,8 +75,25 @@
                 <button type="submit" class="btn-login" id="loginBtn">
                     Sign In
                 </button>
+                <button type="button" class="btn-config" id="openConfig">
+                    Database Setting
+                </button>
             </form>
+            <div class="modal" id="configModal">
+                <div class="modal-content">
+                    <h3>Database Configuration</h3>
 
+                    <input type="text" id="server" placeholder="Server (contoh: .\SQLEXPRESS)">
+                    <input type="text" id="database" placeholder="Database">
+                    <input type="text" id="userId" placeholder="User Id">
+                    <input type="password" id="passwordDb" placeholder="Password">
+
+                    <div style="margin-top:15px;">
+                        <button onclick="saveConnection()">Save</button>
+                        <button onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
             <!-- Error Message Display -->
             <div class="login-error" id="loginError"></div>
         </div>
@@ -139,6 +156,45 @@
                 this.parentElement.style.transform = 'scale(1)';
             });
         });
+
+
+        document.getElementById("openConfig").addEventListener("click", () => {
+            document.getElementById("configModal").style.display = "block";
+        });
+
+        function closeModal() {
+            document.getElementById("configModal").style.display = "none";
+        }
+
+        async function saveConnection() {
+            const data = {
+                server: document.getElementById("server").value,
+                database: document.getElementById("database").value,
+                userId: document.getElementById("userId").value,
+                password: document.getElementById("passwordDb").value
+            };
+
+            try {
+                const res = await fetch("/update-connection", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                alert(result.message);
+
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+
+            } catch (err) {
+                alert("Gagal update koneksi");
+            }
+        }
     </script>
 </body>
 </html>

@@ -128,13 +128,19 @@ public class StockOutService : IStockOutService
 
     public async Task ScanStockOutAsync(StockOutResponseDto dto, string user)
     {
+
+        Console.WriteLine($"SCAN MASUK: {dto.Epc}, DO: {dto.DoId}");
+
         var tag = await _db.Tags
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
+            .FirstOrDefaultAsync(t => t.EpcTag.Replace(" ", "") == dto.Epc.Replace(" ", ""));
 
         if (tag == null || tag.Status != "RESERVED")
+        {
+            Console.WriteLine("TAG TIDAK DITEMUKAN DI DB");
             return;
-
+        }
+        Console.WriteLine($"TAG FOUND: {tag.Id}, STATUS: {tag.Status}");
         var isValid = await _db.TransactionDetails
             .AsNoTracking()
             .AnyAsync(x =>
@@ -188,6 +194,29 @@ public class StockOutService : IStockOutService
             TagId = tag.Id,
             ItemId = tag.ItemId
         });
+
+        var totalRequired = await _db.TransactionDetails
+    .CountAsync(x =>
+        x.Transaction.ReferenceId == dto.DoId &&
+        x.Transaction.TrsType == "STOCK_PREPARATION");
+
+        var totalScanned = await _db.TransactionDetails
+            .CountAsync(x =>
+                x.Transaction.ReferenceId == dto.DoId &&
+                x.Transaction.TrsType == "STOCK_OUT");
+
+        if (totalRequired > 0 && totalRequired == totalScanned)
+        {
+            var doData = await _db.DOs.FirstOrDefaultAsync(x => x.DoId == dto.DoId);
+
+            if (doData != null)
+            {
+                doData.Status = "COMPLETED";
+                await _db.SaveChangesAsync();
+
+                Console.WriteLine("DO  COMPLETED");
+            }
+        }
 
         await _db.SaveChangesAsync();
     }

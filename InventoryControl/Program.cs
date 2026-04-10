@@ -26,6 +26,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<JwtTokenHelper>();
 builder.Services.AddSingleton<ImpinjReaderService>();
+builder.Services.AddSingleton<ConfigService>();
+builder.Services.AddSingleton<AppRestartService>();
 #endregion
 
 #region SESSION CONFIG 

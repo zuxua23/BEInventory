@@ -59,7 +59,9 @@ public class AuthController : Controller
         {
             var result = await _authService.ValidateUserAsync(dto);
             var token = await _authService.GenerateTokenAsync(result);
-            Console.WriteLine("loginHT");
+            Console.WriteLine("========================================================");
+            Console.WriteLine("loginHT SC" );
+            Console.WriteLine("t"+token );
 
             return Ok(new
             {

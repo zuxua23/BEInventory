@@ -22,7 +22,7 @@ public class StockInService : IStockInService
 
         try
         {
-            if (!dto.ScannedCodes.Any())
+            if (dto.ScannedCodes == null || !dto.ScannedCodes.Any())
             {
                 DailyFileLogger.Warn("StockInAsync gagal: Tidak ada tag yang discan");
                 throw new Exception("Tidak ada tag yang discan");

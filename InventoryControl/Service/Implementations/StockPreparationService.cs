@@ -26,7 +26,7 @@ public class StockPreparationService : IStockPreparationService
 
             var doData = await _db.DOs
                 .Include(d => d.Details)
-                .FirstOrDefaultAsync(d => d.DoId == dto.DoId && !d.IsDelete);
+                .FirstOrDefaultAsync(d => d.DoId == dto.DoId);
 
             if (doData == null)
             {

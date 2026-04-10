@@ -48,6 +48,7 @@ public class StockOutController : ControllerBase
     {
         RfidSession.Set(dto.ReaderId, dto.DoId);
         Console.WriteLine("IP" + dto.IpAddress);
+
         await _readerService.StartReader(dto.ReaderId, dto.IpAddress);
 
         return Ok("Reader started");
@@ -60,18 +61,6 @@ public class StockOutController : ControllerBase
         return Ok("Reader stopped");
     }
 
-    [HttpGet("progress")]
-    public async Task<IActionResult> Progress(string doId)
-    {
-        var total = await _db.TransactionDetails
-            .CountAsync(x => x.Transaction.ReferenceId == doId);
-
-        var scanned = await _db.TransactionDetails
-            .CountAsync(x => x.Transaction.TrsType == "STOCK_OUT"
-                          && x.Transaction.ReferenceId == doId);
-
-        return Ok(new { total, scanned });
-    }
 
     [HttpGet("items")]
     public async Task<IActionResult> GetItems(string doId)

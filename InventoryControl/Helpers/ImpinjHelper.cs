@@ -1,5 +1,6 @@
 ﻿using Impinj.OctaneSdk;
 using InventoryControl.DTO;
+using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using System.Collections.Concurrent;
 using static InventoryControl.Service.Implementations.StockOutService;
@@ -101,6 +102,7 @@ public class ImpinjReaderService
     {
         try
         {
+            Console.WriteLine($"Tags reported: {report.Tags.Count} from reader event");
             var reader = sender as ImpinjReader;
 
             var readerId = _readers
@@ -120,6 +122,7 @@ public class ImpinjReaderService
     {
         var doId = RfidSession.Get(readerId);
         if (doId == null) return;
+        Console.WriteLine($"SESSION DO: {doId}");
 
         using var scope = _scopeFactory.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IStockOutService>();
@@ -128,8 +131,8 @@ public class ImpinjReaderService
 
         foreach (var tag in report.Tags)
         {
-            var epc = tag.Epc.ToString();
-
+            var epc = tag.Epc.ToString().Replace(" ", "").Trim().ToUpper();
+            Console.WriteLine($"Tag detected: {epc}, RSSI: {tag.PeakRssiInDbm} dBm");
             // Filter RSSI
             if (tag.PeakRssiInDbm < RSSI_THRESHOLD)
                 continue;

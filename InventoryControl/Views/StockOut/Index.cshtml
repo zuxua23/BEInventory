@@ -135,19 +135,23 @@
                                     <h5><i class="fas fa-qrcode mr-2"></i>RFID Scanner</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="form-group">
+                                    @* <div class="form-group">
                                         <label>Scan RFID Tag</label>
                                         <input type="text" class="form-control scan-input" id="rfidScanner"
                                                placeholder="Scan RFID Tag Here..." autofocus>
-                                    </div>
+                                    </div> *@
                                     <div class="text-center">
                                         <button class="btn btn-warning btn-lg mb-2" id="startScanBtn" onclick="startScanning()">
                                             <i class="fas fa-play mr-2"></i>Start Scan
                                         </button>
                                         <br>
+                                        <button class="btn btn-danger btn-lg" onclick="stopScan()">
+                                            <i class="fas fa-stop"></i> Stop Scan
+                                        </button>
+                                        @* <br>
                                         <button class="btn btn-success btn-lg" id="processOutBtn" onclick="processOut()" disabled>
                                             <i class="fas fa-check mr-2"></i>Process Out
-                                        </button>
+                                        </button> *@
                                     </div>
                                 </div>
                             </div>
@@ -215,12 +219,14 @@
             const readerSelect = document.getElementById("rdrIdSelect");
             const readerId = readerSelect.value;
             const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
-            console.log("DO SELECTED:", doId);
+
+
             if (!doId || !readerId) {
                 alert("Pilih DO dan Reader dulu");
                 return;
             }
             console.log("FETCH DO ID:", doId);
+            console.log("IP Address:", ip);
             currentDo = doId; 
 
             await fetch('/stockout/start', {
@@ -316,9 +322,11 @@
         async function loadTags() {
             const res = await fetch(`/stockout/tags?doId=${currentDo}`);
             const tags = await res.json();
+            console.log("Loaded tags:", tags);
 
             const tagList = document.getElementById('tagList');
             tagList.innerHTML = '';
+
 
             tags.forEach(tag => {
                 const div = document.createElement('div');

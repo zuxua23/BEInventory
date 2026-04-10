@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 
-[ApiController]
-[Route("stockpreparation")]
+//[ApiController]
+//[Route("stockpreparation")]
 public class StockPreparationController : ControllerBase
 {
     private readonly IStockPreparationService _service;
