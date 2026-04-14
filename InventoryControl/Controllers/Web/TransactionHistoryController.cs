@@ -12,6 +12,7 @@ public class TransactionHistoryController : Controller
         if (user == null)
             return Redirect("/");
         ViewData["pages"] = "TransactionHistory";
+        ViewData["parent"] = "";
         return View();
     }
 }

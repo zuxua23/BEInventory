@@ -9,7 +9,7 @@ public class PickingListController : Controller
     {
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
         ViewData["pages"] = "pickinglist";
         ViewData["parent"] = "";
         return View();

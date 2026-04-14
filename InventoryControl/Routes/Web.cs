@@ -54,13 +54,17 @@ public static class Web
         MapCrud(app, "reader", "Reader");
         MapCrud(app, "user", "User");
 
-        app.MapControllerRoute("printtag", "/printtag",
-            new { controller = "PrintTagRegis", action = "Index" })
+        app.MapControllerRoute(
+            name: "printtag",
+            pattern: "/printtag",
+            defaults: new { controller = "PrintTagRegis", action = "Index" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
-        app.MapControllerRoute("printtag-print", "/printtag/print",
-            new { controller = "PrintTagRegis", action = "Print" })
+        app.MapControllerRoute(
+            name: "printtag-print",
+            pattern: "/printtag/print",
+            defaults: new { controller = "PrintTagRegis", action = "Print" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
@@ -68,14 +72,14 @@ public static class Web
             name: "stockOut",
             pattern: "/stockOut",
             defaults: new { controller = "StockOut", action = "Index" })
-                    .AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute(
             name: "TransactionHistory",
             pattern: "/TransactionHistory",
             defaults: new { controller = "TransactionHistory", action = "Index" })
-                    .AddEndpointFilter(AuthFilter)
+            .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
 

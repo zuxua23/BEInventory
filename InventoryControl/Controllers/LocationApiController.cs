@@ -21,14 +21,14 @@ public class LocationApiController : ControllerBase
     }
 
     [HttpGet]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("LOCATION_GET")]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());    
     }
 
     [HttpGet("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("LOCATION_GET")]
     public async Task<IActionResult> GetById(string id)
     {
         var data = await _service.GetByIdAsync(id);
@@ -39,7 +39,7 @@ public class LocationApiController : ControllerBase
     }
 
     [HttpPost]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("LOCATION_CREATE")]
     public async Task<IActionResult> Create(LocationDTO dto)
     {
         var createdBy = Request.Headers["X-User-Id"].FirstOrDefault() ?? "system";
@@ -49,7 +49,7 @@ public class LocationApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("LOCATION_UPDATE")]
     public async Task<IActionResult> Update(string id, LocationDTO dto)
     {
         var updatedBy = Request.Headers["X-User-Id"].FirstOrDefault() ?? "system";
@@ -58,7 +58,7 @@ public class LocationApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("LOCATION_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);

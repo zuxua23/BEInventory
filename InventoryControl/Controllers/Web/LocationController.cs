@@ -9,7 +9,7 @@ public class LocationController : Controller
     {
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
         ViewData["pages"] = "location";
         ViewData["parent"] = "master";
         return View();

@@ -9,9 +9,9 @@ public class PrintTagRegisController : Controller
     {
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
         ViewData["pages"] = "printtag";
+        ViewData["parent"] = "";
         return View();
     }   
 }
-

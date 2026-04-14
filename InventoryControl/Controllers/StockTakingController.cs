@@ -2,12 +2,12 @@
 
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[ApiController]
-[Route("stocktaking")]
+
 public class StockTakingController : ControllerBase
 {
     private readonly IStockTakingService _service;
@@ -26,6 +26,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpGet]
+    [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetStockData()
     {
         var data = await _service.GetStockDataAsync();

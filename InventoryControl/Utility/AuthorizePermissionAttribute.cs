@@ -1,14 +1,14 @@
 ﻿namespace InventoryControl.Utility;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.Security.Claims;
 using System.Text.Json;
 
-public class AuthorizePermissionAttribute : Attribute, IAuthorizationFilter
+public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilter
 {
     private readonly string? _permission;
 
-    public AuthorizePermissionAttribute(string? permission = null)
+    public AuthorizePermissionHybridAttribute(string? permission = null)
     {
         _permission = permission;
     }
@@ -16,39 +16,50 @@ public class AuthorizePermissionAttribute : Attribute, IAuthorizationFilter
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var httpContext = context.HttpContext;
-        Console.WriteLine("SESSION: " + context.HttpContext.Session.GetString("is_login"));
-        var isLogin = httpContext.Session.GetString("is_login");
 
-        if (isLogin != "OK")
+        List<string> userPermissions = new();
+
+
+        var user = httpContext.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
         {
-            return;
+            userPermissions = user.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
+
+            Console.WriteLine("AUTH VIA JWT");
+        }
+        else
+        {
+
+            var isLogin = httpContext.Session.GetString("is_login");
+
+            if (isLogin != "OK")
+            {
+                context.Result = new UnauthorizedResult();
+                return;
+            }
+
+            var permissionsJson = httpContext.Session.GetString("Permissions");
+
+            if (string.IsNullOrEmpty(permissionsJson))
+            {
+                context.Result = new UnauthorizedResult();
+                return;
+            }
+
+            userPermissions = JsonSerializer.Deserialize<List<string>>(permissionsJson);
+
+            Console.WriteLine("AUTH VIA SESSION");
         }
 
-        var controller = context.RouteData.Values["controller"]?.ToString();
-
-        if (controller == "Auth")
-        {
-            return;
-        }
-        Console.WriteLine("=====================");
-        var permissionsJson = httpContext.Session.GetString("Permissions");
-Console.WriteLine("Session JSON: " + permissionsJson);
-
-        if (string.IsNullOrEmpty(permissionsJson))
-        {
-            context.Result = new UnauthorizedResult();
-            return;
-        }
-
-        var permissions = JsonSerializer.Deserialize<List<string>>(permissionsJson);
-foreach (var p in permissions)
-{
-    Console.WriteLine("User Permission: " + p);
-}
         var permissionToCheck = _permission ?? GeneratePermission(context);
-        Console.WriteLine("Required Permission: " + permissionToCheck);
 
-        if (!permissions.Contains(permissionToCheck))
+        Console.WriteLine("Required: " + permissionToCheck);
+
+        if (!userPermissions.Contains(permissionToCheck))
         {
             context.Result = new ObjectResult(new
             {

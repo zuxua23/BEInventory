@@ -20,14 +20,14 @@ public class PickingListApiController : ControllerBase
     }
 
     [HttpGet]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_GET")]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
     [HttpGet("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_GET")]
     public async Task<IActionResult> GetById(string id)
     {
         var data = await _service.GetByIdAsync(id);
@@ -38,7 +38,7 @@ public class PickingListApiController : ControllerBase
     }
 
     [HttpPost]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_CREATE")]
     public async Task<IActionResult> Create([FromBody] PickingListDTO request)
     {
         if (request.Details == null || !request.Details.Any())
@@ -52,14 +52,14 @@ public class PickingListApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_UPDATE")]
     public async Task<IActionResult> Update(string id, [FromBody] PickingListUpdateDTO dto)
     {
         await _service.UpdateAsync(id, dto);
         return Ok(new { message = "DO berhasil diupdate" });
     }
     [HttpDelete("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);
@@ -67,7 +67,7 @@ public class PickingListApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("PICKINGLIST_UPDATE_STATUS")]
     public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
     {
         await _service.UpdateStatusAsync(id, dto.Status);

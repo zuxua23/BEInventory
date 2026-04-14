@@ -4,6 +4,7 @@ using InventoryControl.Entity;
 using InventoryControl.Helpers;
 using InventoryControl.Service.Implementations;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpPost("finalize")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Finalize(StockOutDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -35,6 +37,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpPost("scan")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Scan(StockOutResponseDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -44,6 +47,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpPost("start")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> StartAsync(StartScanDto dto)
     {
         RfidSession.Set(dto.ReaderId, dto.DoId);
@@ -55,6 +59,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpPost("stop")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
     public IActionResult Stop(string readerId)
     {
         _readerService.StopReader(readerId);
@@ -63,6 +68,7 @@ public class StockOutController : ControllerBase
 
 
     [HttpGet("items")]
+    [AuthorizePermissionHybrid("ITEM_GET")]
     public async Task<IActionResult> GetItems(string doId)
     {
         Console.WriteLine("=============================="+doId);
@@ -72,6 +78,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpGet("progress")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> GetProgress(string doId)
     {
         var data = await _service.GetProgressAsync(doId);
@@ -79,6 +86,7 @@ public class StockOutController : ControllerBase
     }
 
     [HttpGet("tags")]
+    [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetTags(string doId)
     {
         var data = await _service.GetTagsAsync(doId);

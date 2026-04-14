@@ -2,6 +2,7 @@
 using InventoryControl.Entity;
 using InventoryControl.Service.Implementations;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,8 @@ public class PrintTagRegisController: ControllerBase
         _service = service;
     }
 
-    [HttpPost("print")]
+    [HttpPost]
+    [AuthorizePermissionHybrid("TAG_PRINT")]
     public async Task<IActionResult> Print([FromBody] List<PrintTagDto> dto)
     {
         if (dto == null || !dto.Any())
@@ -36,6 +38,7 @@ public class PrintTagRegisController: ControllerBase
     }
 
     [HttpPost]
+    [AuthorizePermissionHybrid("TAG_REGISTER")]
     public async Task<IActionResult> Register(TagRegistrationDto dto)
     {
         var user = User.Identity?.Name ?? "system";
@@ -46,6 +49,7 @@ public class PrintTagRegisController: ControllerBase
     }
 
     [HttpGet]
+    [AuthorizePermissionHybrid("TAG_HISTORY_GET")]
     public async Task<IActionResult> GetPrintHistory()
     {
         var data = await _service.GetAvailableTagsAsync();

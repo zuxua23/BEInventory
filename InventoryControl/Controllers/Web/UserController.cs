@@ -11,7 +11,7 @@ public class UserController : Controller
         var user = HttpContext.Session.GetString("UserId");
 
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
 
         ViewData["pages"] = "user";
         ViewData["parent"] = "master";

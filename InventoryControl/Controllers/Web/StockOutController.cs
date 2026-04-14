@@ -9,7 +9,7 @@ public class StockOutController : Controller
     {
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
         ViewData["pages"] = "stockOut";
         return View();
     }

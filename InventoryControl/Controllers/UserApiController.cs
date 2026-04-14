@@ -15,14 +15,14 @@ public class UserApiController : ControllerBase
     }
 
     [HttpGet]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("USER_GET")]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
     [HttpGet("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("USER_GET")]
     public async Task<IActionResult> GetById(string id)
     {
         var data = await _service.GetByIdAsync(id);
@@ -34,7 +34,7 @@ public class UserApiController : ControllerBase
 
 
     [HttpPost]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("USER_CREATE")]
     public async Task<IActionResult> Create(UserDto dto)
     {
         var createdBy = HttpContext.Session.GetString("UserId") ?? "system";
@@ -43,7 +43,7 @@ public class UserApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("USER_UPDATE")]
     public async Task<IActionResult> Update(string id, UpdateUserDto dto)
     {
         var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
@@ -52,7 +52,7 @@ public class UserApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("USER_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);

@@ -2,8 +2,11 @@
 using InventoryControl.Database.Seeder;
 using InventoryControl.Routes;
 using InventoryControl.Utility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +52,37 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 #endregion
 
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Hybrid";
+    options.DefaultChallengeScheme = "Hybrid";
+})
+.AddPolicyScheme("Hybrid", "JWT or Session", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            return "Bearer";
+
+        return "Cookies"; // fallback
+    };
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+})
+.AddCookie("Cookies");
 
 var app = builder.Build();
 
@@ -73,9 +107,10 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
 app.UseStaticFiles();
-app.UseAuthorization();
+//app.UseAuthorization();
 //app.MapControllers();
-
+app.UseAuthentication();
+app.UseAuthorization();
 #endregion
 
 #region ROUTING

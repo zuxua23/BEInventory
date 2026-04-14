@@ -177,16 +177,18 @@ public class StockTakingService : IStockTakingService
                 .Where(d => d.SttId == dto.SttId)
                 .ToListAsync();
 
+
             var removeTagIds = details
-                .Where(d => d.Action == "REMOVE")
+                .Where(d => d.Action == "REMOVE" && d.TagId != null)
                 .Select(d => d.TagId)
+                .Distinct()
                 .ToList();
 
-            var tags = await _db.Tags
+            var removeTags = await _db.Tags
                 .Where(t => removeTagIds.Contains(t.Id))
                 .ToListAsync();
 
-            foreach (var tag in tags)
+            foreach (var tag in removeTags)
             {
                 if (tag.Status == "IN_STOCK")
                 {
@@ -208,6 +210,58 @@ public class StockTakingService : IStockTakingService
 
                     DailyFileLogger.Info($"StockAdjustment REMOVE. Tag={tag.TagId}, Session={dto.SttId}");
                 }
+            }
+
+            var addManuals = details
+                .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
+                .ToList();
+
+            // Validasi duplicate tag
+            var duplicate = addManuals
+                .GroupBy(x => x.TagId)
+                .Where(g => g.Count() > 1)
+                .Any();
+
+            if (duplicate)
+                throw new Exception("Ada tag yang dipakai lebih dari sekali di manual add");
+
+            var addTagIds = addManuals
+                .Select(x => x.TagId)
+                .Distinct()
+                .ToList();
+
+            var addTags = await _db.Tags
+                .Where(t => addTagIds.Contains(t.Id))
+                .ToListAsync();
+
+            foreach (var add in addManuals)
+            {
+                var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
+
+                if (tag == null)
+                    throw new Exception($"Tag {add.TagId} tidak ditemukan");
+
+                if (tag.Status != "STANDBY")
+                    throw new Exception($"Tag {tag.TagId} tidak dalam kondisi STANDBY");
+
+                tag.Status = "IN_STOCK";
+                tag.ItemId = add.ItemId;
+                tag.UpdatedBy = user;
+                tag.UpdatedAt = DateTime.UtcNow;
+
+                _db.Histories.Add(new HistoryPrint
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TagId = tag.Id,
+                    ItemId = add.ItemId,
+                    Type = "STOCK_ADJUSTMENT",
+                    Reference = dto.SttId,
+                    Action = "ADD_MANUAL",
+                    CreatedBy = user,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                DailyFileLogger.Info($"StockAdjustment ADD_MANUAL. Tag={tag.TagId}, Item={add.ItemId}");
             }
 
             _db.Transactions.Add(new Transaction

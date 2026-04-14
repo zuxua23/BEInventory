@@ -1,6 +1,7 @@
 ﻿using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ public class StockPreparationController : ControllerBase
     }
 
     [HttpPost]
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> Prepare(StockPreparationRequestDto dto)
     {
         var user = User.Identity?.Name ?? "system";

@@ -23,15 +23,14 @@ public class ItemApiController : ControllerBase
     //}
 
     [HttpGet]
-    [AuthorizePermission]
-
+    [AuthorizePermissionHybrid("ITEM_GET")]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
     [HttpGet("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("ITEM_GET")]
 
     public async Task<IActionResult> GetById(string id)
     {
@@ -43,7 +42,7 @@ public class ItemApiController : ControllerBase
     }
 
     [HttpPost]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("ITEM_CREATE")]
     public async Task<IActionResult> Create(ItemDto dto)
     {
         var createdBy = HttpContext.Session.GetString("UserId") ?? "system";
@@ -52,7 +51,7 @@ public class ItemApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("ITEM_UPDATE")]
     public async Task<IActionResult> Update(string id, ItemDto dto)
     {
         var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
@@ -63,7 +62,7 @@ public class ItemApiController : ControllerBase
 
    
     [HttpDelete("{id}")]
-    [AuthorizePermission]
+    [AuthorizePermissionHybrid("ITEM_DELETE")]
 
     public async Task<IActionResult> Delete(string id)
     {

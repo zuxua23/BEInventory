@@ -9,7 +9,7 @@ public class ReaderController : Controller
     {
         var user = HttpContext.Session.GetString("UserId");
         if (user == null)
-            return Redirect("/login");
+            return Redirect("/");
         ViewData["pages"] = "reader";
         ViewData["parent"] = "master";
         return View();

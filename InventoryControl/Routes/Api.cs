@@ -33,5 +33,42 @@ public static class Api
             pattern: "/api/preparation",
             defaults: new { controller = "StockPreparation", action = "Prepare" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-create",
+            pattern: "/api/stocktaking/create",
+            defaults: new { controller = "StockTaking", action = "Create" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-getdata",
+            pattern: "/api/stocktaking/data",
+            defaults: new { controller = "StockTaking", action = "GetStockData" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-scan",
+            pattern: "/api/stocktaking/scan",
+            defaults: new { controller = "StockTaking", action = "Scan" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-remove",
+            pattern: "/api/stocktaking/remove",
+            defaults: new { controller = "StockTaking", action = "Remove" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-manual",
+            pattern: "/api/stocktaking/manual-add",
+            defaults: new { controller = "StockTaking", action = "ManualAdd" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stocktaking-finalize",
+            pattern: "/api/stocktaking/finalize",
+            defaults: new { controller = "StockTaking", action = "Finalize" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,7 @@ public class StockInController : ControllerBase
     //}
 
     [HttpPost]
+    [AuthorizePermissionHybrid("STOCK_IN")]
     public async Task<IActionResult> StockIn([FromBody] StockInDto dto) // Tambahkan [FromBody]
     {
         var user = User.Identity?.Name ?? "system";
