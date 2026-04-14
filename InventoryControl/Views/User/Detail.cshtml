@@ -149,7 +149,6 @@
     <div class="modal fade" id="roleUpdate">
         <div class="modal-dialog">
             <div class="modal-content">
-
                 <div class="modal-header">
                     <h5>Update Role User</h5>
                     <button class="close" data-dismiss="modal">&times;</button>
@@ -157,30 +156,37 @@
 
                 <form id="RoleUpdateForm">
                     <div class="modal-body">
-
-                        <div class="form-group">
-                            <label>
-                                <i class="fas fa-barcode text-muted mr-2"></i>
-                                Current Role <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="currentRole" class="form-control" required>
+                    
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
+                                    <input type="text" name="targetUserId" id="modalUserId" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-user-shield mr-2"></i>Current Role</label>
+                                    <input type="text" id="modalCurrentRole" class="form-control" readonly>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="detailContainer"></div>
+                        <hr> <label>Assign New Roles</label>
+                        <div id="detailContainer">
+                        </div>
 
                         <button type="button" class="btn btn-success btn-sm mt-2" onclick="addDetail()">
-                            <i class="fas fa-plus mr-1"></i>Item
+                            <i class="fas fa-plus mr-1"></i> Add Role
                         </button>
-
                     </div>
 
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i>Update
+                            <i class="fas fa-save mr-1"></i>Update Roles
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
@@ -268,54 +274,93 @@
             if(e.key==='Escape') window.location.href="/user";
         });
 
-                $("#RoleUpdateForm").submit(async function (e) {
-                e.preventDefault();
+                        // Script untuk mengisi User ID dan Current Role pas modal dibuka
+            $('#roleUpdate').on('shown.bs.modal', function () {
+                // Ambil value dari input di form utama
+                $("#modalUserId").val($("#userId").val());
+                $("#modalCurrentRole").val($("#RoleUpdate").val()); // Asumsi field "Role" di form utama id-nya RoleUpdate
 
-                const form = e.target;
+                // Kalau kosong, otomatis kasih 1 baris input dropdown
+                if ($("#detailContainer").is(':empty')) {
+                    addDetail();
+                }
+            });
+
+            // Fungsi untuk nambah baris dropdown (Select2 / bisa diketik)
+            function addDetail() {
+                const rowId = Date.now();
+                const html = `
+                    <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
+                        <div class="flex-grow-1 mr-2">
+                            <select class="form-control role-select" required style="width: 100%;">
+                                <option value="">-- Select Role --</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Warehouse">Warehouse</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Staff">Staff</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="$('#row_${rowId}').remove()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                $("#detailContainer").append(html);
+
+                // Aktifin fitur select2 biar bisa diketik/search
+                $(`#row_${rowId} .role-select`).select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Search role...",
+                    dropdownParent: $('#roleUpdate') // Biar dropdown nggak ketutup modal
+                });
+            }
+
+            // Logic buat submit datanya
+            $("#RoleUpdateForm").submit(async function (e) {
+                e.preventDefault();
 
                 let details = [];
 
+                // Ambil semua role yang dipilih
                 $("#detailContainer .detail-item").each(function () {
-                    details.push({
-                        itemId: $(this).find(".item-select").val(),
-                        qtyRequired: parseInt($(this).find(".qty").val())
-                    });
+                    const selectedRole = $(this).find(".role-select").val();
+                    if (selectedRole) {
+                        details.push(selectedRole);
+                    }
                 });
 
+                // Sesuaikan payload dengan kebutuhan API lo
                 const payload = {
-                    doNumber: form.doNumber.value,
-                    details
+                    userId: $("#modalUserId").val(),
+                    roles: details
                 };
 
-                const response = await fetch("/api/pickinglist", {
-                    method: "POST",
+                const response = await fetch("/api/user/update-roles", { // Sesuaikan endpoint API-nya
+                    method: "POST", // Atau PUT tergantung backend lo
                     credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-
                     Swal.fire({
                         icon: "success",
                         title: "Berhasil",
-                        text: "Picking List berhasil dibuat",
+                        text: "Role berhasil diupdate",
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        $("#createPickingList").modal("hide");
-                        form.reset();
-                        loadDO();
+                        $("#roleUpdate").modal("hide");
+                        $("#detailContainer").empty(); // Kosongin lagi
+                        loadUser(); // Refresh data di layar utama
                     });
-
                 } else {
-
                     Swal.fire({
                         icon: "error",
                         title: "Gagal",
-                        text: "Create picking list gagal"
+                        text: "Gagal update role"
                     });
-
                 }
             });
     </script>
