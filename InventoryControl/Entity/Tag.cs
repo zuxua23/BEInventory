@@ -47,7 +47,7 @@ public class Tag
     public DateTime? UpdatedAt { get; set; }
 
     [Column("isDelete")]
-    public int? isDelete { get; set; }
+    public int? isDelete { get; set; } = 0;
 
 
     public Location Location { get; set; }

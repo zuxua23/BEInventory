@@ -25,7 +25,7 @@
 
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
-                                <li class="breadcrumb-item"><a href="/home" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="/dashboard" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
                                 <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-box mr-1"></i>Transaction History</li>
                             </ol>
                         </nav>
@@ -181,8 +181,8 @@
                     data: data,
                     responsive: true,
                     pageLength: 5,
-                    lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                    
+                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
+
                     autoWidth: false, 
                     columnDefs: [
                         { targets: 0, data: null, render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1, orderable: false, searchable: false, width: "5%", className: "text-center" },

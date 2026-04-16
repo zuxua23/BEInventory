@@ -8,4 +8,5 @@ public interface IPrintTagRegisService
     Task<string> PrintBulkAsync(List<PrintTagDto> list, string user);
     Task RegisterAsync(TagRegistrationDto dto, string user);
     Task<List<PrintHistoryResponseDto>> GetAvailableTagsAsync();
+    Task<List<TagResponseDto>> GetAllAsync();
 }

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 [ApiController]
-[Route("tag")]
+[Route("api/tag")]
 public class PrintTagRegisController: ControllerBase
 {
     private readonly IPrintTagRegisService _service;
@@ -19,7 +19,7 @@ public class PrintTagRegisController: ControllerBase
         _service = service;
     }
 
-    [HttpPost]
+    [HttpPost("print")]
     [AuthorizePermissionHybrid("TAG_PRINT")]
     public async Task<IActionResult> Print([FromBody] List<PrintTagDto> dto)
     {
@@ -37,7 +37,7 @@ public class PrintTagRegisController: ControllerBase
         });
     }
 
-    [HttpPost]
+    [HttpPost("register")]
     [AuthorizePermissionHybrid("TAG_REGISTER")]
     public async Task<IActionResult> Register(TagRegistrationDto dto)
     {
@@ -48,11 +48,18 @@ public class PrintTagRegisController: ControllerBase
         return Ok(new { message = "Tag berhasil di-standby-kan" });
     }
 
-    [HttpGet]
+    [HttpGet("history")]
     [AuthorizePermissionHybrid("TAG_HISTORY_GET")]
     public async Task<IActionResult> GetPrintHistory()
     {
         var data = await _service.GetAvailableTagsAsync();
+        return Ok(data);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var data = await _service.GetAllAsync();
         return Ok(data);
     }
 }

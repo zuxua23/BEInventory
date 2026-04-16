@@ -10,10 +10,9 @@ public class TagCreateDto
 public class TagResponseDto
 {
     public string TagId { get; set; } = null!;
-    public string ItemId { get; set; } = null!;
     public string? ItemName { get; set; }
     public string? Status { get; set; }
-    public string? CurrentLocation { get; set; }
+    public string? Location { get; set; }
 }
 
 public class TagRegistrationDto

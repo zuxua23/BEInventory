@@ -26,7 +26,7 @@
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="/home" class="text-muted">
+                                    <a href="/dashboard" class="text-muted">
                                         <i class="fas fa-home mr-1"></i>Dashboard
                                     </a>
                                 </li>
@@ -187,6 +187,7 @@
             });
 
             $("#doIdSelect").html(options);
+                    initSelect2();
         }
 
          async function loadReaderDropdown() {
@@ -205,7 +206,21 @@
             });
             console.log("IP:", data.ipAddress);
             $("#rdrIdSelect").html(options);
+                    initSelect2();
         }
+
+
+        function initSelect2() {
+            $('#rdrIdSelect, #doIdSelect').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        }
+                $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
 
 
         let pollingInterval = null;

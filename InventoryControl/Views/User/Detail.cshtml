@@ -26,7 +26,7 @@
                         <nav class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="/home" class="text-muted">
+                                    <a href="/dashboard" class="text-muted">
                                         <i class="fas fa-home mr-1"></i>Dashboard
                                     </a>
                                 </li>
@@ -195,6 +195,20 @@
 
     <script>
 
+
+        function initSelect2(parent = document) {
+    $(parent).find('.select2').select2({
+        theme: 'bootstrap4',
+        placeholder: "Search role...",
+        width: '100%',
+        dropdownParent: $('#roleUpdate')
+    });
+}
+
+$(document).on('select2:open', () => {
+    document.querySelector('.select2-container--open .select2-search__field').focus();
+});
+
         let id = "@ViewData["id"]";
 
         $(document).ready(function(){
@@ -293,9 +307,8 @@
             const html = `
                 <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
                     <div class="flex-grow-1 mr-2">
-                        <select class="form-control role-select" style="width: 100%;">
-                            <option value="">-- Select Role --</option>
-                            ${options}
+                        <select class="form-control select2 role-select" style="width: 100%;">
+                                  ${options}
                         </select>
                     </div>
                     <button type="button" class="btn btn-danger btn-sm" onclick="$('#row_${rowId}').remove()">
@@ -306,11 +319,7 @@
 
             $("#detailContainer").append(html);
 
-            $(`#row_${rowId} .role-select`).select2({
-                theme: 'bootstrap4',
-                placeholder: "Search role...",
-                dropdownParent: $('#roleUpdate')
-            });
+                    initSelect2(`#row_${rowId}`);
         }
 
         $('#roleUpdate').on('shown.bs.modal', async function () {
@@ -352,10 +361,7 @@
 
                 $("#detailContainer").append(html);
 
-                $(`#row_${rowId} .role-select`).select2({
-                    theme: 'bootstrap4',
-                    dropdownParent: $('#roleUpdate')
-                });
+        initSelect2(`#row_${rowId}`);
             });
 
             if (user.roles.length === 0) addDetail();

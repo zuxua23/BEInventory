@@ -26,7 +26,7 @@
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="/home" class="text-muted">
+                                    <a href="/dashboard" class="text-muted">
                                         <i class="fas fa-home mr-1"></i>Dashboard
                                     </a>
                                 </li>
@@ -108,7 +108,8 @@
                                 <i class="fas fa-barcode text-muted mr-2"></i>
                                 DO Number <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="doNumber" class="form-control" required>
+                            @* <input type="text" name="doNumber" class="form-control" required> *@
+                            <select id="doIdSelect" name="doNumber" class="form-control select2" style="width:100%"></select>
                         </div>
 
                         <div id="detailContainer"></div>
@@ -134,6 +135,23 @@
 
     <script>
 
+                 async function loadDODropdown() {
+
+            const response = await fetch("/api/pickinglist", {
+                method: "GET",
+                credentials: "include"
+            });
+
+            const data = await response.json();
+            let options = `<option value="">-- Select DO --</option>`;
+            console.log("Dropdown value:", $("#doIdSelect").val());
+            data.forEach(data => {
+                options += `<option value="${data.doId}">${data.doNumber}</option>`;
+            });
+
+            $("#doIdSelect").html(options);
+                    initSelect2();
+        }
         async function loadItemDropdown() {
 
             const response = await fetch("/api/item", {
@@ -155,11 +173,23 @@
                 }
             });
         }
+        function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('#createPickingList')
+            });
+        }
+                $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
 
         let table;
 
         $(document).ready(function () {
             loadDO();
+            loadDODropdown();
         });
 
         async function loadDO() {
@@ -188,8 +218,8 @@
                 table = $("#datatablesIndex").DataTable({
                     data: data,
                     responsive: true,
-                    pageLength: 10, 
-                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
+                    pageLength: 5, 
+                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
 
                     autoWidth: false, 
                     columnDefs: [
@@ -305,7 +335,7 @@
             $("#detailContainer").append(`
                 <div class="row mb-2 detail-item align-items-center">
                     <div class="col">
-                        <select class="form-control item-select" required></select>
+                        <select class="form-control select2 item-select" required></select>
                     </div>
                     <div class="col">
                         <input class="form-control qty" placeholder="Qty" type="number">
@@ -319,6 +349,7 @@
             `);
 
             loadItemDropdown();
+            initSelect2($("#detailContainer"));
         }
 
         $("#createPickingListForm").submit(async function (e) {

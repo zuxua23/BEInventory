@@ -26,7 +26,7 @@
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="/home" class="text-muted">
+                                    <a href="/dashboard" class="text-muted">
                                         <i class="fas fa-home mr-1"></i>Dashboard
                                     </a>
                                 </li>
@@ -69,7 +69,7 @@
                                             <tr>
                                                 <td>1</td>
                                                 <td>
-                                                    <select class="form-control item-select" data-row="1" id="firstItemSelect"></select>
+                                                    <select class="form-control select2 item-select" data-row="1" id="firstItemSelect"></select>
                                                 </td>
                                                 <td>
                                                     <input type="number" class="form-control qty-input" min="1" max="100" value="1">
@@ -94,13 +94,21 @@
                         <div class="col-md-4">
                             <div class="card shadow-lg h-100">
                                 <div class="card-header bg-success text-white">
-                                    <h6 class="mb-0"><i class="fas fa-print mr-2"></i>Print</h6>
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-print mr-2"></i>Print
+                                    </h6>
                                 </div>
                                 <div class="card-body d-flex flex-column">
-                                    <div class="form-group">
-                                        <label>Total Tag</label>
-                                        <span class="badge badge-primary badge-lg d-block p-2 text-center" id="totalTags">0</span>
+
+                                    <div class="form-group text-center">
+                                        <label class="font-weight-bold text-muted">Total Tag</label>
+                                        <div id="totalTags"
+                                             class="badge badge-primary badge-lg d-block p-3 text-center"
+                                             style="font-size: 1.5rem;">
+                                            0
+                                        </div>
                                     </div>
+
                                     <button class="btn btn-primary btn-block mt-auto" onclick="printTags()">
                                         <i class="fas fa-print mr-2"></i>Print Tags
                                     </button>
@@ -152,10 +160,93 @@
     @Html.Partial("_BaseScript")
 
     <script>
+
+
+                let table;
+                        async function loadTagTable() {
+
+            const res = await fetch("/api/tag", {
+                credentials: "include"
+            });
+
+            if (!res.ok) {
+                console.error("API ERROR:", res.status);
+                return;
+            }
+
+            const data = await res.json();
+
+            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
+                $('#datatablesIndex').DataTable().clear().destroy();
+            }
+
+            table = $("#datatablesIndex").DataTable({
+                data: data || [],
+                responsive: true,
+                pageLength: 5,
+                autoWidth: false,
+                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
+
+                columnDefs: [
+                    {
+                        targets: 0,
+                        data: null,
+                        render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1,
+                        className: "text-center",
+                        orderable: false
+                    },
+                    {
+                        targets: 1,
+                        data: "tagId",
+                        render: d => `<code>${d}</code>`
+                    },
+                    { targets: 2, data: "itemName" },
+                    { targets: 3, data: "location" },
+                    {
+                        targets: 4,
+                        data: "status",
+                        render: function (data) {
+                            if (data === "IN")
+                                return `<span class="badge badge-success">IN</span>`;
+                            if (data === "OUT")
+                                return `<span class="badge badge-danger">OUT</span>`;
+                            return `<span class="badge badge-secondary">${data || "-"}</span>`;
+                        }
+                    }
+                ],
+
+                dom:
+                    "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                    "<'table-responsive card-body p-0't>" +
+                    "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
+
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: " Search tags...",
+                    lengthMenu: "Show _MENU_ Entries",
+                    emptyTable: "No tag data found",
+                    paginate: { previous: "Previous", next: "Next" }
+                },
+
+                drawCallback: function () {
+                    $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
+                    $('.dataTables_filter input').addClass('form-control form-control-sm rounded shadow-sm');
+
+                    if ($.fn.responsive) {
+                        table.responsive.recalc();
+                    }
+                }
+            });
+        }
+
+
                 $(document).ready(function () {
             loadItemsDropdown(document.getElementById("firstItemSelect"));
+             loadTagTable();
+              updateTotalTags();
         });
-                async function loadItemsDropdown(selectElement) {
+
+           async function loadItemsDropdown(selectElement) {
 
             const response = await fetch("/api/item", {
                 method: "GET",
@@ -176,7 +267,23 @@
             });
 
             selectElement.innerHTML = options;
+                    initSelect2();
         }
+
+
+        function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        }
+                $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
+
             let rowCounter = 1;
 
                function addRow() {
@@ -190,7 +297,7 @@
                     <select class="form-control item-select"></select>
                 </td>
                 <td>
-                    <input type="number" class="form-control qty-input" min="1" max="100" value="1">
+                    <input type="number" class="form-control qty-input" min="1" max="1000" value="1">
                 </td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="removeRow(this)">
@@ -252,7 +359,7 @@
                 }
             });
 
-            const response = await fetch("/tag/print", {
+            const response = await fetch("/api/tag/print", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

@@ -26,7 +26,7 @@
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
                                 <li class="breadcrumb-item">
-                                    <a href="/home" class="text-muted">
+                                    <a href="/dashboard" class="text-muted">
                                         <i class="fas fa-home mr-1"></i>Dashboard
                                     </a>
                                 </li>
@@ -66,22 +66,11 @@
                                         <div class="form-group">
                                             <label>
                                                 <i class="fas fa-barcode text-muted mr-2"></i>
-                                                DO Number <span class="text-danger">*</span>
+                                                DO Number
                                             </label>
-                                            <input id="doNumber" class="form-control" required>
+                                            <input id="doNumber" class="form-control" readonly>
                                         </div>
 
-                                        @* <div class="form-group">
-                                            <label>
-                                                <i class="fas fa-qrcode text-muted mr-2"></i>
-                                                Scanner Type <span class="text-danger">*</span>
-                                            </label>
-                                            <select id="scannerType" class="form-control" required>
-                                                <option value="">-- Pilih Scanner --</option>
-                                                <option value="RFID">RFID</option>
-                                                <option value="QR">QR</option>
-                                            </select>
-                                        </div> *@
 
                                         <div id="details"></div>
 
@@ -173,7 +162,21 @@
             if (selectedId) {
                 lastSelect.val(selectedId);
             }
+            initSelect2();
         }
+
+                function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        }
+                $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
 
         $(document).on("click", ".remove-item", function () {
 
@@ -196,7 +199,7 @@
             $("#details").append(`
                 <div class="row mb-2 detail-item align-items-center">
                     <div class="col">
-                        <select class="form-control item-select"></select>
+                        <select class="form-control select2 item-select"></select>
                     </div>
                     <div class="col">
                         <input class="form-control qty" value="${qty}" type="number">
@@ -210,6 +213,7 @@
             `);
 
             loadItemDropdown(selectedId);
+            initSelect2($("#detailContainer"));
         }
 
         async function updateDO() {

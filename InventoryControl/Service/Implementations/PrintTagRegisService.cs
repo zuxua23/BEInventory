@@ -4,6 +4,7 @@ using InventoryControl.Entity;
 using InventoryControl.Helpers;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 
@@ -299,5 +300,23 @@ public class PrintTagRegisService : IPrintTagRegisService
             DailyFileLogger.Error("Error di GetAvailableTagsAsync.", ex);
             throw;
         }
+    }
+
+    public async Task<List<TagResponseDto>> GetAllAsync()
+    {
+        var data = await _db.Tags
+            .Where(t => t.isDelete == 0)
+            .Include(t => t.Item)
+            .Include(t => t.Location)
+            .Select(t => new TagResponseDto
+            {
+                TagId = t.TagId,
+                ItemName = t.Item.Name,
+                Location = t.Location != null ? t.Location.Name : "-",
+                Status = t.Status
+            })
+            .ToListAsync();
+
+        return data;
     }
 }
