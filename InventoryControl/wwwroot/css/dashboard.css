@@ -307,7 +307,7 @@ block.
 
 /* Status badges */
 .dash-badge {
-    font-size: 1px;
+    font-size: 14px;
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 20px;

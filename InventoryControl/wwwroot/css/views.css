@@ -367,40 +367,52 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before
 }
 
 
-.custom-tab-menu {
+/* ===== MODERN TAB DESIGN ===== */
+.modern-tabs {
     display: flex;
-    border-bottom: 2px solid #3b82f6;
-    margin-bottom: 0;
-    margin-left: 0; 
-    margin-right: 0; 
-    gap: 0;
-    overflow-x: auto;
+    gap: 8px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+    width: fit-content;
 }
 
-.custom-tab-item {
-    flex: 1; 
-    padding: 12px 20px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #3b82f6;
-    background: transparent;
-    border: none;
-    border-radius: 0; 
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    white-space: nowrap;
-    text-align: center;
-}
-    .custom-tab-item:hover {
-        background: rgba(59, 130, 246, 0.08);
+    /* TAB ITEM */
+    .modern-tabs .custom-tab-item {
+        border: none;
+        background: transparent;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    .custom-tab-item.active {
-        background: #3b82f6;
-        color: #ffffff;
-        box-shadow: none;
-    }
+        /* HOVER EFFECT */
+        .modern-tabs .custom-tab-item:hover {
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
 
+        /* ACTIVE TAB */
+        .modern-tabs .custom-tab-item.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(59,130,246,0.35);
+            transform: translateY(-1px);
+        }
+
+        /* ICON STYLE */
+        .modern-tabs .custom-tab-item i {
+            font-size: 0.85rem;
+        }
 
 .filter-row .form-group {
     margin-bottom: 0;
