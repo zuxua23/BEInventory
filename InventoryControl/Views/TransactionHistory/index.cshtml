@@ -55,12 +55,23 @@
                                             <i class="fas fa-arrow-up mr-1"></i> Stock Out
                                         </button>
                                     </div>
-
                                     <div class="card-title-wrapper d-flex justify-content-between align-items-center mt-3">
                                         <h3 class="card-title font-weight-bold mb-0">
                                             <i class="fas fa-filter mr-2 text-primary"></i>
                                             Filter Transactions
                                         </h3>
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <div class="export-buttons-wrapper">
+                                                <button id="btnExportExcel" class="btn export-btn export-excel" title="Export to Excel">
+                                                    <i class="fas fa-file-excel mr-1"></i>
+                                                    Excel
+                                                </button>
+                                                <button id="btnExportCsv" class="btn export-btn export-csv" title="Export to CSV">
+                                                    <i class="fas fa-file-csv mr-1"></i>
+                                                    CSV
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -88,6 +99,7 @@
                                                 </button>
                                             </div>
                                         </div>
+
                                     </div>
 
                                     <hr>
@@ -198,7 +210,12 @@
                             targets: 1,
                             data: "txDate",
                             width: "10%",
-                            className: "text-nowrap" 
+                            className: "text-nowrap",
+                            render: function (data) {
+                                if (!data) return "-";
+
+                                return new Date(data).toLocaleDateString("id-ID");
+                            }
                         },
                         {
                             targets: 2,
@@ -268,5 +285,93 @@
                     setTimeout(() => table.columns.adjust().responsive.recalc(), 100);
                 }
             });
+
+
+        function buildExportUrl(type) {
+            const fromDate = $("#filterFromDate").val();
+            const toDate = $("#filterToDate").val();
+
+            let url = `/api/transaction/export/${type}?`;
+
+            if (fromDate) url += `fromDate=${fromDate}&`;
+            if (toDate) url += `toDate=${toDate}&`;
+            if (currentTxType) url += `txType=${currentTxType}`;
+
+            return url;
+        }
+
+        $("#btnExportExcel").on("click", function () {
+            exportFile("excel");
+        });
+
+        $("#btnExportCsv").on("click", function () {
+            exportFile("csv");
+        });
+
+        async function exportFile(type) {
+            const url = buildExportUrl(type); 
+
+            try {
+                $("#btnExportExcel, #btnExportCsv").prop("disabled", true);
+
+                Swal.fire({
+                    title: "Exporting...",
+                    text: "Please wait while file is being generated",
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const response = await fetch(url, {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                if (!response.ok) throw new Error("Export failed");
+
+                const blob = await response.blob();
+
+                let fileName = "export";
+                const disposition = response.headers.get("Content-Disposition");
+
+                if (disposition) {
+                    let fileNameMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
+
+                    if (fileNameMatch && fileNameMatch[1]) {
+                        fileName = decodeURIComponent(fileNameMatch[1]);
+                    } else {
+                        fileNameMatch = disposition.match(/filename="?([^"]+)"?/);
+                        if (fileNameMatch && fileNameMatch[1]) {
+                            fileName = fileNameMatch[1];
+                        }
+                    }
+                }
+
+                const urlBlob = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = urlBlob;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                window.URL.revokeObjectURL(urlBlob);
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Export Complete",
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Export Failed",
+                    text: err.message
+                });
+            } finally {
+                $("#btnExportExcel, #btnExportCsv").prop("disabled", false);
+            }
+        }
     </script>
 </body>

@@ -52,7 +52,7 @@ public class ItemApiController : ControllerBase
 
     [HttpPut("{id}")]
     [AuthorizePermissionHybrid("ITEM_UPDATE")]
-    public async Task<IActionResult> Update(string id, ItemDto dto)
+    public async Task<IActionResult> Update(string id, ItemUpdateDto dto)
     {
         var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
 

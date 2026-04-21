@@ -49,10 +49,24 @@ public class PrintTagRegisController: ControllerBase
     }
 
     [HttpGet("history")]
-    [AuthorizePermissionHybrid("TAG_HISTORY_GET")]
+    [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetPrintHistory()
     {
         var data = await _service.GetAvailableTagsAsync();
+        return Ok(data);
+    }
+    [HttpGet("stock")]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetStock()
+    {
+        var data = await _service.GetStockPerItemAsync();
+        return Ok(data);
+    }
+    [HttpGet("qr")]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetStockQR(string tagId)
+    {
+        var data = await _service.GetByQRAsync(tagId);
         return Ok(data);
     }
 

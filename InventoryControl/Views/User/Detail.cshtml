@@ -1,3 +1,8 @@
+@using InventoryControl.Utility
+@{
+    var canUpdate = PermissionHelper.HasPermission(Context, "USER_UPDATE");
+}
+}
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
@@ -89,20 +94,23 @@
                                         <a href="/user" class="btn btn-secondary btn-modern mr-3">
                                             <i class="fas fa-times mr-1"></i>Cancel
                                         </a>
-                                        <button class="btn btn-warning btn-modern mr-2"
-                                                data-toggle="modal"
-                                                data-target="#updatePassword">
-                                            <i class="fas fa-key mr-1"></i>Password
-                                        </button>
-                                        <button class="btn btn-info btn-modern mr-2"
-                                                data-toggle="modal"
-                                                data-target="#roleUpdate">
-                                            <i class="fas fa-plus mr-1"></i>Role
-                                        </button>
-                                        <button class="btn btn-primary btn-modern px-5"
-                                                onclick="updateUser()">
-                                            <i class="fas fa-save mr-2"></i>Update
-                                        </button>
+                                        @if (canUpdate)
+                                        {
+                                            <button class="btn btn-warning btn-modern mr-2"
+                                            data-toggle="modal"
+                                            data-target="#updatePassword">
+                                                <i class="fas fa-key mr-1"></i>Password
+                                            </button>
+                                            <button class="btn btn-info btn-modern mr-2"
+                                            data-toggle="modal"
+                                            data-target="#roleUpdate">
+                                                <i class="fas fa-plus mr-1"></i>Role
+                                            </button>
+                                            <button class="btn btn-primary btn-modern px-5"
+                                            onclick="updateUser()">
+                                                <i class="fas fa-save mr-2"></i>Update
+                                            </button>
+                                        }
                                     </div>
 
                                 </div>
@@ -194,7 +202,7 @@
     @Html.Partial("_BaseScript")
 
     <script>
-
+                const canUpdate = @canUpdate.ToString().ToLower();
 
         function initSelect2(parent = document) {
     $(parent).find('.select2').select2({
@@ -232,7 +240,14 @@ $(document).on('select2:open', () => {
         }
 
         async function updateUser(){
-
+                                        if (!canUpdate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses ditolak',
+                        text: 'Tidak punya permission update'
+                    });
+                    return;
+                }
             const payload={
                 id:id,
                 userId:$("#userId").val(),
@@ -253,6 +268,8 @@ $(document).on('select2:open', () => {
                     title:"Berhasil",
                     timer:1500,
                     showConfirmButton:false
+                }).then(()=>{
+                            window.location.href="/user";
                 });
             }else{
                 Swal.fire({ icon:"error", title:"Gagal update" });
@@ -260,7 +277,14 @@ $(document).on('select2:open', () => {
         }
 
         async function updatePassword(){
-
+                                        if (!canUpdate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses ditolak',
+                        text: 'Tidak punya permission update'
+                    });
+                    return;
+                }
             const payload={
                 password:$("#newPassword").val()
             };
@@ -279,6 +303,8 @@ $(document).on('select2:open', () => {
                     title:"Password updated",
                     timer:1500,
                     showConfirmButton:false
+                }).then(()=>{
+                            window.location.href="/user";
                 });
             }else{
                 Swal.fire({ icon:"error", title:"Gagal update password" });
@@ -378,8 +404,15 @@ $(document).on('select2:open', () => {
                 if (val) roleIds.push(val);
             });
 
-            console.log("ROLE IDS:", roleIds); 
-
+            console.log("ROLE IDS:", roleIds);
+                                        if (!canUpdate) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses ditolak',
+                        text: 'Tidak punya permission update'
+                    });
+                    return;
+                }
             const payload = {
                 userId: id,
                 roles: roleIds
@@ -400,7 +433,7 @@ $(document).on('select2:open', () => {
                     showConfirmButton: false
                 }).then(() => {
                     $("#roleUpdate").modal("hide");
-                    loadUser(); 
+                    window.location.href = "/user";
                 });
             } else {
                 Swal.fire({

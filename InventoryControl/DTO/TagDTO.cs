@@ -1,11 +1,5 @@
 ﻿namespace InventoryControl.DTO;
 
-public class TagCreateDto
-{
-    public string ItemId { get; set; } = null!;
-    public string EpcTag { get; set; } = null!;
-    public string CurrentLocId { get; set; } = null!;
-}
 
 public class TagResponseDto
 {
@@ -40,4 +34,19 @@ public class PrintDto
 {
     public string ItemName { get; set; }
     public int Qty { get; set; }
+}
+
+public class StockResponseDto
+{
+    public string ItemId { get; set; }
+    public string ItemName { get; set; }
+    public int TotalStock { get; set; }
+}
+
+public class StockQRDto
+{
+    public string TagId { get; set; } = null!;
+    public string? ItemName { get; set; }
+    public string? Location { get; set; }
+    public int TotalStock { get; set; }
 }

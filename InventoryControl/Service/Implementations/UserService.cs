@@ -24,7 +24,12 @@ public class UserService : IUserService
                     Id = x.Id,
                     UserId = x.UserId,
                     Fullname = x.Fullname,
-                    Username = x.Username
+                    Username = x.Username,
+                    Roles = _db.UserRoles
+                        .Where(ur => ur.UserId == x.Id)
+                        .Include(ur => ur.Role)
+                        .Select(ur => ur.Role.Name)
+                        .ToList()
                 })
                 .ToListAsync();
 

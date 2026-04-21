@@ -1,3 +1,10 @@
+@using InventoryControl.Utility
+
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "LOCATION_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "LOCATION_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "LOCATION_DELETE");
+}
 <body class="hold-transition sidebar-mini layout-fixed">
 
     <div class="wrapper">
@@ -54,7 +61,8 @@
                                             <i class="fas fa-list mr-2 text-primary"></i>
                                             Location List
                                         </h3>
-
+                                        @if (canCreate)
+                                        {
                                         <button class="btn btn-primary btn-icon-split"
                                                 data-toggle="modal"
                                                 data-target="#createLocation">
@@ -63,6 +71,7 @@
                                             </span>
                                             <span class="text">Create</span>
                                         </button>
+                                        }
                                     </div>
                                 </div>
 
@@ -76,7 +85,10 @@
                                                     <th>Location ID</th>
                                                     <th>Name</th>
                                                     <th>Description</th>
-                                                    <th class="text-center" width="160">Actions</th>
+                                                    @if (canUpdate || canDelete)
+                                                    {
+                                                        <th class="text-center" width="160">Actions</th>
+                                                    }
                                                 </tr>
                                             </thead>
                                         </table>
@@ -150,6 +162,9 @@
     @Html.Partial("_BaseScript")
 
     <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
+
 
         let table;
 
@@ -175,6 +190,7 @@
             }
 
             const data = await response.json();
+                        let showAction = canUpdate || canDelete;
 
             if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
                 $('#datatablesIndex').DataTable().clear().destroy();
@@ -210,18 +226,29 @@
                         },
                         {
                             targets: 4,
+                            visible: showAction,
                             data: null,
-                            render: data => `
-                                <div class="btn-group btn-group-sm">
+                            render: data => {
+                                let buttons = `<div class="btn-group btn-group-sm">`;
+                            
+                            if (canUpdate) {
+                                buttons += `
                                     <a href="/location/detail?id=${data.id}" class="btn btn-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                `;
+                            }
+                            if (canDelete) {
+                                buttons += `
                                     <button class="btn btn-danger"
-                                            onclick="deleteLocation('${data.id}')">
+                                            onclick="deleteLocation('${data.id}')" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </div>
-                            `,
+                            `;
+                            } 
+                            buttons += `</div>`;
+                                return buttons;
+                            },
                             className: "text-center",
                             orderable: false
                         }

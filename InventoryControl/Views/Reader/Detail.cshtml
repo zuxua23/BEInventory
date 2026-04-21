@@ -1,3 +1,8 @@
+@using InventoryControl.Utility
+@{
+        var canUpdate = PermissionHelper.HasPermission(Context, "READER_UPDATE");
+}
+}
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
@@ -102,11 +107,14 @@
                                         <a href="/reader" class="btn btn-secondary btn-modern mr-3">
                                             <i class="fas fa-times mr-1"></i>Cancel
                                         </a>
-                                        <button type="button"
-                                                class="btn btn-primary btn-modern px-5"
-                                                onclick="updateReader()">
-                                            <i class="fas fa-save mr-2"></i>Update
-                                        </button>
+                                        @if (canUpdate)
+                                        {
+                                            <button type="button"
+                                            class="btn btn-primary btn-modern px-5"
+                                            onclick="updateReader()">
+                                                <i class="fas fa-save mr-2"></i>Update
+                                            </button>
+                                        }
                                     </div>
 
                                 </div>
@@ -127,6 +135,7 @@
     @Html.Partial("_BaseScript")
 
     <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
 
         let id = "@ViewData["id"]";
 
@@ -156,7 +165,14 @@
         }
 
         async function updateReader() {
-
+                                if (!canUpdate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Akses ditolak',
+                text: 'Tidak punya permission update'
+            });
+            return;
+        }
             const payload = {
                 rdrId: $("#rdrId").val(),
                 rdrName: $("#rdrName").val(),

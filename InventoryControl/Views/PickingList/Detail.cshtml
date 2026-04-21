@@ -1,3 +1,8 @@
+@using InventoryControl.Utility
+@{
+    var canUpdate = PermissionHelper.HasPermission(Context, "PICKINGLIST_UPDATE");
+}
+
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
@@ -110,6 +115,8 @@
     @Html.Partial("_BaseScript")
 
     <script>
+
+        const canUpdate = @canUpdate.ToString().ToLower();
 
         let id = "@ViewData["id"]";
 
@@ -226,7 +233,14 @@
                     qtyRequired: parseInt($(this).find(".qty").val())
                 });
             });
-
+           if (!canUpdate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Akses ditolak',
+                text: 'Tidak punya permission update'
+            });
+            return;
+        }
             const payload = {
                 doNumber: $("#doNumber").val(),
                 scannerType: $("#scannerType").val(),

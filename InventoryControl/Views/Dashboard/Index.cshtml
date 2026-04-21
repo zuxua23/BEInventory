@@ -142,6 +142,50 @@
                             </div>
 
                         </div>
+                        <div class="row mt-4">
+
+                            <!-- STOCK LEVEL -->
+                            <div class="col-md-6">
+                                <div class="dash-card">
+                                    <div class="dash-card-header">
+                                        <span class="dash-card-title">Stock Level</span>
+                                    </div>
+                                    <div id="stockLevelContainer"></div>
+                                </div>
+                            </div>
+
+                            <!-- ITEM LEVEL -->
+                            <div class="col-md-6">
+                                <div class="dash-card">
+                                    <div class="dash-card-header">
+                                        <span class="dash-card-title">Item Stock Detail</span>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Stock</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="itemStockBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="dash-card mt-4">
+                        @*     <div class="dash-card-header">
+                                <span class="dash-card-title">Search Item (QR Code)</span>
+                            </div>
+
+                            <div class="p-3">
+                                <input type="text" id="qrInput" class="form-control" placeholder="Scan QR / Input Tag ID">
+                                <div id="qrResult" class="mt-3"></div>
+                            </div>
+                        </div> *@
 
                     </div>
 
@@ -159,6 +203,7 @@
     <script>
         $(document).ready(function () {
             loadDashboard();
+            loadStockData();
         });
 
         async function loadDashboard() {
@@ -215,6 +260,61 @@
                 });
             }
         }
+
+        async function loadStockData() {
+            const res = await fetch("/api/tag/stock", { credentials: "include" });
+            const data = await res.json();
+
+            let total = data.length;
+            let low = data.filter(x => x.totalStock < 10).length;
+            let normal = data.filter(x => x.totalStock >= 10).length;
+
+            $("#stockLevelContainer").html(`
+                <div class="d-flex justify-content-between">
+                    <div>Total: <b>${total}</b></div>
+                    <div class="text-danger">Low: <b>${low}</b></div>
+                    <div class="text-success">Normal: <b>${normal}</b></div>
+                </div>
+            `);
+
+            let html = "";
+            data.slice(0,10).forEach(item => {
+                let status = item.totalStock < 10
+                    ? `<span class="badge badge-danger">Low</span>`
+                    : `<span class="badge badge-success">Safe</span>`;
+
+                html += `
+                    <tr>
+                        <td>${item.itemName}</td>
+                        <td>${item.totalStock}</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+            });
+
+            $("#itemStockBody").html(html);
+        }
+        //    $("#qrInput").on("change", async function () {
+
+        //     const res = await fetch(`/api/tag/qr/${id}`, {
+        //         credentials: "include"
+        //     });
+
+        //     if (!res.ok) {
+        //         $("#qrResult").html(`<span class="text-danger">Item not found</span>`);
+        //         return;
+        //     }
+
+        //     const item = await res.json();
+
+        //     $("#qrResult").html(`
+        //         <div class="card p-3 shadow-sm">
+        //             <h6>${item.name}</h6>
+        //             <p>Stock: ${item.stock}</p>
+        //             <p>Location: ${item.location}</p>
+        //         </div>
+        //     `);
+        // });
     </script>
 
 </body>

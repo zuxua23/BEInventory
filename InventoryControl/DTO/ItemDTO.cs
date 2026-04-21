@@ -2,7 +2,11 @@
 
 public class ItemDto
 {
-    //public string ItemId { get; set; } = null!;
+    public string Id { get; set; } = null!;
+    public string ItemName { get; set; } = null!;
+}
+public class ItemUpdateDto
+{
     public string ItemName { get; set; } = null!;
 }
 

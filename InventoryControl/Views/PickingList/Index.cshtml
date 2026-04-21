@@ -1,3 +1,9 @@
+@using InventoryControl.Utility
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "PICKINGLIST_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "PICKINGLIST_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "PICKINGLIST_DELETE");
+}
 <body class="hold-transition sidebar-mini layout-fixed">
 
     <div class="wrapper">
@@ -54,15 +60,17 @@
                                             <i class="fas fa-list mr-2 text-primary"></i>
                                             Picking List Data
                                         </h3>
-
-                                        <button class="btn btn-primary btn-icon-split"
-                                                data-toggle="modal"
-                                                data-target="#createPickingList">
-                                            <span class="icon text-white-50">
-                                                <i class="fas fa-plus"></i>
-                                            </span>
-                                            <span class="text">Create</span>
-                                        </button>
+                                        @if (canCreate)
+                                        {
+                                            <button class="btn btn-primary btn-icon-split"
+                                            data-toggle="modal"
+                                            data-target="#createPickingList">
+                                                <span class="icon text-white-50">
+                                                    <i class="fas fa-plus"></i>
+                                                </span>
+                                                <span class="text">Create</span>
+                                            </button>
+                                        }
                                     </div>
                                 </div>
 
@@ -76,7 +84,10 @@
                                                     <th class="text-nowrap">DO Number</th>
                                                     <th>Status</th>
                                                     <th>Create Date</th>
-                                                    <th class="text-center" width="160">Actions</th>
+                                                    @if (canUpdate || canDelete)
+                                                    {
+                                                        <th class="text-center" width="160">Actions</th>
+                                                    }
                                                 </tr>
                                             </thead>
                                         </table>
@@ -108,8 +119,8 @@
                                 <i class="fas fa-barcode text-muted mr-2"></i>
                                 DO Number <span class="text-danger">*</span>
                             </label>
-                            @* <input type="text" name="doNumber" class="form-control" required> *@
-                            <select id="doIdSelect" name="doNumber" class="form-control select2" style="width:100%"></select>
+                            <input type="text" name="doNumber" class="form-control" required>
+                            @* <select id="doIdSelect" name="doNumber" class="form-control select2" style="width:100%"></select> *@
                         </div>
 
                         <div id="detailContainer"></div>
@@ -134,24 +145,9 @@
     @Html.Partial("_BaseScript")
 
     <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
 
-                 async function loadDODropdown() {
-
-            const response = await fetch("/api/pickinglist", {
-                method: "GET",
-                credentials: "include"
-            });
-
-            const data = await response.json();
-            let options = `<option value="">-- Select DO --</option>`;
-            console.log("Dropdown value:", $("#doIdSelect").val());
-            data.forEach(data => {
-                options += `<option value="${data.doId}">${data.doNumber}</option>`;
-            });
-
-            $("#doIdSelect").html(options);
-                    initSelect2();
-        }
         async function loadItemDropdown() {
 
             const response = await fetch("/api/item", {
@@ -189,7 +185,6 @@
 
         $(document).ready(function () {
             loadDO();
-            loadDODropdown();
         });
 
         async function loadDO() {
@@ -261,18 +256,29 @@
                         },
                         {
                             targets: 4,
+                            visible: canUpdate || canDelete,
                             data: null,
-                            render: data => `
-                                <div class="btn-group btn-group-sm">
+                            render: data => {
+                                let buttons= `<div class="btn-group btn-group-sm">`;
+                                    if (canUpdate) {
+                                            buttons += `
                                     <a href="/pickinglist/detail?id=${data.doId}" class="btn btn-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                        `;
+                                    }
+
+                                    if (canDelete) {
+                                            buttons += `
                                     <button class="btn btn-danger"
                                             onclick="deletePickingList('${data.doId}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </div>
-                            `,
+                                        `;
+                                    }
+                                    buttons += `</div>`;
+                                    return buttons;
+                            },
                             className: "text-center",
                             orderable: false,
                             width: "20%", 

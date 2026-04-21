@@ -1,3 +1,10 @@
+@using InventoryControl.Utility
+
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "PERMISSION_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "PERMISSION_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "PERMISSION_DELETE");
+}
 <body class="hold-transition sidebar-mini layout-fixed">
 
     <div class="wrapper">
@@ -18,8 +25,8 @@
                                    style="font-size: 2.25rem; opacity: 0.8;"></i>
                             </div>
                             <div>
-                                <h1 class="h3 mb-1 text-dark font-weight-bold">Role Management</h1>
-                                <p class="mb-0 text-muted small">Manage Role</p>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Permission Management</h1>
+                                <p class="mb-0 text-muted small">Manage Permission & Role</p>
                             </div>
                         </div>
 
@@ -51,14 +58,17 @@
                                     <i class="fas fa-list mr-2 text-primary"></i>
                                     Role List
                                 </h3>
-                                <button class="btn btn-primary btn-icon-split"
-                                        data-toggle="modal"
-                                        data-target="#modalRole">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-plus"></i>
-                                    </span>
-                                    <span class="text">Create</span>
-                                </button>
+                                @if (canCreate)
+                                {
+                                    <button class="btn btn-primary btn-icon-split"
+                                    data-toggle="modal"
+                                    data-target="#modalRole">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-plus"></i>
+                                        </span>
+                                        <span class="text">Create</span>
+                                    </button>
+                                }
                             </div>
                         </div>
 
@@ -71,7 +81,10 @@
                                             <th class="text-nowrap">Role ID</th>
                                             <th>Role Name</th>
                                             <th>Status</th>
+                                            @if (canUpdate || canDelete)
+                                            {
                                             <th class="text-center" width="160">Actions</th>
+                                            }
                                         </tr>
                                     </thead>
                                 </table>
@@ -160,18 +173,9 @@
     @Html.Partial("_BaseScript")
 
     <script>
-        //         const MODULES = [
-        //     { key: "stockIn", label: "Stock IN" },
-        //     { key: "stockOut", label: "Stock OUT" },
-        //     { key: "stockPrep", label: "Stock Prep" },
-        //     { key: "stockTaking", label: "Stock Taking" },
-        //     { key: "manageUser", label: "Manage User" },
-        //     { key: "stockTakingAdj", label: "Stock Taking & Adj" },
-        //     { key: "manageItem", label: "Manage Item" },
-        //     { key: "manageLocation", label: "Manage Location" },
-        // ];
-
-        // const OPERATIONS = ["Create", "View", "Update", "Delete", "Detail", "Export"];
+        const canCreate = @canCreate.ToString().ToLower();
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
 
         let table;
 
@@ -342,17 +346,27 @@
                 },
                 {
                     targets: 4,
+                    visible: canUpdate|| canDelete,
                     data: null,
-                    render: data => `
-                        <div class="btn-group btn-group-sm">
+                    render: data => {
+                        let buttons= `<div class="btn-group btn-group-sm">`;
+                        if(canUpdate){
+                            buttons+= `
                             <button class="btn btn-info" onclick="openEditRole('${data.id}')">
                                 <i class="fas fa-edit"></i>
                             </button>
+                            `;
+                        }
+                        if(canDelete){
+                            buttons += `
                             <button class="btn btn-danger" onclick="deleteRole('${data.id}')">
                                 <i class="fas fa-trash"></i>
                             </button>
-                        </div>
-                    `,
+                            `;
+                        }
+                        buttons +=`</div>`;
+                        return buttons;
+                        },
                     className: "text-center",
                     orderable: false
                 }
@@ -375,12 +389,24 @@
         }
 
 
-        $("#modalRole").on("shown.bs.modal", function () {
-            if (!$("#roleDbId").val()) {
-                const data = table.rows().data().toArray();
+        // $("#modalRole").on("shown.bs.modal", function () {
+        //     if (!$("#roleDbId").val()) {
+        //         const data = table.rows().data().toArray();
+        //     }
+        // });
+        $('#modalRole').on('show.bs.modal', function (e) {
+            const isEdit = $("#roleDbId").val();
+
+            if (!isEdit && !canCreate) {
+                e.preventDefault();
+                Swal.fire("Tidak punya akses create", "", "error");
+            }
+
+            if (isEdit && !canUpdate) {
+                e.preventDefault();
+                Swal.fire("Tidak punya akses update", "", "error");
             }
         });
-
 
         async function openEditRole(id) {
             const response = await fetch(`/api/permission/${id}`, {

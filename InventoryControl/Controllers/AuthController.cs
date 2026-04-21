@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using InventoryControl.DTO;
+﻿using InventoryControl.DTO;
 using InventoryControl.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using System.Text.Json;
 
 namespace InventoryControl.Controllers;
@@ -35,7 +36,7 @@ public class AuthController : Controller
             HttpContext.Session.SetString("Permissions", JsonSerializer.Serialize(result.Permissions));
             HttpContext.Session.SetString("is_login", "OK");
             Console.WriteLine("login SC" );
-
+            Console.WriteLine(JsonSerializer.Serialize(result.Permissions));
             //return RedirectToAction("Index", "Dashboard");
             return Redirect("/dashboard");
         }

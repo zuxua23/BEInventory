@@ -116,7 +116,7 @@ public class ItemService : IItemService
         }
     }
 
-    public async Task UpdateAsync(string id, ItemDto dto, string updatedBy)
+    public async Task UpdateAsync(string id, ItemUpdateDto dto, string updatedBy)
     {
         try
         {

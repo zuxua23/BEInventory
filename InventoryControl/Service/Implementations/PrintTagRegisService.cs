@@ -319,4 +319,60 @@ public class PrintTagRegisService : IPrintTagRegisService
 
         return data;
     }
+
+    public async Task<List<StockResponseDto>> GetStockPerItemAsync()
+    {
+        var data = await _db.Tags
+            .Where(t => t.isDelete == 0 && t.Status == "IN_STOCK")
+            .GroupBy(t => new { t.ItemId, t.Item.Name })
+            .Select(g => new StockResponseDto
+            {
+                ItemId = g.Key.ItemId,
+                ItemName = g.Key.Name,
+                TotalStock = g.Count()
+            })
+            .ToListAsync();
+
+        return data;
+    }
+
+    public async Task<StockQRDto?> GetByQRAsync(string tagId)
+    {
+        try
+        {
+            var tag = await _db.Tags
+                .Include(t => t.Item)
+                .Include(t => t.Location)
+                .FirstOrDefaultAsync(t => t.TagId == tagId && t.isDelete == 0);
+
+            if (tag == null)
+            {
+                DailyFileLogger.Warn($"GetByQRAsync: Tag {tagId} tidak ditemukan.");
+                return null;
+            }
+
+            var totalStock = await _db.Tags
+                .Where(t => t.ItemId == tag.ItemId
+                         && t.Status == "StockIn"
+                         && t.isDelete == 0)
+                .CountAsync();
+
+            var result = new StockQRDto
+            {
+                TagId = tag.TagId,
+                ItemName = tag.Item?.Name,
+                Location = tag.Location != null ? tag.Location.Name : "-",
+                TotalStock = totalStock
+            };
+
+            DailyFileLogger.Info($"GetByQRAsync berhasil untuk Tag {tagId}.");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Error di GetByQRAsync untuk Tag {tagId}.", ex);
+            throw;
+        }
+    }
 }

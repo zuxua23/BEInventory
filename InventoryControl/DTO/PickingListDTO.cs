@@ -3,7 +3,6 @@
 public class PickingListDTO
 {
     public string DoNumber { get; set; } = null!;
-    public string ScannerType { get; set; } = null!;
     public List<DODetailCreateDto> Details { get; set; } = new();
 }
 public class PickingListUpdateDTO

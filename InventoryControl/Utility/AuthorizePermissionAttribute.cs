@@ -16,32 +16,14 @@ public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilte
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var httpContext = context.HttpContext;
-
         List<string> userPermissions = new();
-
 
         var user = httpContext.User;
 
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        var isLogin = httpContext.Session.GetString("is_login");
+
+        if (isLogin == "OK")
         {
-            userPermissions = user.Claims
-                .Where(c => c.Type == "permission")
-                .Select(c => c.Value)
-                .ToList();
-
-            Console.WriteLine("AUTH VIA JWT");
-        }
-        else
-        {
-
-            var isLogin = httpContext.Session.GetString("is_login");
-
-            if (isLogin != "OK")
-            {
-                context.Result = new UnauthorizedResult();
-                return;
-            }
-
             var permissionsJson = httpContext.Session.GetString("Permissions");
 
             if (string.IsNullOrEmpty(permissionsJson))
@@ -54,10 +36,22 @@ public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilte
 
             Console.WriteLine("AUTH VIA SESSION");
         }
+        else if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            userPermissions = user.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
+
+            Console.WriteLine("AUTH VIA JWT");
+        }
+        else
+        {
+            context.Result = new UnauthorizedResult();
+            return;
+        }
 
         var permissionToCheck = _permission ?? GeneratePermission(context);
-
-        Console.WriteLine("Required: " + permissionToCheck);
 
         if (!userPermissions.Contains(permissionToCheck))
         {

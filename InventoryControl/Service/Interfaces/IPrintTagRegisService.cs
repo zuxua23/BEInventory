@@ -9,4 +9,6 @@ public interface IPrintTagRegisService
     Task RegisterAsync(TagRegistrationDto dto, string user);
     Task<List<PrintHistoryResponseDto>> GetAvailableTagsAsync();
     Task<List<TagResponseDto>> GetAllAsync();
+    Task<List<StockResponseDto>> GetStockPerItemAsync();
+    Task<StockQRDto?> GetByQRAsync(string tagId);
 }

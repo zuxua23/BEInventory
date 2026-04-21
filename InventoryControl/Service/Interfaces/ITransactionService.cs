@@ -5,4 +5,6 @@ namespace InventoryControl.Service.Interfaces;
 public interface ITransactionService
 {
     Task<List<TransactionHistoryDto>> GetHistory(DateTime? fromDate, DateTime? toDate, string? txType);
+    Task<byte[]> ExportExcel(DateTime? fromDate, DateTime? toDate, string? txType);
+    Task<byte[]> ExportCsv(DateTime? fromDate, DateTime? toDate, string? txType);
 }

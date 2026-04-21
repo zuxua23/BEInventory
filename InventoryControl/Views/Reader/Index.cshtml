@@ -1,3 +1,11 @@
+@using InventoryControl.Utility
+
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "READER_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "READER_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "READER_DELETE");
+}
+
 <body class="hold-transition sidebar-mini layout-fixed">
 
     <div class="wrapper">
@@ -51,15 +59,17 @@
                                     <i class="fas fa-list mr-2 text-primary"></i>
                                     Reader List
                                 </h3>
-
-                                <button class="btn btn-primary btn-icon-split"
-                                        data-toggle="modal"
-                                        data-target="#createReader">
-                                    <span class="icon text-white-50">
-                                        <i class="fas fa-plus"></i>
-                                    </span>
-                                    <span class="text">Create</span>
-                                </button>
+                                @if (canCreate)
+                                {
+                                    <button class="btn btn-primary btn-icon-split"
+                                    data-toggle="modal"
+                                    data-target="#createReader">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-plus"></i>
+                                        </span>
+                                        <span class="text">Create</span>
+                                    </button>
+                                }
                             </div>
                         </div>
 
@@ -74,7 +84,10 @@
                                             <th>Name</th>
                                             <th>Location</th>
                                             <th>IP Address</th>
-                                            <th class="text-center" width="160">Actions</th>
+                                            @if (canUpdate || canDelete)
+                                            {
+                                             <th class="text-center" width="160">Actions</th>
+                                            }
                                         </tr>
                                     </thead>
                                 </table>
@@ -134,6 +147,9 @@
     @Html.Partial("_BaseScript")
 
     <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
+
 
         async function loadLocationDropdown() {
 
@@ -232,17 +248,28 @@
                         {
                             targets: 5,
                             data: null,
-                            render: data => `
-                                <div class="btn-group btn-group-sm">
+                            visible:canUpdate|| canDelete,
+                            render: data => {
+                                let buttons = `<div class="btn-group btn-group-sm">`;
+                                if (canUpdate) {
+                                    buttons += `
                                     <a href="/reader/detail?id=${data.id}" class="btn btn-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    `;
+                                }
+                                if(canDelete){
+                                    buttons += `
                                     <button class="btn btn-danger"
                                             onclick="deleteReader('${data.id}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </div>
-                            `,
+                                    `;
+                                }
+                                buttons += `</div>`;
+                                return buttons;
+                                },
+
                             className: "text-center",
                             orderable: false,
                             width: "20%", 

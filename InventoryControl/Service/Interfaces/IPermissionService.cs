@@ -11,5 +11,5 @@ public interface IPermissionService
         Task<object> GetModules();
         Task<List<Role>> GetAll();
         Task Delete(string id);
-    
+
 }

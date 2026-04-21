@@ -2,6 +2,7 @@ namespace InventoryControl.Controllers;
 
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ public class PermissionApiController : ControllerBase
 
 
         [HttpGet]
+    [AuthorizePermissionHybrid("PERMISSION_GET")]
         public async Task<IActionResult> GetAll()
         {
             var data = await _service.GetAll();
@@ -26,7 +28,8 @@ public class PermissionApiController : ControllerBase
         }
    
     [HttpGet("modules")]
-        public async Task<IActionResult> GetModules()
+    [AuthorizePermissionHybrid("PERMISSION_GET")]
+    public async Task<IActionResult> GetModules()
         {
             var data = await _service.GetModules();
             return Ok(data);
@@ -34,7 +37,8 @@ public class PermissionApiController : ControllerBase
 
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+    [AuthorizePermissionHybrid("PERMISSION_GET")]
+    public async Task<IActionResult> GetById(string id)
         {
             var data = await _service.GetById(id);
             return Ok(data);
@@ -42,7 +46,8 @@ public class PermissionApiController : ControllerBase
 
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] RoleRequestDto dto)
+    [AuthorizePermissionHybrid("PERMISSION_CREATE")]
+    public async Task<IActionResult> Create([FromBody] RoleRequestDto dto)
         {
             var user = "system"; // ambil dari login nanti
             await _service.Create(dto, user);
@@ -51,17 +56,20 @@ public class PermissionApiController : ControllerBase
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] RoleRequestDto dto)
+    [AuthorizePermissionHybrid("PERMISSION_UPDATE")]
+
+    public async Task<IActionResult> Update(string id, [FromBody] RoleRequestDto dto)
         {
             var user = "system";
             await _service.Update(id, dto, user);
             return Ok();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
-        {
-            await _service.Delete(id);
-            return Ok();
-        }
+    [HttpDelete("{id}")]
+    [AuthorizePermissionHybrid("PERMISSION_DELETE")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        await _service.Delete(id);
+        return Ok();
+    }
 }
