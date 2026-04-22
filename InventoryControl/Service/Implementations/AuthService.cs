@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
@@ -45,10 +45,12 @@ namespace InventoryControl.Services.Implementations
                     && rp.Permission.IsActive
                 select rp.Permission.Code
             ).Distinct().ToListAsync();
+
             return new LoginResultDto
             {
                 UserId = user.UserId,
                 Username = user.Username,
+                Fullname = user.Fullname,   
                 Roles = roles,
                 Permissions = permissions
             };

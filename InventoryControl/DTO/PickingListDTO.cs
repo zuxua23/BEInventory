@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.DTO;
+namespace InventoryControl.DTO;
 
 public class PickingListDTO
 {

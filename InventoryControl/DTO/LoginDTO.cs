@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.DTO;
+namespace InventoryControl.DTO;
 
 public class LoginDTO
 {
@@ -10,6 +10,7 @@ public class LoginResultDto
     public string UserId { get; set; }
 
     public string Username { get; set; }
+    public string Fullname { get; set; }
 
     public List<string> Roles { get; set; }
 

@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.Database;
 using InventoryControl.DTO;
@@ -19,63 +19,26 @@ public class StockInService : IStockInService
     public async Task StockInAsync(StockInDto dto, string user)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
-
         try
         {
-            if (dto.ScannedCodes == null || !dto.ScannedCodes.Any())
-            {
-                DailyFileLogger.Warn("StockInAsync gagal: Tidak ada tag yang discan");
-                throw new Exception("Tidak ada tag yang discan");
-            }
+            var tags = await _db.Tags
+                .Where(t => dto.ScannerType == "RFID"
+                    ? dto.ScannedCodes.Contains(t.EpcTag)
+                    : dto.ScannedCodes.Contains(t.TagId))
+                .ToListAsync();
 
-            List<Tag> tags;
+            if (!tags.Any()) throw new Exception("Tag tidak ditemukan di database");
 
-            if (dto.ScannerType == "RFID")
-            {
-                tags = await _db.Tags
-                    .Where(t => dto.ScannedCodes.Contains(t.EpcTag))
-                    .ToListAsync();
-
-                DailyFileLogger.Info($"StockInAsync menggunakan scanner RFID. Total scan: {dto.ScannedCodes.Count}");
-            }
-            else
-            {
-                tags = await _db.Tags
-                    .Where(t => dto.ScannedCodes.Contains(t.TagId))
-                    .ToListAsync();
-
-                DailyFileLogger.Info($"StockInAsync menggunakan scanner QR. Total scan: {dto.ScannedCodes.Count}");
-            }
-
-            if (!tags.Any())
-            {
-                DailyFileLogger.Warn("StockInAsync gagal: Tag tidak ditemukan");
-                throw new Exception("Tag tidak ditemukan");
-            }
-
-            var location = await _db.Locations
-                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
-
-            if (location == null)
-            {
-                DailyFileLogger.Warn("StockInAsync gagal: Location WAREHOUSE tidak ditemukan");
-                throw new Exception("Location WAREHOUSE tidak ditemukan");
-            }
+            var location = await _db.Locations.FirstOrDefaultAsync(x => x.Id == dto.LocId);
+            if (location == null) throw new Exception("Lokasi tujuan tidak ditemukan");
 
             foreach (var tag in tags)
             {
+                if (tag.Status == "IN_STOCK")
+                    throw new Exception($"Tag {tag.TagId} sudah berstatus IN STOCK!");
+
                 if (tag.Status != "STANDBY" && tag.Status != "PRINTED")
-                {
-                    DailyFileLogger.Warn($"StockInAsync gagal: Tag {tag.TagId} tidak bisa di Stock In. Status: {tag.Status}");
-                    throw new Exception($"Tag {tag.TagId} tidak bisa di Stock In");
-                }
-
-                tag.Status = "IN_STOCK";
-                tag.LocationId = location.Id;
-                tag.UpdatedBy = user;
-                tag.UpdatedAt = DateTime.UtcNow;
-
-                DailyFileLogger.Info($"Tag {tag.TagId} berhasil diubah status menjadi IN_STOCK");
+                    throw new Exception($"Tag {tag.TagId} statusnya {tag.Status}, tidak bisa di Stock In");
             }
 
             var trxHeader = new Transaction
@@ -85,11 +48,15 @@ public class StockInService : IStockInService
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             };
-
             _db.Transactions.Add(trxHeader);
 
             foreach (var tag in tags)
             {
+                tag.Status = "IN_STOCK";
+                tag.LocationId = location.Id;
+                tag.UpdatedBy = user;
+                tag.UpdatedAt = DateTime.UtcNow;
+
                 _db.TransactionDetails.Add(new Transaction_Detail
                 {
                     TrdId = Guid.NewGuid().ToString(),
@@ -113,14 +80,33 @@ public class StockInService : IStockInService
 
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
-
-            DailyFileLogger.Info($"StockInAsync berhasil. TransactionId: {trxHeader.TrsId}, Total Tag: {tags.Count}");
+            DailyFileLogger.Info($"StockIn berhasil: {trxHeader.TrsId}");
         }
         catch (Exception ex)
         {
             await trx.RollbackAsync();
-            DailyFileLogger.Error("Error di StockInAsync.", ex);
-            throw;
+            DailyFileLogger.Error("Gagal StockIn.", ex);
+            throw; 
+
         }
+    }
+    public async Task<TagResponseDto> GetTagByCodeAsync(string code)
+    {
+        var tag = await _db.Tags
+            .Include(t => t.Item)
+            .Include(t => t.Location)
+            .FirstOrDefaultAsync(t => t.EpcTag == code || t.TagId == code);
+       
+
+        if (tag == null) return null;
+
+        return new TagResponseDto
+        {
+            TagId           = tag.TagId,
+            ItemId          = tag.ItemId,
+            ItemName        = tag.Item?.Name,   // sesuaikan dengan property Item kamu
+            Status          = tag.Status,
+            CurrentLocation = tag.Location?.Name    // sesuaikan dengan property Location kamu
+        };
     }
 }

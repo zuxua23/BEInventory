@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Routes;
+namespace InventoryControl.Routes;
 
 public static class Api
 {
@@ -23,10 +23,22 @@ public static class Api
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute(
+            name: "api-print",
+            pattern: "/api/tag/print",
+            defaults: new { controller = "PrintTagRegis", action = "Print" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
             name: "api-stockin",
             pattern: "/api/stockin",
             defaults: new { controller = "StockIn", action = "StockIn" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-stockin-gettag",
+            pattern: "/api/stockin/{code}",
+            defaults: new { controller = "StockIn", action = "GetTagByCode" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute(
             name: "api-preparation",
@@ -70,5 +82,34 @@ public static class Api
             defaults: new { controller = "StockTaking", action = "Finalize" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
+        app.MapControllerRoute(
+            name: "api-location-get",
+            pattern: "/api/location",
+            defaults: new { controller = "LocationApi", action = "Get" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-do-list",
+            pattern: "/api/do",
+            defaults: new { controller = "PickingListApi", action = "Get" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-pickinglist-list",
+            pattern: "/api/pickinglist",
+            defaults: new { controller = "PickingListApi", action = "Get" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-pickinglist-detail",
+            pattern: "/api/pickinglist/{id}",
+            defaults: new { controller = "PickingListApi", action = "GetById" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-preparation-bulk",
+            pattern: "/api/preparation/bulk",
+            defaults: new { controller = "StockPreparation", action = "PrepareBulk" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
     }
 }
