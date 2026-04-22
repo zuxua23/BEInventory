@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -37,5 +37,5 @@ public class Item
     public bool IsDelete { get; set; }
 
     public ICollection<Transaction_Detail>? TransactionDetails { get; set; }
-
+    //public string ItemName { get; internal set; }
 }

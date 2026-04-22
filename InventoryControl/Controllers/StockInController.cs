@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
@@ -32,9 +32,30 @@ public class StockInController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_IN")]
     public async Task<IActionResult> StockIn([FromBody] StockInDto dto) // Tambahkan [FromBody]
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.StockInAsync(dto, user);
-        return Ok(new { message = "Stock In berhasil" });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.StockInAsync(dto, user);
+            return Ok(new { message = "Stock In berhasil" });
+        }catch(Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+    [HttpGet]
+    [AuthorizePermissionHybrid("TAG_GET_DETAIL")]
+    public async Task<IActionResult> GetTagByCode(string code)
+    {
+        try
+        {
+            var result = await _service.GetTagByCodeAsync(code);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
 }

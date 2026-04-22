@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Implementations;
 using InventoryControl.Service.Interfaces;
@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
-[ApiController]
-[Route("tag")]
 public class PrintTagRegisController: ControllerBase
 {
     private readonly IPrintTagRegisService _service;
@@ -19,7 +17,6 @@ public class PrintTagRegisController: ControllerBase
         _service = service;
     }
 
-    [HttpPost]
     [AuthorizePermissionHybrid("TAG_PRINT")]
     public async Task<IActionResult> Print([FromBody] List<PrintTagDto> dto)
     {
@@ -37,18 +34,16 @@ public class PrintTagRegisController: ControllerBase
         });
     }
 
-    [HttpPost]
     [AuthorizePermissionHybrid("TAG_REGISTER")]
-    public async Task<IActionResult> Register(TagRegistrationDto dto)
+    public async Task<IActionResult> Register([FromBody] TagRegistrationDto dto)
     {
         var user = User.Identity?.Name ?? "system";
 
         await _service.RegisterAsync(dto, user);
 
-        return Ok(new { message = "Tag berhasil di-standby-kan" });
+        return Ok(new { message = "Tag successfully registered" });
     }
 
-    [HttpGet]
     [AuthorizePermissionHybrid("TAG_HISTORY_GET")]
     public async Task<IActionResult> GetPrintHistory()
     {

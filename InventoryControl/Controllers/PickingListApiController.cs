@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
@@ -8,8 +8,8 @@ using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
 
-[ApiController]
-[Route("api/pickinglist")]
+//[ApiController]
+//[Route("api/pickinglist")]
 public class PickingListApiController : ControllerBase
 {
     private readonly IPickingListService _service;
@@ -19,21 +19,21 @@ public class PickingListApiController : ControllerBase
         _service = service;
     }
 
-    [HttpGet]
+    //[HttpGet]
     [AuthorizePermissionHybrid("PICKINGLIST_GET")]
     public async Task<IActionResult> Get()
     {
         return Ok(await _service.GetAllAsync());
     }
 
-    [HttpGet("{id}")]
+    //[HttpGet("{id}")]
     [AuthorizePermissionHybrid("PICKINGLIST_GET")]
     public async Task<IActionResult> GetById(string id)
     {
         var data = await _service.GetByIdAsync(id);
         if (data == null)
             return NotFound();
-
+        
         return Ok(data);
     }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using InventoryControl.DTO;
 using InventoryControl.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -28,7 +28,6 @@ public class AuthController : Controller
         {
             var result = await _authService.ValidateUserAsync(dto);
 
-            // SESSION (WEB)
             HttpContext.Session.SetString("UserId", result.UserId.ToString());
             HttpContext.Session.SetString("Username", result.Username);
             HttpContext.Session.SetString("Roles", JsonSerializer.Serialize(result.Roles));
@@ -36,7 +35,6 @@ public class AuthController : Controller
             HttpContext.Session.SetString("is_login", "OK");
             Console.WriteLine("login SC" );
 
-            //return RedirectToAction("Index", "Dashboard");
             return Redirect("/dashboard");
         }
         catch (Exception e)
@@ -59,22 +57,25 @@ public class AuthController : Controller
         {
             var result = await _authService.ValidateUserAsync(dto);
             var token = await _authService.GenerateTokenAsync(result);
-            Console.WriteLine("========================================================");
-            Console.WriteLine("loginHT SC" );
-            Console.WriteLine("t"+token );
 
             return Ok(new
             {
+                success = true,
                 token = token,
                 token_type = "Bearer",
-                user = result.Username,
-                roles = result.Roles,
-                permissions = result.Permissions
+                user = new                                    
+                {
+                    usr_id = result.UserId,
+                    usr_name = result.Username,
+                    usr_fullname = result.Fullname,
+                    roles = result.Roles,                     
+                    permissions = result.Permissions
+                }
             });
         }
         catch (Exception e)
         {
-            return BadRequest(new { message = e.Message });
+            return BadRequest(new { success = false, message = e.Message });
         }
     }
 
