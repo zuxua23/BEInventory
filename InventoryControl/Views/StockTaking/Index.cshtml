@@ -1,0 +1,405 @@
+﻿<body class="hold-transition sidebar-mini layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Stock Taking</h1>
+                                <p class="mb-0 text-muted small">Manage stock taking process</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Stock Taking
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+        <!-- Input Section -->
+        <div class="input-section" id="inputSection">
+            <div class="input-group">
+                <input type="text" placeholder="Masukkan remark/keterangan..." id="remarkInput">
+                <select id="locationSelect">
+                    <option value="">Pilih Lokasi</option>
+                    <option value="GUDANG-A">Gudang A</option>
+                    <option value="GUDANG-B">Gudang B</option>
+                    <option value="GUDANG-C">Gudang C</option>
+                    <option value="RACKING-01">Racking 01</option>
+                    <option value="RACKING-02">Racking 02</option>
+                </select>
+                <button class="btn-save" id="saveBtn" onclick="toggleSession()">💾 Save & Start</button>
+            </div>
+            <div id="sessionInfo" style="display: none; margin-top: 16px; padding: 12px; background: #dbeafe; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <strong>✅ Session Aktif:</strong> <span id="activeRemark"></span> | <span id="activeLocation"></span>
+            </div>
+        </div>
+
+        <!-- NEW: Tables Side-by-Side -->
+        <div class="tables-container">
+            <!-- Table 1: Stock Original -->
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <div class="table-title">📊 Stock Taking (Data Asli)</div>
+                    <div class="total-info">Total Items: 24 | Total Stock: 1,245 pcs</div>
+                </div>
+                <div class="table-container">
+                    <table id="originalTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Stock</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="originalTableBody">
+                            <tr data-item="BRG-001">
+                                <td>BRG-001 - Besi Beton 12mm</td>
+                                <td class="stock-original">150</td>
+                                <td>GUDANG-A / Rak-01</td>
+                            </tr>
+                            <tr data-item="BRG-002">
+                                <td>BRG-002 - Semen Holcim 50kg</td>
+                                <td class="stock-original">80</td>
+                                <td>GUDANG-B / Rak-03</td>
+                            </tr>
+                            <tr data-item="BRG-003">
+                                <td>BRG-003 - Cat Dulux 5L</td>
+                                <td class="stock-original">45</td>
+                                <td>RACKING-01 / Shelf-02</td>
+                            </tr>
+                            <tr data-item="BRG-004">
+                                <td>BRG-004 - Plywood 18mm</td>
+                                <td class="stock-original">120</td>
+                                <td>GUDANG-C / Rak-05</td>
+                            </tr>
+                            <tr data-item="BRG-005">
+                                <td>BRG-005 - Batu Split 1/2</td>
+                                <td class="stock-original">200</td>
+                                <td>GUDANG-A / Tumpuk-01</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Table 2: Data Collect -->
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <div class="table-title">✅ Data Collect (Hasil Scanning)</div>
+                    <div class="total-info" id="collectTotal">Scanned: 1/24 | Progress: 4%</div>
+                </div>
+                <div class="table-container">
+                    <table id="collectTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Stock</th>
+                                <th>Lokasi</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collectTableBody">
+                            <tr class="row-pending" data-item="BRG-001">
+                                <td>BRG-001 - Besi Beton 12mm</td>
+                                <td class="stock-collect" data-original-stock="150">-</td>
+                                <td>GUDANG-A / Rak-01</td>
+                                <td><span class="status-badge status-pending">❌ Pending</span></td>
+                            </tr>
+                            <tr class="row-pending" data-item="BRG-002">
+                                <td>BRG-002 - Semen Holcim 50kg</td>
+                                <td class="stock-collect" data-original-stock="80">-</td>
+                                <td>GUDANG-B / Rak-03</td>
+                                <td><span class="status-badge status-pending">❌ Pending</span></td>
+                            </tr>
+                            <tr class="row-pending" data-item="BRG-003">
+                                <td>BRG-003 - Cat Dulux 5L</td>
+                                <td class="stock-collect" data-original-stock="45">-</td>
+                                <td>RACKING-01 / Shelf-02</td>
+                                <td><span class="status-badge status-pending">❌ Pending</span></td>
+                            </tr>
+                            <tr class="row-scanned" data-item="BRG-004">
+                                <td>BRG-004 - Plywood 18mm</td>
+                                <td class="stock-collect" data-original-stock="120">120</td>
+                                <td>GUDANG-C / Rak-05</td>
+                                <td><span class="status-badge status-scanned">✅ Scanned</span></td>
+                            </tr>
+                            <tr class="row-pending" data-item="BRG-005">
+                                <td>BRG-005 - Batu Split 1/2</td>
+                                <td class="stock-collect" data-original-stock="200">-</td>
+                                <td>GUDANG-A / Tumpuk-01</td>
+                                <td><span class="status-badge status-pending">❌ Pending</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+            </div>
+
+                @Html.Partial("_Footer")
+
+            </div>
+
+
+            @Html.Partial("_BaseScript")
+
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+            .header-section h1 {
+                font-size: 28px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+        .input-section {
+            padding: 24px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+            .input-group input, .input-group select {
+                flex: 1;
+                min-width: 200px;
+                padding: 12px 16px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                background: white;
+            }
+
+                .input-group input:focus, .input-group select:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }
+
+        .btn-save, .btn-end {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            }
+
+        .btn-end {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+            .btn-end:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+            }
+
+        /* NEW: Tables Side-by-Side Layout */
+        .tables-container {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .table-wrapper {
+            flex: 1;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .table-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .total-info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: 500px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 500px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 14px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 15px;
+        }
+
+        /* Row Colors */
+        .row-scanned {
+            background: #dcfce7 !important;
+        }
+
+            .row-scanned:hover {
+                background: #bbf7d0 !important;
+            }
+
+        .row-pending {
+            background: #fef2f2 !important;
+        }
+
+            .row-pending:hover {
+                background: #fecaca !important;
+            }
+
+        .stock-original {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .stock-collect {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .status-scanned {
+            background: #dcfce7;
+            color: #059669;
+        }
+
+        .status-pending {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .active-session {
+            background: #dbeafe !important;
+            border-left: 4px solid #3b82f6 !important;
+        }
+
+        .input-section.active-session {
+            background: #dbeafe !important;
+            border-bottom: 2px solid #3b82f6;
+        }
+
+
+
+        .input-group input, .input-group select {
+            min-width: 100%;
+        }
+
+        
+    </style>
+</body>
