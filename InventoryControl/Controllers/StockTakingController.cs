@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-
+[ApiController]
+[Route("api/stock-taking")]
 public class StockTakingController : ControllerBase
 {
     private readonly IStockTakingService _service;
@@ -33,28 +34,41 @@ public class StockTakingController : ControllerBase
         return Ok(data);
     }
 
-    [HttpPost]
+    [HttpPost("scan")]
     public async Task<IActionResult> Scan(StockTakingScanDto dto)
     {
         await _service.ScanAsync(dto);
         return Ok(new { message = "Tag discan" });
     }
+    [HttpPost("scan/bulk")]
+    public async Task<IActionResult> Bulk(StockTakingBulkScanDto dto)
+    {
+        await _service.BulkScanAsync(dto);
+        return Ok();
+    }
+    [HttpGet("compare/{id}")]
+    public async Task<IActionResult> Compare(string id)
+    {
+        var data = await _service.GetCompareAsync(id);
+        return Ok(data);
+    }
 
-    [HttpPost]
+
+    [HttpPost("remove")]
     public async Task<IActionResult> Remove(StockTakingRemoveDto dto)
     {
         await _service.RemoveAsync(dto);
         return Ok(new { message = "Tag ditandai remove" });
     }
 
-    [HttpPost]
+    [HttpPost("manual-add")]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
         await _service.ManualAddAsync(dto);
         return Ok(new { message = "Manual add dicatat" });
     }
 
-    [HttpPost]
+    [HttpPost("finalize")]
     public async Task<IActionResult> Finalize(StockTakingFinalizeDto dto)
     {
         var user = User.Identity?.Name ?? "system";

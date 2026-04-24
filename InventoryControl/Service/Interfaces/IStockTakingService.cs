@@ -11,4 +11,6 @@ public interface IStockTakingService
     Task RemoveAsync(StockTakingRemoveDto dto);
     Task ManualAddAsync(StockTakingManualAddDto dto);
     Task FinalizeAsync(StockTakingFinalizeDto dto, string user);
+    Task BulkScanAsync(StockTakingBulkScanDto dto);
+    Task<object> GetCompareAsync(string sttId);
 }

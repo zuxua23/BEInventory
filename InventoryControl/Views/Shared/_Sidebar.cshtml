@@ -50,7 +50,7 @@
                                 </li>
                             }
 
-                            @* PRODUCT / ITEM *@
+                            @*  ITEM *@
                             @if (PermissionHelper.HasPermission(Context, "ITEM_GET"))
                             {
                                 <li class="nav-item">
@@ -62,7 +62,7 @@
                                 </li>
                             }
 
-                            @* WAREHOUSE / LOCATION *@
+                            @* LOCATION *@
                             @if (PermissionHelper.HasPermission(Context, "LOCATION_GET"))
                             {
                                 <li class="nav-item">
@@ -86,7 +86,7 @@
                                 </li>
                             }
 
-                            @* Role *@
+                            @* Permission *@
                             @if (PermissionHelper.HasPermission(Context, "PERMISSION_GET"))
                             {
                                 <li class="nav-item">
@@ -130,8 +130,7 @@
                     </li>
                 }
 
-
-                <!-- LOADING -->
+                <!-- STOCK OUT -->
                 @if (PermissionHelper.HasPermission(Context, "STOCK_OUT"))
                 {
                     <li class="nav-item">
@@ -144,8 +143,7 @@
                 }
 
 
-
-                <!-- REPORT -->
+                <!-- TRANSACTION -->
                     @if (PermissionHelper.HasPermission(Context, "TRANSACTION_GET"))
                 {
                         <li class="nav-item">
@@ -153,6 +151,18 @@
                                    class="nav-link @(ViewData["pages"]?.ToString() == "TransactionHistory" ? "active" : "")">
                                 <i class="nav-icon fas fa-file"></i>
                                 <p>Transaction History</p>
+                            </a>
+                        </li>
+                }
+
+                <!-- STOCK PICKING -->
+                    @if (PermissionHelper.HasPermission(Context, "STOCK_TAKING_GET"))
+                {
+                        <li class="nav-item">
+                            <a asp-route="StockTaking"
+                                   class="nav-link @(ViewData["pages"]?.ToString() == "StockTaking" ? "active" : "")">
+                                <i class="nav-icon fas fa-file"></i>
+                                <p>Stock Taking</p>
                             </a>
                         </li>
                 }

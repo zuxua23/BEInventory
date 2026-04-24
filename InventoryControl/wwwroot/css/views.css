@@ -583,3 +583,19 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before
         transform: translateY(-2px) scale(1.05) !important;
         box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4) !important;
     }
+
+.row-scanned {
+    background-color: #dcfce7 !important;
+}
+
+    .row-scanned:hover {
+        background-color: #bbf7d0 !important;
+    }
+
+.row-pending {
+    background-color: #fef2f2 !important; 
+}
+
+    .row-pending:hover {
+        background-color: #fecaca !important;
+    }

@@ -82,6 +82,13 @@ public static class Web
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
+        app.MapControllerRoute(
+            name: "StockTaking",
+            pattern: "/stock-taking",
+            defaults: new { controller = "StockTaking", action = "Index" })
+            .AddEndpointFilter(AuthFilter)
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
 
         app.MapControllerRoute("pickinglist", "/pickinglist",
             new { controller = "Pickinglist", action = "Index" })

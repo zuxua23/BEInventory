@@ -5,401 +5,486 @@
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
         @Html.Partial("_Views")
-
-        <div class="content-wrapper">
+    <div class="content-wrapper">
 
             <section class="content-header">
                 <div class="container-fluid">
                     <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
-
                         <div class="d-flex align-items-center">
                             <div class="header-icon mr-3">
-                                <i class="fas fa-clipboard-list nav-icon text-primary"
-                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                                <i class="fas fa-history  nav-icon text-primary" style="font-size: 2.25rem; opacity: 0.8;"></i>
                             </div>
                             <div>
                                 <h1 class="h3 mb-1 text-dark font-weight-bold">Stock Taking</h1>
-                                <p class="mb-0 text-muted small">Manage stock taking process</p>
+                                <p class="mb-0 text-muted small">Manage stock taking process </p>
                             </div>
                         </div>
 
                         <nav aria-label="breadcrumb" class="modern-breadcrumb">
                             <ol class="breadcrumb bg-transparent p-0 mb-0">
-                                <li class="breadcrumb-item">
-                                    <a href="/dashboard" class="text-muted">
-                                        <i class="fas fa-home mr-1"></i>Dashboard
-                                    </a>
-                                </li>
-                                <li class="breadcrumb-item active">
-                                    <i class="fas fa-clipboard-list mr-1"></i>Stock Taking
-                                </li>
+                                <li class="breadcrumb-item"><a href="/dashboard" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-box mr-1"></i>Stock Taking</li>
                             </ol>
                         </nav>
-
                     </div>
                 </div>
             </section>
 
-        <!-- Input Section -->
-        <div class="input-section" id="inputSection">
-            <div class="input-group">
-                <input type="text" placeholder="Masukkan remark/keterangan..." id="remarkInput">
-                <select id="locationSelect">
-                    <option value="">Pilih Lokasi</option>
-                    <option value="GUDANG-A">Gudang A</option>
-                    <option value="GUDANG-B">Gudang B</option>
-                    <option value="GUDANG-C">Gudang C</option>
-                    <option value="RACKING-01">Racking 01</option>
-                    <option value="RACKING-02">Racking 02</option>
-                </select>
-                <button class="btn-save" id="saveBtn" onclick="toggleSession()">💾 Save & Start</button>
+        <!-- CONTENT -->
+        <section class="content">
+            <div class="container-fluid">
+
+                <div class="card card-primary card-outline shadow-sm">
+                    <!-- INPUT (1 BARIS) -->
+                    <div class="card-body">
+                        <div class="row align-items-end">
+
+                            <div class="col-md-5">
+                                <label class="small font-weight-bold">Remark</label>
+                                <input type="text" class="form-control form-control-sm">
+                            </div>
+
+                            <div class="col-md-5">
+                                <label class="small font-weight-bold">Location</label>
+                                <select class="form-control form-control-sm"></select>
+                            </div>
+
+                            <div class="col-md-2 d-flex">
+                                <button id="startBtn" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-play mr-1"></i> Start
+                                </button>
+                                <button id="endBtn" class="btn btn-danger btn-sm w-100">
+                                    <i class="fas fa-play mr-1"></i> End
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- TABLES -->
+                                <div class="card card-primary card-outline shadow-sm">
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <!-- TABLE 1 -->
+                            <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <h5 class="mb-0">📊 Data Asli</h5>
+                                            <small class="text-primary font-weight-bold">
+                                                Total Items: <span id="totalItems">24</span> |
+                                                Total Stock: <span id="totalStock">1245</span> pcs
+                                            </small>
+                                        </div>
+                                     <div class="d-flex">
+
+                                    <div class="d-flex align-items-center gap-2">
+
+                                        <button id="exportOriginalExcel" class="btn btn-sm btn-success mr-1">
+                                            <i class="fas fa-file-excel mr-1"></i> Excel
+                                        </button>
+
+                                        <button id="exportOriginalCsv" class="btn btn-sm btn-info">
+                                            <i class="fas fa-file-csv mr-1"></i> CSV
+                                        </button>
+
+                                    </div>
+
+                                    </div>
+                                    </div>
+                                        <hr>
+                                        <div class="table-responsive">
+
+                                <table id="originalTable" class="table table-bordered table-hover">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                            <th>Item</th>
+                                            <th>Stock</th>
+                                            <th>Lokasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001 - Besi</td>
+                                            <td>150</td>
+                                            <td>Gudang A</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002 - Semen</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002 - Semen</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002 - Semen</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002 - Semen</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002 - Semen</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                            </div>
+
+                            <!-- TABLE 2 -->
+                            <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                        <div>
+                                            <h5 class="mb-0">✅ Data Scanning</h5>
+                                            <small class="text-success font-weight-bold">
+                                                Scanned: <span id="scannedCount">1</span>/<span id="totalData">24</span> |
+                                                Progress: <span id="progressPercent">4%</span>
+                                            </small>
+                                        </div>
+
+                                    <div class="d-flex">
+                                            <div class="d-flex align-items-center gap-2">
+                                        <select id="filterStatus" class="form-control form-control-sm mr-1">
+                                            <option value="">All</option>
+                                            <option value="scanned">Scanned</option>
+                                            <option value="pending">Pending</option>
+                                        </select>
+
+
+                                                <button id="exportCollectExcel" class="btn btn-sm btn-success mr-1">
+                                                    <i class="fas fa-file-excel mr-1"></i> Excel
+                                                </button>
+
+                                                <button id="exportCollectCsv" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-file-csv mr-1"></i> CSV
+                                                </button>
+
+                                            </div>
+                                    </div>
+
+                                </div>
+                                        <hr>
+                                        <table id="collectTable" class="table table-bordered table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                            <th>Item</th>
+                                            <th>Stock</th>
+                                            <th>Lokasi</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>BRG-001</td>
+                                            <td>-</td>
+                                            <td>Gudang A</td>
+                                            <td>Pending</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001</td>
+                                            <td>-</td>
+                                            <td>Gudang A</td>
+                                            <td>Pending</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001</td>
+                                            <td>-</td>
+                                            <td>Gudang A</td>
+                                            <td>Pending</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001</td>
+                                            <td>-</td>
+                                            <td>Gudang A</td>
+                                            <td>Pending</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-001</td>
+                                            <td>-</td>
+                                            <td>Gudang A</td>
+                                            <td>Pending</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                            <td>Scanned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                            <td>Scanned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                            <td>Scanned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                            <td>Scanned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRG-002</td>
+                                            <td>80</td>
+                                            <td>Gudang B</td>
+                                            <td>Scanned</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
-            <div id="sessionInfo" style="display: none; margin-top: 16px; padding: 12px; background: #dbeafe; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <strong>✅ Session Aktif:</strong> <span id="activeRemark"></span> | <span id="activeLocation"></span>
-            </div>
+        </section>
         </div>
 
-        <!-- NEW: Tables Side-by-Side -->
-        <div class="tables-container">
-            <!-- Table 1: Stock Original -->
-            <div class="table-wrapper">
-                <div class="table-header">
-                    <div class="table-title">📊 Stock Taking (Data Asli)</div>
-                    <div class="total-info">Total Items: 24 | Total Stock: 1,245 pcs</div>
-                </div>
-                <div class="table-container">
-                    <table id="originalTable">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Stock</th>
-                                <th>Lokasi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="originalTableBody">
-                            <tr data-item="BRG-001">
-                                <td>BRG-001 - Besi Beton 12mm</td>
-                                <td class="stock-original">150</td>
-                                <td>GUDANG-A / Rak-01</td>
-                            </tr>
-                            <tr data-item="BRG-002">
-                                <td>BRG-002 - Semen Holcim 50kg</td>
-                                <td class="stock-original">80</td>
-                                <td>GUDANG-B / Rak-03</td>
-                            </tr>
-                            <tr data-item="BRG-003">
-                                <td>BRG-003 - Cat Dulux 5L</td>
-                                <td class="stock-original">45</td>
-                                <td>RACKING-01 / Shelf-02</td>
-                            </tr>
-                            <tr data-item="BRG-004">
-                                <td>BRG-004 - Plywood 18mm</td>
-                                <td class="stock-original">120</td>
-                                <td>GUDANG-C / Rak-05</td>
-                            </tr>
-                            <tr data-item="BRG-005">
-                                <td>BRG-005 - Batu Split 1/2</td>
-                                <td class="stock-original">200</td>
-                                <td>GUDANG-A / Tumpuk-01</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        @Html.Partial("_Footer")
 
-            <!-- Table 2: Data Collect -->
-            <div class="table-wrapper">
-                <div class="table-header">
-                    <div class="table-title">✅ Data Collect (Hasil Scanning)</div>
-                    <div class="total-info" id="collectTotal">Scanned: 1/24 | Progress: 4%</div>
-                </div>
-                <div class="table-container">
-                    <table id="collectTable">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Stock</th>
-                                <th>Lokasi</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="collectTableBody">
-                            <tr class="row-pending" data-item="BRG-001">
-                                <td>BRG-001 - Besi Beton 12mm</td>
-                                <td class="stock-collect" data-original-stock="150">-</td>
-                                <td>GUDANG-A / Rak-01</td>
-                                <td><span class="status-badge status-pending">❌ Pending</span></td>
-                            </tr>
-                            <tr class="row-pending" data-item="BRG-002">
-                                <td>BRG-002 - Semen Holcim 50kg</td>
-                                <td class="stock-collect" data-original-stock="80">-</td>
-                                <td>GUDANG-B / Rak-03</td>
-                                <td><span class="status-badge status-pending">❌ Pending</span></td>
-                            </tr>
-                            <tr class="row-pending" data-item="BRG-003">
-                                <td>BRG-003 - Cat Dulux 5L</td>
-                                <td class="stock-collect" data-original-stock="45">-</td>
-                                <td>RACKING-01 / Shelf-02</td>
-                                <td><span class="status-badge status-pending">❌ Pending</span></td>
-                            </tr>
-                            <tr class="row-scanned" data-item="BRG-004">
-                                <td>BRG-004 - Plywood 18mm</td>
-                                <td class="stock-collect" data-original-stock="120">120</td>
-                                <td>GUDANG-C / Rak-05</td>
-                                <td><span class="status-badge status-scanned">✅ Scanned</span></td>
-                            </tr>
-                            <tr class="row-pending" data-item="BRG-005">
-                                <td>BRG-005 - Batu Split 1/2</td>
-                                <td class="stock-collect" data-original-stock="200">-</td>
-                                <td>GUDANG-A / Tumpuk-01</td>
-                                <td><span class="status-badge status-pending">❌ Pending</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            </div>
-            </div>
+    </div>
 
-                @Html.Partial("_Footer")
-
-            </div>
+    @Html.Partial("_BaseScript")y
 
 
-            @Html.Partial("_BaseScript")
 
+    <script>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        let currentSttId = null;
+        let refreshInterval = null;
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-            padding: 20px;
-        }
+                $(".btn-success").on("click", async function () {
+            const remark = $("input").val();
+            const location = $("select").val();
 
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-
-        .header-section {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            padding: 24px;
-            text-align: center;
-        }
-
-            .header-section h1 {
-                font-size: 28px;
-                font-weight: 600;
-                margin-bottom: 8px;
+            if (!location) {
+                alert("Pilih lokasi dulu");
+                return;
             }
 
-        .input-section {
-            padding: 24px;
-            background: #f1f5f9;
-            border-bottom: 1px solid #e2e8f0;
+            const res = await fetch("/api/stock-taking/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    remark: remark,
+                    locationId: location
+                })
+            });
+
+            const data = await res.json();
+
+            currentSttId = data.sttId;
+
+            loadStockTaking();
+
+            // auto refresh tiap 3 detik 🔥
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(loadStockTaking, 3000);
+        });
+
+                async function loadStockTaking() {
+            if (!currentSttId) return;
+
+            const res = await fetch(`/api/stock-taking/compare/${currentSttId}`);
+            const data = await res.json();
+
+            // RESET TABLE
+            tableOriginal.clear();
+            tableCollect.clear();
+
+            let totalItems = 0;
+            let totalStock = 0;
+            let scanned = 0;
+
+            data.forEach(x => {
+                totalItems++;
+                totalStock += x.qtySystem;
+
+                if (x.qtyScan > 0) scanned++;
+
+                // TABLE ORIGINAL
+                tableOriginal.row.add([
+                    x.itemId,
+                    x.qtySystem,
+                    "-"
+                ]);
+
+                // TABLE SCAN
+        let row = tableCollect.row.add([
+            x.itemId,
+            x.qtyScan || "-",
+            "-",
+            x.status
+        ]).node();
+
+        if (x.selisih < 0) {
+            $(row).addClass("table-danger");
+        } else if (x.selisih > 0) {
+            $(row).addClass("table-success");
+        }
+            });
+
+            tableOriginal.draw();
+            tableCollect.draw();
+
+            // UPDATE HEADER
+            $("#totalItems").text(totalItems);
+            $("#totalStock").text(totalStock);
+
+            $("#totalData").text(totalItems);
+            $("#scannedCount").text(scanned);
+
+            let percent = totalItems === 0 ? 0 : Math.round((scanned / totalItems) * 100);
+            $("#progressPercent").text(percent + "%");
         }
 
-        .input-group {
-            display: flex;
-            gap: 16px;
-            max-width: 600px;
-            margin: 0 auto;
-            flex-wrap: wrap;
-        }
+                $("#endBtn").click(async function () {
+            if (!currentSttId) return;
 
-            .input-group input, .input-group select {
-                flex: 1;
-                min-width: 200px;
-                padding: 12px 16px;
-                border: 2px solid #e2e8f0;
-                border-radius: 8px;
-                font-size: 16px;
-                transition: all 0.3s ease;
-                background: white;
-            }
+            if (!confirm("Yakin mau selesai?")) return;
 
-                .input-group input:focus, .input-group select:focus {
-                    outline: none;
-                    border-color: #3b82f6;
-                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            await fetch(`/api/stock-taking/finalize`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sttId: currentSttId })
+            });
+
+            alert("Stock Taking selesai");
+            clearInterval(refreshInterval);
+        });
+
+        let tableOriginal;
+        let tableCollect;
+
+        $(document).ready(function () {
+
+            // INIT TABLE 1
+        tableOriginal = $("#originalTable").DataTable({
+            pageLength: 5,
+            lengthMenu: [[5,10,25],[5,10,25]],
+
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search item...",
+                lengthMenu: "Show _MENU_ Entries",
+                emptyTable: "No data available",
+                paginate: {
+                    previous: "Previous",
+                    next: "Next"
                 }
+            },
 
-        .btn-save, .btn-end {
-            padding: 12px 32px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
+            dom: "<'row mb-2'<'col-md-6'l><'col-md-6'f>>" +
+                 "t" +
+                 "<'row mt-2'<'col-md-5'i><'col-md-7'p>>"
+        });
 
-        .btn-save {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
+            // INIT TABLE 2
+        tableCollect = $("#collectTable").DataTable({
+            pageLength: 5,
+            lengthMenu: [[5,10,25],[5,10,25]],
 
-            .btn-save:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search data scanning...",
+                lengthMenu: "Show _MENU_ Entries",
+                emptyTable: "No data found.",
+                paginate: {
+                    previous: "Previous",
+                    next: "Next"
+                }
+            },
+
+            dom: "<'row mb-2'<'col-md-6'l><'col-md-6'f>>" +
+                 "t" +
+                 "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
+
+            createdRow: function(row, data, dataIndex) {
+                let status = data[3].toLowerCase();
+
+                if (status.includes("scanned")) {
+                    $(row).addClass("row-scanned");
+                } else {
+                    $(row).addClass("row-pending");
+                }
             }
+        });
 
-        .btn-end {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
+            // SEARCH
+            $("#searchOriginal").on("keyup", function () {
+                tableOriginal.search(this.value).draw();
+            });
 
-            .btn-end:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-            }
+            $("#searchCollect").on("keyup", function () {
+                tableCollect.search(this.value).draw();
+            });
 
-        /* NEW: Tables Side-by-Side Layout */
-        .tables-container {
-            padding: 24px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            align-items: start;
-        }
+            // FILTER STATUS
+            $.fn.dataTable.ext.search.push(function(settings, data) {
 
-        .table-wrapper {
-            flex: 1;
-        }
+                if (settings.nTable.id !== "collectTable") return true;
 
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+                let selected = $("#filterStatus").val().toLowerCase();
+                let status = data[3].toLowerCase();
 
-        .table-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1e293b;
-        }
+                if (!selected) return true;
 
-        .total-info {
-            background: #eff6ff;
-            color: #1d4ed8;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
-        }
+                return status.includes(selected);
+            });
 
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            height: 500px;
-        }
+            $("#filterStatus").on("change", function () {
+                tableCollect.draw();
+            });
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            min-width: 500px;
-        }
+        });
+    </script>
 
-        th {
-            background: #f8fafc;
-            padding: 16px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #374151;
-            border-bottom: 2px solid #e2e8f0;
-            font-size: 14px;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        td {
-            padding: 16px 12px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 15px;
-        }
-
-        /* Row Colors */
-        .row-scanned {
-            background: #dcfce7 !important;
-        }
-
-            .row-scanned:hover {
-                background: #bbf7d0 !important;
-            }
-
-        .row-pending {
-            background: #fef2f2 !important;
-        }
-
-            .row-pending:hover {
-                background: #fecaca !important;
-            }
-
-        .stock-original {
-            font-weight: 500;
-            color: #1e293b;
-        }
-
-        .stock-collect {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .status-scanned {
-            background: #dcfce7;
-            color: #059669;
-        }
-
-        .status-pending {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .active-session {
-            background: #dbeafe !important;
-            border-left: 4px solid #3b82f6 !important;
-        }
-
-        .input-section.active-session {
-            background: #dbeafe !important;
-            border-bottom: 2px solid #3b82f6;
-        }
-
-
-
-        .input-group input, .input-group select {
-            min-width: 100%;
-        }
-
-        
-    </style>
 </body>
