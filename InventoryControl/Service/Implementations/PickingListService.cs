@@ -103,7 +103,7 @@ public class PickingListService : IPickingListService
         }
         
     }
-    public async Task UpdateAsync(string id, PickingListUpdateDTO dto)
+    public async Task UpdateAsync(string id, PickingListDTO dto)
     {
         try
         {
@@ -124,7 +124,7 @@ public class PickingListService : IPickingListService
             }
 
             doEntity.DoNumber = dto.DoNumber;
-            doEntity.ScannerType = dto.ScannerType;
+            //doEntity.ScannerType = dto.ScannerType;
 
             _db.DODetails.RemoveRange(doEntity.Details);
 
@@ -149,29 +149,29 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task UpdateStatusAsync(string id, string status)
-    {
-        try
-        {
-            var dO = await _db.DOs.FindAsync(id);
+    //public async Task UpdateStatusAsync(string id, string status)
+    //{
+    //    try
+    //    {
+    //        var dO = await _db.DOs.FindAsync(id);
 
-            if (dO == null || dO.IsDelete == true)
-            {
-                    DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan untuk pembaruan status");
-                throw new Exception("DO tidak ditemukan");
-            }
+    //        if (dO == null || dO.IsDelete == true)
+    //        {
+    //                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan untuk pembaruan status");
+    //            throw new Exception("DO tidak ditemukan");
+    //        }
 
-            dO.Status = status;
+    //        dO.Status = status;
 
-            await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"Berhasil memperbarui status DO dengan ID: {id} menjadi {status}");
-        } catch(Exception ex)
-        {
-            DailyFileLogger.Error($"Gagal memperbarui status DO dengan ID: {id}", ex);
-            throw;
-        }
+    //        await _db.SaveChangesAsync();
+    //        DailyFileLogger.Info($"Berhasil memperbarui status DO dengan ID: {id} menjadi {status}");
+    //    } catch(Exception ex)
+    //    {
+    //        DailyFileLogger.Error($"Gagal memperbarui status DO dengan ID: {id}", ex);
+    //        throw;
+    //    }
 
-    }
+    //}
 
     public async Task DeleteAsync(string id)
     {

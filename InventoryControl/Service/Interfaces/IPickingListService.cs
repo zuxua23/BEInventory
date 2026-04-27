@@ -8,7 +8,7 @@ public interface IPickingListService
     Task<List<DOResponseDto>> GetAllAsync();
     Task<DO?> GetByIdAsync(string id);
     Task CreateAsync(PickingListDTO dto, string createdBy);
-    Task UpdateAsync(string id, PickingListUpdateDTO dto);
+    Task UpdateAsync(string id, PickingListDTO dto);
     Task DeleteAsync(string id);
-    Task UpdateStatusAsync(string id, string status);
+    //Task UpdateStatusAsync(string id, string status);
 }

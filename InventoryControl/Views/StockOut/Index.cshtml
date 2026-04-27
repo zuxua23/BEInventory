@@ -14,7 +14,7 @@
 
                         <div class="d-flex align-items-center">
                             <div class="header-icon mr-3">
-                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                <i class="fas fa-dolly-flatbed nav-icon text-primary"
                                    style="font-size: 2.25rem; opacity: 0.8;"></i>
                             </div>
                             <div>
@@ -43,6 +43,7 @@
             <section class="content">
                 <div class="container-fluid">
                     <div class="row">
+
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
@@ -111,6 +112,7 @@
                     </div>
 
                     <div class="row">
+
                         <div class="col-md-8">
                             <div class="card">
                                 <div class="card-header">
@@ -153,8 +155,8 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
-                </div>
             </section>
 
 
@@ -180,6 +182,11 @@
             });
 
             const data = await response.json();
+                    if (!response.ok) {
+                                        Swal.fire("Error", "Failed to load DO data", "warning");
+
+            return;
+        }
             let options = `<option value="">-- Select DO --</option>`;
             console.log("Dropdown value:", $("#doIdSelect").val());
             data.forEach(data => {
@@ -198,14 +205,19 @@
             });
 
             const data = await response.json();
+                    if (!response.ok) {
+                                        Swal.fire("Error", "Failed to load Reader data", "warning");
+
+            return;
+        }
             let options = `<option value="">-- Select Reader --</option>`;
 
             data.forEach(data => {
         options += `<option value="${data.id}" data-ip="${data.ipAddress}">
             ${data.rdrName}        </option>`;
             });
-            console.log("IP:", data.ipAddress);
-            $("#rdrIdSelect").html(options);
+console.log("Readers loaded:", data);
+$("#rdrIdSelect").html(options);
                     initSelect2();
         }
 
@@ -231,11 +243,14 @@
             const readerSelect = document.getElementById("rdrIdSelect");
             const readerId = readerSelect.value;
             const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
-
+                    if (!ip) {
+                    Swal.fire("Error", "Reader IP not found", "warning");
+            return;
+        }
 
             if (!doId || !readerId) {
-                alert("Pilih DO dan Reader dulu");
-                return;
+        Swal.fire("Error", "Please select DO and Reader first", "warning");
+        return;
             }
             console.log("FETCH DO ID:", doId);
             console.log("IP Address:", ip);
@@ -268,8 +283,9 @@
 
             clearInterval(pollingInterval);
 
-            document.getElementById('processStatus').textContent = 'Stopped';
-            document.getElementById('processStatus').className = 'status-badge status-ready';
+        document.getElementById("scanProgress").style.width = "0%";
+        document.getElementById("progressText").textContent = "0 / 0 scanned";
+        document.getElementById('processStatus').className = 'status-badge status-ready';
         }
 
         // POLLING
@@ -335,6 +351,11 @@
             const res = await fetch(`/stockout/tags?doId=${currentDo}`);
             const tags = await res.json();
             console.log("Loaded tags:", tags);
+                    if (!res.ok) {
+                                        Swal.fire("Error", "Failed to load tags data", "warning");
+
+            return;
+        }
 
             const tagList = document.getElementById('tagList');
             tagList.innerHTML = '';
@@ -358,8 +379,8 @@
 
          async function loadItems(doId) {
             if (!doId || doId === "undefined") {
-            console.error("DO ID tidak valid:", doId);
-            return;
+        console.error("Invalid DO ID:", doId);
+        return;
             }
             console.log("FETCH DO ID:", doId);
 
@@ -367,8 +388,9 @@
                     if (!res.ok) {
             const text = await res.text();
             console.error("API Error:", text);
-            alert("Terjadi error di server");
-            return;
+                                    Swal.fire("Error", "Server error occurred", "warning");
+
+        return;
                 }
             const items = await res.json();
 
@@ -379,8 +401,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
-                            Tidak ada item
-                        </td>
+        No items available                        </td>
                     </tr>
                 `;
                 return;

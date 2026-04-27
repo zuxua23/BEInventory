@@ -156,7 +156,10 @@
             });
 
             const data = await response.json();
-
+                    if (!response.ok) {
+            Swal.fire("Error", "Failed to load items", "error");
+            return;
+        }
             let options = `<option value="">-- Select ITEM --</option>`;
 
             data.forEach(item => {
@@ -200,8 +203,8 @@
             }
 
             if (response.status === 403) {
-                Swal.fire("Akses ditolak", "", "warning");
-                return;
+        Swal.fire("Access denied", "", "warning");
+        return;
             }
 
             const data = await response.json();
@@ -311,10 +314,10 @@
             let row = $(this).closest(".detail-item");
 
             Swal.fire({
-                title: "Hapus item?",
+                title: "Delete item?",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Ya, hapus"
+                confirmButtonText: "Yes, delete"
             }).then((result) => {
                 if (result.isConfirmed) {
                     row.remove();
@@ -364,13 +367,30 @@
             const form = e.target;
 
             let details = [];
+                    if (details.length === 0) {
+            Swal.fire("Warning", "Please add at least one item", "warning");
+            return;
+        }
+        let isValid = true;
 
-            $("#detailContainer .detail-item").each(function () {
-                details.push({
-                    itemId: $(this).find(".item-select").val(),
-                    qtyRequired: parseInt($(this).find(".qty").val())
-                });
+        $("#detailContainer .detail-item").each(function () {
+            const itemId = $(this).find(".item-select").val();
+            const qty = parseInt($(this).find(".qty").val());
+
+            if (!itemId || !qty || qty <= 0) {
+                isValid = false;
+            }
+
+            details.push({
+                itemId,
+                qtyRequired: qty
             });
+        });
+
+        if (!isValid) {
+            Swal.fire("Warning", "Please fill all item and quantity correctly", "warning");
+            return;
+        }
 
             const payload = {
                 doNumber: form.doNumber.value,
@@ -383,13 +403,17 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-
+                    Swal.fire({
+            title: "Saving...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
             if (response.ok) {
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Picking List berhasil dibuat",
+        title: "Success",
+        text: "Picking list created successfully",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -402,8 +426,8 @@
 
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Create picking list gagal"
+        title: "Error",
+        text: "Failed to create picking list"
                 });
 
             }
@@ -412,14 +436,14 @@
         async function deletePickingList(id) {
 
             const result = await Swal.fire({
-                title: "Yakin?",
-                text: "Data akan dihapus!",
+        title: "Are you sure?",
+        text: "This data will be deleted!",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
                 cancelButtonColor: "#6c757d",
-                confirmButtonText: "Ya, hapus!",
-                cancelButtonText: "Batal"
+                confirmButtonText: "Yes, delete!",
+                cancelButtonText: "Cancel"
             });
 
             if (!result.isConfirmed) return;
@@ -433,19 +457,15 @@
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Data berhasil dihapus",
+                    title: "Success",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => loadDO());
 
             } else {
 
-                Swal.fire({
-                    icon: "error",
-                    title: "Gagal",
-                    text: "Delete gagal"
-                });
+                Swal.fire({ icon:"error",title:"Failed to delete"});
+
 
             }
         }

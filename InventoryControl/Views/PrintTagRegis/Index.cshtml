@@ -14,12 +14,12 @@
 
                         <div class="d-flex align-items-center">
                             <div class="header-icon mr-3">
-                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                <i class="fas fa-print nav-icon text-primary"
                                    style="font-size: 2.25rem; opacity: 0.8;"></i>
                             </div>
                             <div>
                                 <h1 class="h3 mb-1 text-dark font-weight-bold">Print Tag</h1>
-                                <p class="mb-0 text-muted small">Manage print tag process</p>
+                                <p class="mb-0 text-muted small">Manage tag printing process</p>
                             </div>
                         </div>
 
@@ -109,7 +109,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="btn btn-primary btn-block mt-auto" onclick="printTags()">
+                                    <button class="btn btn-primary btn-block mt-auto" style="font-size: 1.5rem;" onclick="printTags()">
                                         <i class="fas fa-print mr-2"></i>Print Tags
                                     </button>
                                 </div>
@@ -160,17 +160,20 @@
     @Html.Partial("_BaseScript")
 
     <script>
+        let table;
+        let rowCounter = 1;
 
+        $(document).ready(function () {
+            loadItemsDropdown(document.getElementById("firstItemSelect"));
+            loadTagTable();
+            updateTotalTags();
+        });
 
-                let table;
-                        async function loadTagTable() {
-
-            const res = await fetch("/api/tag", {
-                credentials: "include"
-            });
+        async function loadTagTable() {
+            const res = await fetch("/api/tag", { credentials: "include" });
 
             if (!res.ok) {
-                console.error("API ERROR:", res.status);
+                Swal.fire("Error", "Failed to load tag data", "error");
                 return;
             }
 
@@ -185,7 +188,7 @@
                 responsive: true,
                 pageLength: 5,
                 autoWidth: false,
-                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
+                lengthMenu: [[5, 10, 25], [5, 10, 25]],
 
                 columnDefs: [
                     {
@@ -206,10 +209,8 @@
                         targets: 4,
                         data: "status",
                         render: function (data) {
-                            if (data === "IN")
-                                return `<span class="badge badge-success">IN</span>`;
-                            if (data === "OUT")
-                                return `<span class="badge badge-danger">OUT</span>`;
+                            if (data === "IN") return `<span class="badge badge-success">IN</span>`;
+                            if (data === "OUT") return `<span class="badge badge-danger">OUT</span>`;
                             return `<span class="badge badge-secondary">${data || "-"}</span>`;
                         }
                     }
@@ -239,15 +240,7 @@
             });
         }
 
-
-                $(document).ready(function () {
-            loadItemsDropdown(document.getElementById("firstItemSelect"));
-             loadTagTable();
-              updateTotalTags();
-        });
-
-           async function loadItemsDropdown(selectElement) {
-
+        async function loadItemsDropdown(selectElement) {
             const response = await fetch("/api/item", {
                 method: "GET",
                 credentials: "include"
@@ -258,18 +251,27 @@
                 return;
             }
 
+            if (response.status === 403) {
+                Swal.fire("Access denied", "", "warning");
+                return;
+            }
+
+            if (!response.ok) {
+                Swal.fire("Error", "Failed to load items", "error");
+                return;
+            }
+
             const data = await response.json();
 
-            let options = `<option value="">-- Pilih Item --</option>`;
+            let options = `<option value="">-- Select Item --</option>`;
 
             data.forEach(item => {
                 options += `<option value="${item.id}">${item.itemName}</option>`;
             });
 
             selectElement.innerHTML = options;
-                    initSelect2();
+            initSelect2(selectElement.parentElement);
         }
-
 
         function initSelect2(parent = document) {
             $(parent).find('.select2').select2({
@@ -279,15 +281,14 @@
                 dropdownParent: $('body')
             });
         }
-                $(document).on('select2:open', () => {
+
+        $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
 
-
-            let rowCounter = 1;
-
-               function addRow() {
+        function addRow() {
             rowCounter++;
+
             const tbody = document.querySelector('#tagTable tbody');
 
             const newRow = document.createElement('tr');
@@ -309,7 +310,6 @@
             tbody.appendChild(newRow);
 
             const select = newRow.querySelector('.item-select');
-
             loadItemsDropdown(select);
 
             updateTotalTags();
@@ -323,33 +323,47 @@
 
         function updateRowNumbers() {
             const rows = document.querySelectorAll('#tagTable tbody tr');
+
             rows.forEach((row, index) => {
                 row.cells[0].textContent = index + 1;
             });
+
             rowCounter = rows.length;
         }
 
         function updateTotalTags() {
             let total = 0;
+
             document.querySelectorAll('.qty-input').forEach(input => {
                 total += parseInt(input.value) || 0;
             });
-            document.getElementById('totalTags').textContent = total;
+
+            document.getElementById('totalTags').textContent = total.toLocaleString();
         }
-                document.addEventListener('input', function (e) {
+
+        document.addEventListener('input', function (e) {
             if (e.target.classList.contains('qty-input')) {
                 updateTotalTags();
             }
         });
 
         async function printTags() {
+
+            const btn = document.querySelector("button[onclick='printTags()']");
+            btn.disabled = true;
+
             const rows = document.querySelectorAll('#tagTable tbody tr');
 
             let payload = [];
+            let isValid = true;
 
             rows.forEach(row => {
                 const itemId = row.querySelector('.item-select').value;
                 const qty = row.querySelector('.qty-input').value;
+
+                if (!itemId) {
+                    isValid = false;
+                }
 
                 if (itemId && qty > 0) {
                     payload.push({
@@ -359,19 +373,64 @@
                 }
             });
 
-            const response = await fetch("/api/tag/print", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
+            if (!isValid) {
+                Swal.fire("Warning", "Please select item in all rows", "warning");
+                btn.disabled = false;
+                return;
+            }
+
+            if (payload.length === 0) {
+                Swal.fire("Warning", "Please add at least one item", "warning");
+                btn.disabled = false;
+                return;
+            }
+
+            Swal.fire({
+                title: "Printing...",
+                text: "Please wait",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
 
-            if (response.ok) {
-                alert("Print success!");
-            } else {
-                const err = await response.text();
-                alert("Print failed: " + err);
+            try {
+                const response = await fetch("/api/tag/print", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    Swal.fire("Success", "Tags printed successfully", "success");
+
+                    const tbody = document.querySelector('#tagTable tbody');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td>1</td>
+                            <td>
+                                <select class="form-control select2 item-select" id="firstItemSelect"></select>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control qty-input" value="1">
+                            </td>
+                            <td></td>
+                        </tr>
+                    `;
+
+                    rowCounter = 1;
+
+                    loadItemsDropdown(document.getElementById("firstItemSelect"));
+                    updateTotalTags();
+                    loadTagTable();
+
+                } else {
+                    const err = await response.text();
+                    Swal.fire("Error", "Print failed: " + err, "error");
+                }
+
+            } catch (err) {
+                Swal.fire("Error", err.message, "error");
+            } finally {
+                btn.disabled = false;
             }
         }
     </script>

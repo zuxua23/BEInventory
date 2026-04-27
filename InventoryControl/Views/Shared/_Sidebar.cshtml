@@ -44,19 +44,30 @@
                                 <li class="nav-item">
                                     <a asp-route="User"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "user" ? "active" : "")">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="nav-icon fas fa-users"></i>
                                         <p>User</p>
                                     </a>
                                 </li>
                             }
 
+                            @* Permission *@
+                            @if (PermissionHelper.HasPermission(Context, "PERMISSION_GET"))
+                            {
+                                <li class="nav-item">
+                                    <a asp-route="Permission"
+                                    class="nav-link @(ViewData["pages"]?.ToString() == "permission" ? "active" : "")">
+                                        <i class="nav-icon fas fa-user-shield"></i>
+                                        <p>Permission</p>
+                                    </a>
+                                </li>
+                            }
                             @*  ITEM *@
                             @if (PermissionHelper.HasPermission(Context, "ITEM_GET"))
                             {
                                 <li class="nav-item">
                                     <a asp-route="Item"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "item" ? "active" : "")">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="nav-icon fas fa-boxes"></i>
                                         <p>Item</p>
                                     </a>
                                 </li>
@@ -68,7 +79,7 @@
                                 <li class="nav-item">
                                     <a asp-route="Location"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "location" ? "active" : "")">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="nav-icon fas fa-map"></i>
                                         <p>Location</p>
                                     </a>
                                 </li>
@@ -80,20 +91,20 @@
                                 <li class="nav-item">
                                     <a asp-route="Reader"
                                     class="nav-link @(ViewData["pages"]?.ToString() == "reader" ? "active" : "")">
-                                        <i class="far fa-circle nav-icon"></i>
+                                        <i class="nav-icon fas fa-broadcast-tower"></i>
                                         <p>Reader</p>
                                     </a>
                                 </li>
                             }
 
-                            @* Permission *@
-                            @if (PermissionHelper.HasPermission(Context, "PERMISSION_GET"))
+                            <!-- PICKING -->
+                            @if (PermissionHelper.HasPermission(Context, "PICKINGLIST_GET"))
                             {
                                 <li class="nav-item">
-                                    <a asp-route="Permission"
-                                    class="nav-link @(ViewData["pages"]?.ToString() == "permission" ? "active" : "")">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        <p>Permission</p>
+                                    <a asp-route="PickingList"
+                                       class="nav-link @(ViewData["pages"]?.ToString() == "pickinglist" ? "active" : "")">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Picking</p>
                                     </a>
                                 </li>
                             }
@@ -117,26 +128,13 @@
                     </li>
                 }
 
-
-                <!-- PICKING -->
-                @if (PermissionHelper.HasPermission(Context, "PICKINGLIST_GET"))
-                {
-                    <li class="nav-item">
-                        <a asp-route="PickingList"
-                           class="nav-link @(ViewData["pages"]?.ToString() == "pickinglist" ? "active" : "")">
-                            <i class="nav-icon fas fa-edit"></i>
-                            <p>Picking</p>
-                        </a>
-                    </li>
-                }
-
                 <!-- STOCK OUT -->
                 @if (PermissionHelper.HasPermission(Context, "STOCK_OUT"))
                 {
                     <li class="nav-item">
                         <a asp-route="StockOut"
                            class="nav-link @(ViewData["pages"]?.ToString() == "stockOut" ? "active" : "")">
-                            <i class="nav-icon fas fa-tasks"></i>
+                            <i class="nav-icon fas fa-dolly-flatbed"></i>
                             <p>Stock Out</p>
                         </a>
                     </li>
@@ -149,7 +147,7 @@
                         <li class="nav-item">
                             <a asp-route="TransactionHistory"
                                    class="nav-link @(ViewData["pages"]?.ToString() == "TransactionHistory" ? "active" : "")">
-                                <i class="nav-icon fas fa-file"></i>
+                            <i class="nav-icon fas fa-history"></i>
                                 <p>Transaction History</p>
                             </a>
                         </li>
@@ -161,7 +159,7 @@
                         <li class="nav-item">
                             <a asp-route="StockTaking"
                                    class="nav-link @(ViewData["pages"]?.ToString() == "StockTaking" ? "active" : "")">
-                                <i class="nav-icon fas fa-file"></i>
+                                <i class="nav-icon fas fa-clipboard-check"></i>
                                 <p>Stock Taking</p>
                             </a>
                         </li>

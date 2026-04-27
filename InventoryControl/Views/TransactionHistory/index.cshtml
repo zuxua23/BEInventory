@@ -19,7 +19,7 @@
                             </div>
                             <div>
                                 <h1 class="h3 mb-1 text-dark font-weight-bold">Transaction History</h1>
-                                <p class="mb-0 text-muted small">Show History of Transaction</p>
+                                <p class="mb-0 text-muted small">Transaction History Overview</p>
                             </div>
                         </div>
 
@@ -141,21 +141,31 @@
 
             async function fetchTransactions(fromDate, toDate, txType) {
 
-            let url = `/api/transaction/history?`;
+        const params = new URLSearchParams();
 
-            if (fromDate) url += `fromDate=${fromDate}&`;
-            if (toDate) url += `toDate=${toDate}&`;
-            if (txType) url += `txType=${txType}`;
+        if (fromDate) params.append("fromDate", fromDate);
+        if (toDate) params.append("toDate", toDate);
+        if (txType) params.append("txType", txType);
+
+        const url = `/api/transaction/history?${params.toString()}`;
 
         const res = await fetch(url, {
             credentials: "include"
         });
 
-        if (!res.ok) {
-            console.error("API ERROR:", res.status);
+                if (!res.ok) {
+            Swal.fire("Error", "Failed to load transactions", "error");
+            return [];
+        }
+                                if (res.status === 401) {
+            window.location.href = "/login";
             return [];
         }
 
+        if (res.status === 403) {
+            Swal.fire("Access denied", "", "warning");
+            return [];
+        }
         return await res.json();
         }
 
@@ -188,6 +198,9 @@
             });
 
             async function loadData() {
+
+
+
                 const fromDate = $("#filterFromDate").val();
                 const toDate = $("#filterToDate").val();
 
@@ -235,7 +248,7 @@
                             width: "15%",
                             className: "text-nowrap" 
                         },
-                        { targets: 4, data: "readerName", width: "15%" },
+                        { targets: 4, data: "readerName", render: data => data || "-", width: "15%" },
                         { targets: 5, data: "tagId", width: "15%", render: function(data) { return `<code>${data}</code>`; } },
                         {
                             targets: 6,
@@ -291,13 +304,13 @@
             const fromDate = $("#filterFromDate").val();
             const toDate = $("#filterToDate").val();
 
-            let url = `/api/transaction/export/${type}?`;
+        const params = new URLSearchParams();
 
-            if (fromDate) url += `fromDate=${fromDate}&`;
-            if (toDate) url += `toDate=${toDate}&`;
-            if (currentTxType) url += `txType=${currentTxType}`;
+        if (fromDate) params.append("fromDate", fromDate);
+        if (toDate) params.append("toDate", toDate);
+        if (currentTxType) params.append("txType", currentTxType);
 
-            return url;
+        return `/api/transaction/export/${type}?${params.toString()}`;
         }
 
         $("#btnExportExcel").on("click", function () {
