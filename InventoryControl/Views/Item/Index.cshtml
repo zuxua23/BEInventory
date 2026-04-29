@@ -185,7 +185,7 @@
         }
 
         if (response.status === 403) {
-            alert("Tidak punya akses");
+            alert("You do not have access");
             return;
         }
 
@@ -312,8 +312,8 @@
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Item berhasil dibuat',
+                    title: 'Success',
+                    text: 'Item created successfully',
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -324,8 +324,8 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Gagal',
-                    text: 'Create item gagal'
+                    title: 'Failed',
+                    text: 'Failed to create item'
                 });
 
             }
@@ -334,14 +334,14 @@
              async function deleteItem(id) {
 
             const result = await Swal.fire({
-                title: 'Yakin?',
-                text: "Item akan dihapus!",
+                title: 'Are you sure?',
+                text: "Item will be deleted!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             });
 
             if (!result.isConfirmed) return;
@@ -355,8 +355,8 @@
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Item berhasil dihapus',
+                    title: 'Success',
+                    text: 'Item deleted successfully',
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -367,8 +367,8 @@
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Gagal',
-                    text: 'Delete item gagal'
+                    title: 'Failed',
+                    text: 'Failed to delete item'
                 });
 
             }

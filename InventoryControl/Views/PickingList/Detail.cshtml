@@ -130,11 +130,8 @@
             });
 
             if (!res.ok) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Gagal",
-                    text: "Gagal load data"
-                });
+            Swal.fire("Error", "Failed to load data", "error");
+
                 return;
             }
 
@@ -190,10 +187,10 @@
             let row = $(this).closest(".detail-item");
 
             Swal.fire({
-                title: "Hapus item?",
+                title: "Delete item?",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Ya, hapus"
+                confirmButtonText: "Yes, delete"
             }).then((result) => {
                 if (result.isConfirmed) {
                     row.remove();
@@ -234,11 +231,11 @@
                 });
             });
            if (!canUpdate) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Akses ditolak',
-                text: 'Tidak punya permission update'
-            });
+                    Swal.fire({
+                        icon: 'error',
+        title: 'Access denied',
+        text: 'You do not have permission to update'
+                    });
             return;
         }
             const payload = {
@@ -258,8 +255,8 @@
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Picking List berhasil diupdate",
+                    title: "Success",
+                    text: "Picking List updated successfully",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -270,8 +267,8 @@
 
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Update gagal"
+                    title: "Error",
+                    text: "Update failed"
                 });
 
             }

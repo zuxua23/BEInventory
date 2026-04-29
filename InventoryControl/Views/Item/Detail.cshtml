@@ -138,8 +138,8 @@
                     if (!canUpdate) {
             Swal.fire({
                 icon: 'error',
-                title: 'Akses ditolak',
-                text: 'Tidak punya permission update'
+                title: 'Access Denied',
+                text: 'You do not have permission to update'
             });
             return;
         }
@@ -160,8 +160,8 @@
 
                Swal.fire({
                    icon: 'success',
-                   title: 'Berhasil',
-                   text: 'Item berhasil diupdate',
+                   title: 'Success',
+                   text: 'Item updated successfully',
                    timer: 1500,
                    showConfirmButton: false
                }).then(() => {
@@ -172,8 +172,8 @@
 
                Swal.fire({
                    icon: 'error',
-                   title: 'Gagal',
-                   text: 'Update item gagal'
+                   title: 'Failed',
+                   text: 'Failed to update item'
                });
 
            }

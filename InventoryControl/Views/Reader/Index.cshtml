@@ -347,11 +347,13 @@
 
             const result = await Swal.fire({
         title:"Are you sure?",
-        text:"This data will be deleted",
+        text:"This Reader will be deleted",
                 icon:"warning",
                 showCancelButton:true,
-                confirmButtonColor:"#d33",
-                cancelButtonColor:"#6c757d"
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             });
 
             if (!result.isConfirmed) return;
@@ -363,13 +365,14 @@
 
             if (response.ok) {
                 Swal.fire({
-                    icon:"success",
-                    title:"Success",
-                    timer:1500,
-                    showConfirmButton:false
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Reader deleted successfully',
+                    timer: 1500,
+                    showConfirmButton: false
                 }).then(()=>loadReaders());
             } else {
-                Swal.fire({ icon:"error",title:"Failed to delete reader"});
+                Swal.fire({ icon:"error",title:'Failed' ,text: "Failed to delete reader"});
             }
         }
 
