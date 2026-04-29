@@ -44,11 +44,11 @@ public class StockInController : ControllerBase
     }
     [HttpGet]
     [AuthorizePermissionHybrid("TAG_GET_DETAIL")]
-    public async Task<IActionResult> GetTagByCode(string code)
+    public async Task<IActionResult> GetTagByCode(string code, string scannerType)
     {
         try
         {
-            var result = await _service.GetTagByCodeAsync(code);
+            var result = await _service.GetTagByCodeAsync(code, scannerType);
             if (result == null) return NotFound();
             return Ok(result);
         }

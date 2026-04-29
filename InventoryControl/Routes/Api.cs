@@ -117,5 +117,17 @@ public static class Api
             pattern: "/api/preparation/bulk",
             defaults: new { controller = "StockPreparation", action = "PrepareBulk" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
+            name: "api-search-item-list",
+            pattern: "/api/search-item",
+            defaults: new { controller = "SearchItem", action = "GetAll" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-search-item-detail",
+            pattern: "/api/search-item/{code}",
+            defaults: new { controller = "SearchItem", action = "GetDetail" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
     }
 }

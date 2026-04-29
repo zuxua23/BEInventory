@@ -27,9 +27,12 @@ public class StockInService : IStockInService
                     : dto.ScannedCodes.Contains(t.TagId))
                 .ToListAsync();
 
-            if (!tags.Any()) throw new Exception("Tag tidak ditemukan di database");
+            if (!tags.Any()) throw new Exception("Tag tidak boleh kosong");
 
-            var location = await _db.Locations.FirstOrDefaultAsync(x => x.Id == dto.LocId);
+            var location = await _db.Locations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
+
             if (location == null) throw new Exception("Lokasi tujuan tidak ditemukan");
 
             foreach (var tag in tags)
@@ -50,12 +53,13 @@ public class StockInService : IStockInService
             };
             _db.Transactions.Add(trxHeader);
 
+            var now = DateTime.UtcNow;
             foreach (var tag in tags)
             {
                 tag.Status = "IN_STOCK";
                 tag.LocationId = location.Id;
                 tag.UpdatedBy = user;
-                tag.UpdatedAt = DateTime.UtcNow;
+                tag.UpdatedAt = now;
 
                 _db.TransactionDetails.Add(new Transaction_Detail
                 {
@@ -74,7 +78,7 @@ public class StockInService : IStockInService
                     Reference = trxHeader.TrsId,
                     Action = "MOVE_TO_" + location.Name.Replace(" ", "_").ToUpper(),
                     CreatedBy = user,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = now
                 });
             }
 
@@ -86,28 +90,26 @@ public class StockInService : IStockInService
         {
             await trx.RollbackAsync();
             DailyFileLogger.Error("Gagal StockIn.", ex);
-            throw; 
-
+            throw;
         }
     }
-    public async Task<TagResponseDto> GetTagByCodeAsync(string code)
+
+    public async Task<TagResponseDto?> GetTagByCodeAsync(string code, string scannerType)
     {
         var tag = await _db.Tags
-            .Include(t => t.Item)
-            .Include(t => t.Location)
-            .FirstOrDefaultAsync(t => t.EpcTag == code || t.TagId == code);
-       
+            .AsNoTracking()
+            .Where(t => scannerType == "RFID" ? t.EpcTag == code : t.TagId == code)
+            .Select(t => new TagResponseDto
+            {
+                TagId = t.TagId,
+                EpcTag = t.EpcTag,
+                ItemId = t.ItemId,
+                ItemName = t.Item.Name,
+                Status = t.Status,
+                Location = t.Location.Name
+            })
+            .FirstOrDefaultAsync();
 
-        if (tag == null) return null;
-
-        return new TagResponseDto
-        {
-            TagId = tag.TagId,
-            EpcTag = tag.EpcTag,   
-            ItemId = tag.ItemId,   
-            ItemName = tag.Item?.Name,
-            Status = tag.Status,
-            Location = tag.Location?.Name
-        };
+        return tag;
     }
 }
