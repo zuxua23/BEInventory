@@ -27,21 +27,21 @@ public class StockInService : IStockInService
                     : dto.ScannedCodes.Contains(t.TagId))
                 .ToListAsync();
 
-            if (!tags.Any()) throw new Exception("Tag tidak boleh kosong");
+            if (!tags.Any()) throw new Exception("No tags provided");
 
             var location = await _db.Locations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == dto.LocId);
 
-            if (location == null) throw new Exception("Lokasi tujuan tidak ditemukan");
+            if (location == null) throw new Exception("Destination location not found");
 
             foreach (var tag in tags)
             {
                 if (tag.Status == "IN_STOCK")
-                    throw new Exception($"Tag {tag.TagId} sudah berstatus IN STOCK!");
+                    throw new Exception($"Tag {tag.TagId} is already IN STOCK!");
 
                 if (tag.Status != "STANDBY" && tag.Status != "PRINTED")
-                    throw new Exception($"Tag {tag.TagId} statusnya {tag.Status}, tidak bisa di Stock In");
+                    throw new Exception($"Tag {tag.TagId} has status {tag.Status}, cannot be stocked in");
             }
 
             var trxHeader = new Transaction
@@ -84,12 +84,12 @@ public class StockInService : IStockInService
 
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
-            DailyFileLogger.Info($"StockIn berhasil: {trxHeader.TrsId}");
+            DailyFileLogger.Info($"StockIn success: {trxHeader.TrsId}");
         }
         catch (Exception ex)
         {
             await trx.RollbackAsync();
-            DailyFileLogger.Error("Gagal StockIn.", ex);
+            DailyFileLogger.Error("StockIn failed.", ex);
             throw;
         }
     }

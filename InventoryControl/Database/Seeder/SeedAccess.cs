@@ -67,6 +67,8 @@ public class SeedAccess
             ("PERMISSION_DELETE", "Delete Master PERMISSION", "PER033"),
             ("TRANSACTION_GET", "VIEW Master PERMISSION", "PER037"),
             ("TAG_GET", "VIEW Master TAG", "PER036"),
+            ("PERMISSION_GET", "List Search", "PER038"),
+            ("PERMISSION_DETAIL", "Detail Search", "PER039"),
 };
         foreach (var (code, name, perid) in permissionSeeds)
         {

@@ -36,8 +36,9 @@ public class StockInController : ControllerBase
         {
             var user = User.Identity?.Name ?? "system";
             await _service.StockInAsync(dto, user);
-            return Ok(new { message = "Stock In berhasil" });
-        }catch(Exception ex)
+            return Ok(new { message = "Stock In successful" });
+        }
+        catch(Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }

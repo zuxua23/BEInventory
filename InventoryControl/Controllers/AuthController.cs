@@ -23,6 +23,11 @@ public class AuthController : Controller
         return View();
     }
 
+    public IActionResult Ping()
+    {
+        return Ok(new { status = "ok", message = "Server is Connected" });
+    }
+
     public async Task<IActionResult> Login(LoginDTO dto)
     {
         try

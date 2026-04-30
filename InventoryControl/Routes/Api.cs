@@ -5,6 +5,12 @@ public static class Api
     public static void Map(WebApplication app)
     {
         app.MapControllerRoute(
+            name: "api-ping",
+            pattern: "/api/ping",
+            defaults: new { controller = "Auth", action = "Ping" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" })); 
+
+        app.MapControllerRoute(
             name: "api-login",
             pattern: "/api/auth/login",
             defaults: new { controller = "Auth", action = "LoginHT" })

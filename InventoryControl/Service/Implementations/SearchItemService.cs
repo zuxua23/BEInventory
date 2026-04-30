@@ -14,13 +14,16 @@ namespace InventoryControl.Service.Implementations
         public async Task<List<SearchItemListDto>> GetAllItemsAsync()
         {
             return await _db.Tags
-                .Where(t => t.isDelete == 0)
+                .Where(t => (t.isDelete == 0 || t.isDelete == null) &&
+                    (t.Status == "RESERVED" || t.Status == "IN_STOCK"))
                 .Include(t => t.Item)
+                .Include(t => t.Location) 
                 .Select(t => new SearchItemListDto
                 {
                     TagId = t.TagId,
                     EpcTag = t.EpcTag,
-                    ItemName = t.Item.Name
+                    ItemName = t.Item.Name,
+                    Location = t.Location != null ? t.Location.Name : "-" 
                 })
                 .ToListAsync();
         }
@@ -28,21 +31,28 @@ namespace InventoryControl.Service.Implementations
         public async Task<TagDetailDto?> GetTagDetailAsync(string code)
         {
             var tag = await _db.Tags
-                .Where(t => t.isDelete == 0 &&
-                       (t.EpcTag == code || t.TagId == code))
+                .Where(t => (t.isDelete == 0 || t.isDelete == null) &&
+                    (t.EpcTag == code || t.TagId == code))
                 .Include(t => t.Item)
                 .Include(t => t.Location)
                 .FirstOrDefaultAsync();
 
             if (tag == null) return null;
 
+            var statusDisplay = tag.Status switch
+            {
+                "RESERVED" => "PREPARATION",
+                "IN_STOCK" => "STOCK IN",
+                _ => tag.Status
+            };
+
             return new TagDetailDto
             {
                 TagId = tag.TagId,
                 EpcTag = tag.EpcTag,
-                ItemName = tag.Item.Name,
-                Location = tag.Location?.Name ?? "-",   // sesuaikan dengan property Location entity kamu
-                Status = tag.Status ?? "-"
+                ItemName = tag.Item?.Name ?? "-",
+                Location = tag.Location?.Name ?? "-",
+                Status = statusDisplay
             };
         }
     }

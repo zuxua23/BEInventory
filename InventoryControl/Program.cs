@@ -1,4 +1,4 @@
-﻿using InventoryControl.Database;
+using InventoryControl.Database;
 using InventoryControl.Database.Seeder;
 using InventoryControl.Routes;
 using InventoryControl.Utility;
@@ -19,7 +19,6 @@ builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 #endregion
-
 
 #region DEPENDENCY INJECTION
 builder.Services.AddApplicationServices();

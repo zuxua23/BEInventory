@@ -42,13 +42,12 @@ public class PickingListApiController : ControllerBase
     public async Task<IActionResult> Create([FromBody] PickingListDTO request)
     {
         if (request.Details == null || !request.Details.Any())
-            return BadRequest("Detail DO tidak boleh kosong");
+            return BadRequest("DO details cannot be empty");
 
         var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
-
         await _service.CreateAsync(request, createdBy);
 
-        return Ok(new { message = "DO berhasil dibuat" });
+        return Ok(new { message = "DO created successfully" });
     }
 
     //[HttpPut("{id}")]
@@ -56,14 +55,14 @@ public class PickingListApiController : ControllerBase
     public async Task<IActionResult> Update(string id, [FromBody] PickingListUpdateDTO dto)
     {
         await _service.UpdateAsync(id, dto);
-        return Ok(new { message = "DO berhasil diupdate" });
+        return Ok(new { message = "DO updated successfully" });
     }
     [HttpDelete("{id}")]
     [AuthorizePermissionHybrid("PICKINGLIST_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
         await _service.DeleteAsync(id);
-        return Ok(new { message = "DO berhasil dihapus" });
+        return Ok(new { message = "DO deleted successfully" });
     }
 
     [HttpPut("{id}")]
@@ -71,6 +70,6 @@ public class PickingListApiController : ControllerBase
     public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
     {
         await _service.UpdateStatusAsync(id, dto.Status);
-        return Ok(new { message = "Status DO berhasil diperbarui" });
+        return Ok(new { message = "DO status updated successfully" });
     }
 }

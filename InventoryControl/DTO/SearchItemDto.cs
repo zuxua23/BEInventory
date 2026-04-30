@@ -5,6 +5,7 @@ namespace InventoryControl.DTO
         public string TagId { get; set; }
         public string EpcTag { get; set; }
         public string ItemName { get; set; }
+        public string Location { get; set; }
     }
 
     public class TagDetailDto

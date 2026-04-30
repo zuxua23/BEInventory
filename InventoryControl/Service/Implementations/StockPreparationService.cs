@@ -22,16 +22,15 @@ public class StockPreparationService : IStockPreparationService
 
         try
         {
-            DailyFileLogger.Info($"StockPreparation dimulai. DO: {dto.DoId}, Scanner: {dto.ScannerType}, Code: {dto.Code}");
-
+            DailyFileLogger.Info($"StockPreparation started. DO: {dto.DoId}, Scanner: {dto.ScannerType}, Code: {dto.Code}");
             var doData = await _db.DOs
                 .Include(d => d.Details)
                 .FirstOrDefaultAsync(d => d.DoId == dto.DoId);
 
             if (doData == null)
             {
-                DailyFileLogger.Warn($"StockPreparation gagal: DO {dto.DoId} tidak ditemukan");
-                throw new Exception("DO tidak ditemukan");
+                DailyFileLogger.Warn($"StockPreparation failed: DO {dto.DoId} not found");
+                throw new Exception("DO not found");
             }
 
             var location = await _db.Locations
@@ -39,8 +38,8 @@ public class StockPreparationService : IStockPreparationService
 
             if (location == null)
             {
-                DailyFileLogger.Warn($"CreateAsync: Location dengan ID {dto.LocId} tidak ditemukan");
-                throw new Exception("Location tidak ditemukan");
+                DailyFileLogger.Warn($"CreateAsync: Location with ID {dto.LocId} not found");
+                throw new Exception("Location not found");
             }
 
             Tag tag;
@@ -58,14 +57,14 @@ public class StockPreparationService : IStockPreparationService
 
             if (tag == null)
             {
-                DailyFileLogger.Warn($"StockPreparation gagal: Tag {dto.Code} tidak ditemukan");
-                throw new Exception("Tag tidak ditemukan");
+                DailyFileLogger.Warn($"StockPreparation failed: Tag {dto.Code} not found");
+                throw new Exception("Tag not found");
             }
 
             if (tag.Status != "IN_STOCK")
             {
-                DailyFileLogger.Warn($"StockPreparation gagal: Tag {tag.TagId} status {tag.Status}, harus IN_STOCK");
-                throw new Exception($"Tag {tag.TagId} tidak dalam status IN_STOCK");
+                DailyFileLogger.Warn($"StockPreparation failed: Tag {tag.TagId} status is {tag.Status}, must be IN_STOCK");
+                throw new Exception($"Tag {tag.TagId} is not in IN_STOCK status");
             }
 
             var detail = doData.Details
@@ -73,8 +72,8 @@ public class StockPreparationService : IStockPreparationService
 
             if (detail == null)
             {
-                DailyFileLogger.Warn($"StockPreparation gagal: Item {tag.ItemId} tidak ada di DO {dto.DoId}");
-                throw new Exception("Item tidak ada dalam DO");
+                DailyFileLogger.Warn($"StockPreparation failed: Item {tag.ItemId} not found in DO {dto.DoId}");
+                throw new Exception("Item not found in DO");
             }
 
             var reservedCount = await _db.TransactionDetails
@@ -86,8 +85,8 @@ public class StockPreparationService : IStockPreparationService
 
             if (reservedCount >= detail.QtyRequired)
             {
-                DailyFileLogger.Warn($"StockPreparation gagal: Qty item {tag.ItemId} sudah terpenuhi di DO {dto.DoId}");
-                throw new Exception("Qty item sudah terpenuhi untuk DO ini");
+                DailyFileLogger.Warn($"StockPreparation failed: Qty for item {tag.ItemId} already fulfilled in DO {dto.DoId}");
+                throw new Exception("Item quantity already fulfilled for this DO");
             }
 
             var transaction = new Transaction
@@ -134,7 +133,7 @@ public class StockPreparationService : IStockPreparationService
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
 
-            DailyFileLogger.Info($"StockPreparation berhasil. DO: {dto.DoId}, Tag: {tag.TagId}, Transaction: {transaction.TrsId}");
+            DailyFileLogger.Info($"StockPreparation successful. DO: {dto.DoId}, Tag: {tag.TagId}, Transaction: {transaction.TrsId}");
         }
         catch (Exception ex)
         {
@@ -149,29 +148,29 @@ public class StockPreparationService : IStockPreparationService
         try
         {
             if (dto.ScannedCodes == null || !dto.ScannedCodes.Any())
-                throw new Exception("Tidak ada tag yang dikirim");
+                throw new Exception("No tags provided");
 
-            DailyFileLogger.Info($"PrepareBulk dimulai. DO: {dto.DoId}, Total: {dto.ScannedCodes.Count}, Scanner: {dto.ScannerType}");
+            DailyFileLogger.Info($"PrepareBulk started. DO: {dto.DoId}, Total: {dto.ScannedCodes.Count}, Scanner: {dto.ScannerType}");
 
             var doData = await _db.DOs
                 .Include(d => d.Details)
                 .FirstOrDefaultAsync(d => d.DoId == dto.DoId);
 
             if (doData == null)
-                throw new Exception("DO tidak ditemukan");
+                throw new Exception("DO not found");
 
             var location = await _db.Locations
                 .FirstOrDefaultAsync(x => x.Id == dto.LocId);
 
             if (location == null)
-                throw new Exception("Lokasi tidak ditemukan");
+                throw new Exception("Location not found");
 
             var tags = dto.ScannerType == "RFID"
                 ? await _db.Tags.Where(t => dto.ScannedCodes.Contains(t.EpcTag)).ToListAsync()
                 : await _db.Tags.Where(t => dto.ScannedCodes.Contains(t.TagId)).ToListAsync();
 
             if (!tags.Any())
-                throw new Exception("Tag tidak ditemukan di database");
+                throw new Exception("Tags not found in database");
 
             var foundCodes = dto.ScannerType == "RFID"
                 ? tags.Select(t => t.EpcTag).ToHashSet()
@@ -179,16 +178,14 @@ public class StockPreparationService : IStockPreparationService
 
             var missing = dto.ScannedCodes.Where(c => !foundCodes.Contains(c)).ToList();
             if (missing.Any())
-                throw new Exception($"Tag tidak ditemukan: {string.Join(", ", missing)}");
-
+                throw new Exception($"Tags not found: {string.Join(", ", missing)}");
             foreach (var tag in tags)
             {
                 if (tag.Status != "IN_STOCK")
-                    throw new Exception($"Tag {tag.TagId} status {tag.Status}, harus IN_STOCK");
-
+                    throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be IN_STOCK");
                 var detail = doData.Details.FirstOrDefault(d => d.ItemId == tag.ItemId);
                 if (detail == null)
-                    throw new Exception($"Item {tag.ItemId} tidak ada di DO ini");
+                    throw new Exception($"Item {tag.ItemId} is not in this DO");
             }
 
             var reservedPerItem = await _db.TransactionDetails
@@ -208,7 +205,7 @@ public class StockPreparationService : IStockPreparationService
                 var totalAfter = alreadyReserved + kv.Value;
 
                 if (totalAfter > detail.QtyRequired)
-                    throw new Exception($"Qty item {kv.Key} kelebihan (scan: {kv.Value}, sudah reserved: {alreadyReserved}, required: {detail.QtyRequired})");
+                    throw new Exception($"Item {kv.Key} quantity exceeds requirement (scanned: {kv.Value}, already reserved: {alreadyReserved}, required: {detail.QtyRequired})");
             }
 
             var transaction = new Transaction
@@ -255,12 +252,12 @@ public class StockPreparationService : IStockPreparationService
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
 
-            DailyFileLogger.Info($"PrepareBulk berhasil. DO: {dto.DoId}, Total reserved: {tags.Count}, Trx: {transaction.TrsId}");
+            DailyFileLogger.Info($"PrepareBulk successful. DO: {dto.DoId}, Total reserved: {tags.Count}, Trx: {transaction.TrsId}");
         }
         catch (Exception ex)
         {
             await trx.RollbackAsync();
-            DailyFileLogger.Error("Error PrepareBulkAsync", ex);
+            DailyFileLogger.Error("Error in PrepareBulkAsync", ex);
             throw;
         }
     }
@@ -291,12 +288,12 @@ public class StockPreparationService : IStockPreparationService
             })
             .ToListAsync();
 
-            DailyFileLogger.Info($"Berhasil mengambil data DO, total: {result.Count}");
+            DailyFileLogger.Info($"Successfully retrieved DO data, total: {result.Count}");
             return result;
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Gagal mengambil data DO", ex);
+            DailyFileLogger.Error("Failed to retrieve DO data", ex);
             throw;
         }
     }

@@ -41,12 +41,12 @@ public class PickingListService : IPickingListService
             })
             .ToListAsync();
 
-            DailyFileLogger.Info($"Berhasil mengambil data DO, total: {result.Count}");
+            DailyFileLogger.Info($"Successfully retrieved DO data, total: {result.Count}");
             return result;
         }
         catch(Exception ex)
         {
-            DailyFileLogger.Error("Gagal mengambil data DO", ex);
+            DailyFileLogger.Error("Failed to retrieve DO data", ex);
             throw;
         }
     }
@@ -55,7 +55,7 @@ public class PickingListService : IPickingListService
     {
         var result = await _db.DOs
             .Include(x => x.Details)
-            .ThenInclude(d => d.Item)   // TAMBAH INI
+            .ThenInclude(d => d.Item)   
             .FirstOrDefaultAsync(x => x.DoId == id && !x.IsDelete);
 
         if (result == null) return null;
@@ -103,11 +103,10 @@ public class PickingListService : IPickingListService
             _db.DODetails.AddRange(details);
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"Berhasil membuat DO baru dengan ID: {doEntity.DoId}");
-
+            DailyFileLogger.Info($"Successfully created new DO with ID: {doEntity.DoId}");
         } catch(Exception ex)
         {
-            DailyFileLogger.Error("Gagal membuat DO baru", ex);
+            DailyFileLogger.Error("Failed to create new DO", ex);
             throw;
         }
         
@@ -122,14 +121,14 @@ public class PickingListService : IPickingListService
 
             if (doEntity == null)
             {
-                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan");
-                throw new Exception("DO tidak ditemukan");
+                DailyFileLogger.Warn($"DO with ID: {id} not found");
+                throw new Exception("DO not found");
             }
 
             if (doEntity.Status != "DRAFT")
             {
-                DailyFileLogger.Warn($"DO dengan ID: {id} tidak bisa diupdate karena status bukan DRAFT");
-                throw new Exception("DO hanya bisa diupdate jika status masih DRAFT");
+                DailyFileLogger.Warn($"DO with ID: {id} cannot be updated because status is not DRAFT");
+                throw new Exception("DO can only be updated if the status is still DRAFT");
             }
 
             doEntity.DoNumber = dto.DoNumber;
@@ -149,11 +148,11 @@ public class PickingListService : IPickingListService
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"Berhasil update DO dengan ID: {id}");
+            DailyFileLogger.Info($"Successfully updated DO with ID: {id}");
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error($"Gagal update DO dengan ID: {id}", ex);
+            DailyFileLogger.Error($"Failed to update DO with ID: {id}", ex);
             throw;
         }
     }
@@ -166,17 +165,17 @@ public class PickingListService : IPickingListService
 
             if (dO == null || dO.IsDelete == true)
             {
-                    DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan untuk pembaruan status");
-                throw new Exception("DO tidak ditemukan");
+                DailyFileLogger.Warn($"DO with ID: {id} not found for status update");
+                throw new Exception("DO not found");
             }
 
             dO.Status = status;
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"Berhasil memperbarui status DO dengan ID: {id} menjadi {status}");
+            DailyFileLogger.Info($"Successfully updated DO status for ID: {id} to {status}");
         } catch(Exception ex)
         {
-            DailyFileLogger.Error($"Gagal memperbarui status DO dengan ID: {id}", ex);
+            DailyFileLogger.Error($"Failed to update DO status for ID: {id}", ex);
             throw;
         }
 
@@ -189,17 +188,16 @@ public class PickingListService : IPickingListService
             var doData = await _db.DOs.FindAsync(id);
 
             if (doData == null || doData.IsDelete)
-                throw new Exception("DO tidak ditemukan");
-
+                throw new Exception("DO not found");
             doData.IsDelete = true;
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"DO dengan ID {id} berhasil dihapus");
+            DailyFileLogger.Info($"DO with ID {id} successfully deleted");
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error($"Gagal menghapus DO dengan ID {id}", ex);
+            DailyFileLogger.Error($"Failed to delete DO with ID {id}", ex);
             throw;
         }
     }

@@ -18,7 +18,6 @@ public class StockPreparationController : ControllerBase
         _service = service;
     }
 
-    //[HttpPost]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> Prepare(StockPreparationRequestDto dto)
     {
@@ -26,7 +25,7 @@ public class StockPreparationController : ControllerBase
         {
             var user = User.Identity?.Name ?? "system";
             await _service.PrepareAsync(dto, user);
-            return Ok(new { message = "Tag berhasil diprepare" });
+            return Ok(new { message = "Tag prepared successfully" });
         }
         catch (Exception ex)
         {
@@ -41,7 +40,7 @@ public class StockPreparationController : ControllerBase
         {
             var user = User.Identity?.Name ?? "system";
             await _service.PrepareBulkAsync(dto, user);
-            return Ok(new { message = $"Berhasil prepare {dto.ScannedCodes.Count} tag" });
+            return Ok(new { message = $"Successfully prepared {dto.ScannedCodes.Count} tags" });
         }
         catch (Exception ex)
         {
