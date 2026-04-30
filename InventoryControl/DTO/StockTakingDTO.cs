@@ -3,7 +3,7 @@
 public class StockTakingCreateDto
 {
     public string? Remark { get; set; }
-    public string? LocationId { get; set; }
+    public List<string>? LocationIds { get; set; }
 }
 
 public class StockTakingScanDto

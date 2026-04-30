@@ -13,8 +13,6 @@ public class StockTaking
     [Column("remark")]
     public string? Remark { get; set; }
 
-    [Column("loc_id")]
-    public string LocationId { get; set; }
 
     [Column("status")]
     public string? Status { get; set; }
@@ -27,7 +25,6 @@ public class StockTaking
 
     public ICollection<StockTakingDetail>? Details { get; set; }
 
-    public Location LocationTaking { get; set; }
 
 
 

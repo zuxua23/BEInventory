@@ -21,9 +21,22 @@ public class StockTakingController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(StockTakingCreateDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        var id = await _service.CreateAsync(dto, user);
-        return Ok(new { StockTakingId = id });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+
+            var id = await _service.CreateAsync(dto, user);
+
+            return Ok(new { stockTakingId = id });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = ex.Message,
+                detail = ex.InnerException?.Message
+            });
+        }
     }
 
     [HttpGet]
@@ -75,4 +88,19 @@ public class StockTakingController : ControllerBase
         await _service.FinalizeAsync(dto, user);
         return Ok(new { message = "Stock Taking selesai" });
     }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+    {
+        var data = await _service.GetActiveAsync();
+        return Ok(data);
+    }
+
+    [HttpGet("system/{sttId}")]
+    public async Task<IActionResult> GetSystem(string sttId)
+    {
+        var data = await _service.GetSystemDataAsync(sttId);
+        return Ok(data);
+    }
+
 }

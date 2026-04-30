@@ -16,11 +16,6 @@ public class ItemApiController : ControllerBase
         _service = service;
     }
 
-    //public IActionResult Index()
-    //{
-    //    ViewData["pages"] = "item";
-    //    return View();
-    //}
 
     [HttpGet]
     [AuthorizePermissionHybrid("ITEM_GET")]

@@ -13,4 +13,7 @@ public interface IStockTakingService
     Task FinalizeAsync(StockTakingFinalizeDto dto, string user);
     Task BulkScanAsync(StockTakingBulkScanDto dto);
     Task<object> GetCompareAsync(string sttId);
+    Task<List<object>> GetSystemDataAsync(string sttId);
+    Task<object?> GetActiveAsync();
+
 }

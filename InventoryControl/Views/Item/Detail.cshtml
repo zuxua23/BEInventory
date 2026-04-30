@@ -106,82 +106,65 @@
     </div>
 
     @Html.Partial("_BaseScript")
-
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
     <script>
-                const canUpdate = @canUpdate.ToString().ToLower();
-
+        const canUpdate = @canUpdate.ToString().ToLower();
         let id = "@ViewData["id"]";
 
         $(document).ready(function () {
             loadItem();
         });
 
-         async function loadItem() {
+        async function loadItem() {
 
-            const response = await fetch(`/api/item/${id}`, {
-                method: "GET",
-                credentials: "include"
-            });
+            const item = await Api.get(`/api/item/${id}`);
 
-            if (!response.ok) {
-                alert("Gagal load item");
+            if (!item) {
+                Alert.error("Failed to load item");
                 return;
             }
-
-            const item = await response.json();
 
             $("#itemId").val(item.itemId);
             $("#itemName").val(item.itemName);
         }
 
+
         async function updateItem() {
-                    if (!canUpdate) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Access Denied',
-                text: 'You do not have permission to update'
-            });
-            return;
-        }
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
 
             const payload = {
-
                 itemName: $("#itemName").val()
             };
 
-            const response = await fetch(`/api/item/${id}`, {
-                method: "PUT", 
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
+            const res = await Api.request(`/api/item/${id}`, {
+                method: "PUT",
                 body: JSON.stringify(payload)
             });
 
-        if (response.ok) {
+            if (res && res.ok) {
 
-               Swal.fire({
-                   icon: 'success',
-                   title: 'Success',
-                   text: 'Item updated successfully',
-                   timer: 1500,
-                   showConfirmButton: false
-               }).then(() => {
-                   window.location.href = "/item";
-               });
+                await Alert.success("Item updated successfully");
 
-           } else {
+                window.location.href = "/item";
 
-               Swal.fire({
-                   icon: 'error',
-                   title: 'Failed',
-                   text: 'Failed to update item'
-               });
+            } else {
 
-           }
+                Alert.error("Failed to update item");
+
+            }
         }
-             $(document).keydown(function(e) {
+
+
+        $(document).keydown(function (e) {
             if (e.ctrlKey && e.key === 'Enter') updateItem();
             if (e.key === 'Escape') window.location.href = "/item";
         });
+
     </script>
 
 </body>
