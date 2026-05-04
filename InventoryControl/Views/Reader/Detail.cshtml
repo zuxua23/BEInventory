@@ -2,7 +2,7 @@
 @{
         var canUpdate = PermissionHelper.HasPermission(Context, "READER_UPDATE");
 }
-}
+
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
@@ -151,7 +151,7 @@
             });
 
             if (!response.ok) {
-                Swal.fire({ icon: "error", title: "Gagal load data" });
+                Swal.fire({ icon: "error",title: "Failed to load data" });
                 return;
             }
 
@@ -168,8 +168,8 @@
                                 if (!canUpdate) {
             Swal.fire({
                 icon: 'error',
-                title: 'Akses ditolak',
-                text: 'Tidak punya permission update'
+        title: 'Access denied',
+        text: 'You do not have permission to update'
             });
             return;
         }
@@ -190,8 +190,8 @@
             if (response.ok) {
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Reader berhasil diupdate",
+        title: "Success",
+        text: "Reader updated successfully"
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -200,8 +200,8 @@
             } else {
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Update gagal"
+        title: "Error",
+        text: "Failed to update reader"
                 });
             }
         }

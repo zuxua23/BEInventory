@@ -53,7 +53,7 @@ public class PickingListApiController : ControllerBase
 
     [HttpPut("{id}")]
     [AuthorizePermissionHybrid("PICKINGLIST_UPDATE")]
-    public async Task<IActionResult> Update(string id, [FromBody] PickingListUpdateDTO dto)
+    public async Task<IActionResult> Update(string id, [FromBody] PickingListDTO dto)
     {
         await _service.UpdateAsync(id, dto);
         return Ok(new { message = "DO berhasil diupdate" });
@@ -66,11 +66,11 @@ public class PickingListApiController : ControllerBase
         return Ok(new { message = "DO berhasil dihapus" });
     }
 
-    [HttpPut("{id}")]
-    [AuthorizePermissionHybrid("PICKINGLIST_UPDATE_STATUS")]
-    public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
-    {
-        await _service.UpdateStatusAsync(id, dto.Status);
-        return Ok(new { message = "Status DO berhasil diperbarui" });
-    }
+    //[HttpPut("{id}")]
+    //[AuthorizePermissionHybrid("PICKINGLIST_UPDATE_STATUS")]
+    //public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
+    //{
+    //    await _service.UpdateStatusAsync(id, dto.Status);
+    //    return Ok(new { message = "Status DO berhasil diperbarui" });
+    //}
 }

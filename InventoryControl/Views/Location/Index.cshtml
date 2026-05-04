@@ -185,7 +185,7 @@
             }
 
             if (response.status === 403) {
-                Swal.fire("Akses ditolak", "", "warning");
+                Swal.fire("Access denied", "", "warning");
                 return;
             }
 
@@ -298,8 +298,8 @@
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Location berhasil dibuat",
+                    title: "Success",
+                    text: "Location created successfully",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -312,8 +312,8 @@
 
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Create location gagal"
+                    title: "Failed",
+                    text: "Create location failed"
                 });
 
             }
@@ -322,14 +322,14 @@
         async function deleteLocation(id) {
 
             const result = await Swal.fire({
-                title: "Yakin?",
-                text: "Location akan dihapus!",
+                title: "Are you sure?",
+                text: "Location will be deleted!",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#d33",
                 cancelButtonColor: "#6c757d",
-                confirmButtonText: "Ya, hapus!",
-                cancelButtonText: "Batal"
+                confirmButtonText: "Yes, delete!",
+                cancelButtonText: "Cancel"
             });
 
             if (!result.isConfirmed) return;
@@ -343,8 +343,8 @@
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Location berhasil dihapus",
+                    title: "Success",
+                    text: "Location deleted successfully",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => loadLocations());
@@ -353,8 +353,8 @@
 
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Delete location gagal"
+                    title: "Failed",
+                    text: "Delete location failed"
                 });
 
             }

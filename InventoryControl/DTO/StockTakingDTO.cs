@@ -3,6 +3,7 @@
 public class StockTakingCreateDto
 {
     public string? Remark { get; set; }
+    public List<string>? LocationIds { get; set; }
 }
 
 public class StockTakingScanDto
@@ -24,4 +25,14 @@ public class StockTakingManualAddDto
 public class StockTakingFinalizeDto
 {
     public string SttId { get; set; }
+}
+public class StockTakingBulkScanDto
+{
+    public string SttId { get; set; } = null!;
+    public List<BulkItemDto> Items { get; set; } = new();
+}
+
+public class BulkItemDto
+{
+    public string Epc { get; set; } = null!;
 }

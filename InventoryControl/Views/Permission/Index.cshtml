@@ -311,7 +311,7 @@
             });
 
             if (response.status === 401) { window.location.href = "/login"; return; }
-            if (response.status === 403) { Swal.fire("Akses ditolak", "", "warning"); return; }
+            if (response.status === 403) { Swal.fire("Access denied", "", "warning"); return; }
 
             const data = await response.json();
 
@@ -388,23 +388,12 @@
         });
         }
 
-
-        // $("#modalRole").on("shown.bs.modal", function () {
-        //     if (!$("#roleDbId").val()) {
-        //         const data = table.rows().data().toArray();
-        //     }
-        // });
         $('#modalRole').on('show.bs.modal', function (e) {
             const isEdit = $("#roleDbId").val();
 
             if (!isEdit && !canCreate) {
                 e.preventDefault();
-                Swal.fire("Tidak punya akses create", "", "error");
-            }
-
-            if (isEdit && !canUpdate) {
-                e.preventDefault();
-                Swal.fire("Tidak punya akses update", "", "error");
+                Swal.fire("Access denied", "", "error");
             }
         });
 
@@ -443,17 +432,17 @@
 
 
             if (!codeVal) {
-            Swal.fire({ icon: "warning", title: "Role Code wajib diisi" });
+            Swal.fire({ icon: "warning", title: "Role Code is required" });
             return;
             }
 
             if (!nameVal) {
-                Swal.fire({ icon: "warning", title: "Role name wajib diisi" });
+                Swal.fire({ icon: "warning", title: "Role name is required" });
                 return;
             }
 
             if (countCheckedPermissions() === 0) {
-                Swal.fire({ icon: "warning", title: "Pilih minimal 1 permission" });
+                Swal.fire({ icon: "warning", title: "Select at least 1 permission" });
                 return;
             }
 
@@ -476,7 +465,7 @@
             if (response.ok) {
                 Swal.fire({
                     icon: "success",
-                    title: isEdit ? "Role diperbarui" : "Role dibuat",
+                    title: isEdit ? "Role updated" : "Role created",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -484,18 +473,23 @@
                     loadRoles();
                 });
             } else {
-                Swal.fire({ icon: "error", title: "Gagal simpan role" });
+                Swal.fire({ icon: "error", title: "Failed to save role" });
             }
         });
 
 
         async function deleteRole(id) {
             const result = await Swal.fire({
-                title: "Yakin?",
-                text: "Role akan dihapus",
-                icon: "warning",
-                showCancelButton: true
+                title: 'Are you sure?',
+                text: "Role will be deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             });
+
 
             if (!result.isConfirmed) return;
 
@@ -505,9 +499,23 @@
             });
 
             if (response.ok) {
-                Swal.fire({ icon: "success", timer: 1500, showConfirmButton: false })
-                    .then(() => loadRoles());
-            }
-        }
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Role deleted successfully',
+                    timer: 1500,
+                    showConfirmButton: false
+                }) .then(() => {
+                    loadRoles()
+                });
+            } else {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: 'Delete role failed'
+                });
+
+            }        }
     </script>
 </body>

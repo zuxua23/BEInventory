@@ -16,15 +16,70 @@ public class StockTakingService : IStockTakingService
         _db = db;
     }
 
+    public async Task<object?> GetActiveAsync()
+    {
+        var data = await _db.StockTakings
+            .Where(x => x.Status == "OPEN")
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new
+            {
+                x.SttId,
+                x.Remark,
+                x.Status
+            })
+            .FirstOrDefaultAsync();
+
+        return data;
+    }
+
+    public async Task<List<object>> GetSystemDataAsync(string sttId)
+    {
+        var data = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => new
+                {
+                    std.ItemId,
+                    tag.LocationId
+                })
+            .Join(_db.Locations,
+                x => x.LocationId,
+                loc => loc.Id,
+                (x, loc) => new
+                {
+                    x.ItemId,
+                    LocationName = loc.Name
+                })
+            .GroupBy(x => new { x.ItemId, x.LocationName })
+            .Select(g => new
+            {
+                ItemId = g.Key.ItemId,
+                Location = g.Key.LocationName,
+                Qty = g.Count()
+            })
+            .ToListAsync<object>();
+
+        return data;
+    }
 
     public async Task<string> CreateAsync(StockTakingCreateDto dto, string user)
     {
+        using var trx = await _db.Database.BeginTransactionAsync();
 
         try
         {
+            var active = await _db.StockTakings
+    .AnyAsync(x => x.Status == "OPEN");
+
+            if (active)
+                throw new Exception("Masih ada stock taking aktif");
+            var sttId = Guid.NewGuid().ToString();
+
             var st = new StockTaking
             {
-                SttId = Guid.NewGuid().ToString(),
+                SttId = sttId,
                 Remark = dto.Remark,
                 Status = "OPEN",
                 CreatedBy = user,
@@ -32,15 +87,38 @@ public class StockTakingService : IStockTakingService
             };
 
             _db.StockTakings.Add(st);
+
+            var query = _db.Tags.Where(t => t.Status == "IN_STOCK");
+
+            if (dto.LocationIds != null && dto.LocationIds.Any())
+            {
+                query = query.Where(t => dto.LocationIds.Contains(t.LocationId));
+            }
+
+            var tags = await query.ToListAsync();
+
+            var snapshot = tags.Select(t => new StockTakingDetail
+            {
+                StdId = Guid.NewGuid().ToString(),
+                SttId = sttId,
+                TagId = t.Id,
+                ItemId = t.ItemId,
+                Action = "SYSTEM" 
+            });
+
+            await _db.StockTakingDetails.AddRangeAsync(snapshot);
+
             await _db.SaveChangesAsync();
+            await trx.CommitAsync();
 
-            DailyFileLogger.Info($"StockTaking session dibuat. SttId={st.SttId}, User={user}");
+            DailyFileLogger.Info($"StockTaking SNAPSHOT created. Count={tags.Count}");
 
-            return st.SttId;
+            return sttId;
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di CreateAsync StockTaking", ex);
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("CreateAsync Snapshot error", ex);
             throw;
         }
     }
@@ -68,36 +146,120 @@ public class StockTakingService : IStockTakingService
     {
         try
         {
+            var st = await _db.StockTakings
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
+
+            if (st == null)
+                throw new Exception("Stock taking tidak ditemukan");
+
+            if (st.Status != "OPEN")
+                throw new Exception("Stock taking sudah selesai");
+
             var tag = await _db.Tags
                 .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
 
             if (tag == null)
-            {
-                DailyFileLogger.Warn($"ScanAsync gagal: EPC {dto.Epc} tidak ditemukan");
                 throw new Exception("Tag tidak ditemukan");
-            }
 
-            var exists = await _db.StockTakingDetails
-                .AnyAsync(x => x.SttId == dto.SttId && x.TagId == tag.Id);
+            var existsInSystem = await _db.StockTakingDetails
+                .AnyAsync(x => x.SttId == dto.SttId
+                            && x.TagId == tag.Id
+                            && x.Action == "SYSTEM");
 
-            if (exists)
-                return;
+            if (!existsInSystem)
+                throw new Exception("Tag tidak termasuk dalam snapshot stock taking");
+
+            var alreadyScanned = await _db.StockTakingDetails
+                .AnyAsync(x => x.SttId == dto.SttId
+                            && x.TagId == tag.Id
+                            && x.Action == "FOUND");
+
+            if (alreadyScanned)
+                return; 
 
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
                 StdId = Guid.NewGuid().ToString(),
                 SttId = dto.SttId,
                 TagId = tag.Id,
+                ItemId = tag.ItemId,
                 Action = "FOUND"
             });
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"StockTaking scan berhasil. SttId={dto.SttId}, Tag={tag.TagId}");
+            DailyFileLogger.Info($"Scan success. SttId={dto.SttId}, Tag={tag.TagId}");
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di ScanAsync StockTaking", ex);
+            DailyFileLogger.Error("ScanAsync error", ex);
+            throw;
+        }
+    }
+    public async Task BulkScanAsync(StockTakingBulkScanDto dto)
+    {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
+        try
+        {
+            var st = await _db.StockTakings
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
+
+            if (st == null)
+                throw new Exception("Stock taking tidak ditemukan");
+
+            if (st.Status != "OPEN")
+                throw new Exception("Stock taking sudah selesai");
+
+            var epcs = dto.Items.Select(x => x.Epc).Distinct().ToList();
+
+            var tags = await _db.Tags
+                .Where(t => epcs.Contains(t.EpcTag))
+                .ToListAsync();
+
+            if (!tags.Any())
+                return;
+
+            var systemTagIds = await _db.StockTakingDetails
+                .Where(x => x.SttId == dto.SttId && x.Action == "SYSTEM")
+                .Select(x => x.TagId)
+                .ToListAsync();
+
+            var existingFound = await _db.StockTakingDetails
+                .Where(x => x.SttId == dto.SttId && x.Action == "FOUND")
+                .Select(x => x.TagId)
+                .ToListAsync();
+
+            var validTags = tags
+                .Where(t =>
+                    systemTagIds.Contains(t.Id) &&
+                    !existingFound.Contains(t.Id)
+                )
+                .ToList();
+
+            if (!validTags.Any())
+                return;
+
+            var newData = validTags.Select(t => new StockTakingDetail
+            {
+                StdId = Guid.NewGuid().ToString(),
+                SttId = dto.SttId,
+                TagId = t.Id,
+                ItemId = t.ItemId,
+                Action = "FOUND"
+            });
+
+            await _db.StockTakingDetails.AddRangeAsync(newData);
+            await _db.SaveChangesAsync();
+
+            await trx.CommitAsync();
+
+            DailyFileLogger.Info($"Bulk scan success. Count={validTags.Count}");
+        }
+        catch (Exception ex)
+        {
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("BulkScanAsync error", ex);
             throw;
         }
     }
@@ -157,7 +319,37 @@ public class StockTakingService : IStockTakingService
             throw;
         }
     }
+    public async Task<object> GetCompareAsync(string sttId)
+    {
+        var system = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .GroupBy(x => x.ItemId)
+            .Select(g => new
+            {
+                ItemId = g.Key,
+                QtySystem = g.Count()
+            })
+            .ToListAsync();
 
+        var scan = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "FOUND")
+            .GroupBy(x => x.ItemId)
+            .Select(g => new
+            {
+                ItemId = g.Key,
+                QtyScan = g.Count()
+            })
+            .ToListAsync();
+
+        return system.Select(s => new
+        {
+            s.ItemId,
+            s.QtySystem,
+            QtyScan = scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0,
+            Status = scan.Any(x => x.ItemId == s.ItemId) ? "Scanned" : "Pending",
+            Selisih = (scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0) - s.QtySystem
+        });
+    }
     public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
@@ -165,87 +357,68 @@ public class StockTakingService : IStockTakingService
         try
         {
             var st = await _db.StockTakings
-                .FirstOrDefaultAsync(x => x.SttId == dto.SttId && x.Status == "OPEN");
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
 
             if (st == null)
-            {
-                DailyFileLogger.Warn($"FinalizeAsync gagal: Session {dto.SttId} tidak aktif");
-                throw new Exception("Session tidak aktif");
-            }
+                throw new Exception("Session tidak ditemukan");
+
+            if (st.Status != "OPEN")
+                throw new Exception("Session sudah ditutup");
 
             var details = await _db.StockTakingDetails
                 .Where(d => d.SttId == dto.SttId)
                 .ToListAsync();
 
-
-            var removeTagIds = details
-                .Where(d => d.Action == "REMOVE" && d.TagId != null)
-                .Select(d => d.TagId)
-                .Distinct()
-                .ToList();
-
-            var removeTags = await _db.Tags
-                .Where(t => removeTagIds.Contains(t.Id))
-                .ToListAsync();
-
-            foreach (var tag in removeTags)
+            try
             {
-                if (tag.Status == "IN_STOCK")
-                {
-                    tag.Status = "OUT";
-                    tag.UpdatedBy = user;
-                    tag.UpdatedAt = DateTime.UtcNow;
-
-                    _db.Histories.Add(new HistoryPrint
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        TagId = tag.Id,
-                        ItemId = tag.ItemId,
-                        Type = "STOCK_ADJUSTMENT",
-                        Reference = dto.SttId,
-                        Action = "REMOVE",
-                        CreatedBy = user,
-                        CreatedAt = DateTime.UtcNow
-                    });
-
-                    DailyFileLogger.Info($"StockAdjustment REMOVE. Tag={tag.TagId}, Session={dto.SttId}");
-                }
+                await ApplyAdjustments(details, dto.SttId, user);
+            }
+            catch (Exception ex)
+            {
+                DailyFileLogger.Warn($"Adjustment gagal tapi finalize tetap lanjut. Session={dto.SttId} | {ex.Message}");
             }
 
-            var addManuals = details
-                .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
-                .ToList();
+            st.Status = "COMPLETED";
 
-            // Validasi duplicate tag
-            var duplicate = addManuals
-                .GroupBy(x => x.TagId)
-                .Where(g => g.Count() > 1)
-                .Any();
-
-            if (duplicate)
-                throw new Exception("Ada tag yang dipakai lebih dari sekali di manual add");
-
-            var addTagIds = addManuals
-                .Select(x => x.TagId)
-                .Distinct()
-                .ToList();
-
-            var addTags = await _db.Tags
-                .Where(t => addTagIds.Contains(t.Id))
-                .ToListAsync();
-
-            foreach (var add in addManuals)
+            _db.Transactions.Add(new Transaction
             {
-                var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
+                TrsId = Guid.NewGuid().ToString(),
+                TrsType = "STOCK_TAKING_FINALIZE",
+                ReferenceId = dto.SttId,
+                CreatedBy = user,
+                CreatedAt = DateTime.UtcNow
+            });
 
-                if (tag == null)
-                    throw new Exception($"Tag {add.TagId} tidak ditemukan");
+            await _db.SaveChangesAsync();
+            await trx.CommitAsync();
 
-                if (tag.Status != "STANDBY")
-                    throw new Exception($"Tag {tag.TagId} tidak dalam kondisi STANDBY");
+            DailyFileLogger.Info($"StockTaking finalize sukses. Session={dto.SttId}");
+        }
+        catch (Exception ex)
+        {
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("Finalize error", ex);
+            throw;
+        }
+    }
 
-                tag.Status = "IN_STOCK";
-                tag.ItemId = add.ItemId;
+    private async Task ApplyAdjustments(List<StockTakingDetail> details, string sttId, string user)
+    {
+        var removeTagIds = details
+            .Where(d => d.Action == "REMOVE" && d.TagId != null)
+            .Select(d => d.TagId)
+            .Distinct()
+            .ToList();
+
+        var removeTags = await _db.Tags
+            .Where(t => removeTagIds.Contains(t.Id))
+            .ToListAsync();
+
+        foreach (var tag in removeTags)
+        {
+            if (tag.Status == "IN_STOCK")
+            {
+                tag.Status = "OUT";
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
 
@@ -253,38 +426,196 @@ public class StockTakingService : IStockTakingService
                 {
                     Id = Guid.NewGuid().ToString(),
                     TagId = tag.Id,
-                    ItemId = add.ItemId,
+                    ItemId = tag.ItemId,
                     Type = "STOCK_ADJUSTMENT",
-                    Reference = dto.SttId,
-                    Action = "ADD_MANUAL",
+                    Reference = sttId,
+                    Action = "REMOVE",
                     CreatedBy = user,
                     CreatedAt = DateTime.UtcNow
                 });
-
-                DailyFileLogger.Info($"StockAdjustment ADD_MANUAL. Tag={tag.TagId}, Item={add.ItemId}");
             }
+        }
 
-            _db.Transactions.Add(new Transaction
+        var addManuals = details
+            .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
+            .ToList();
+
+        var addTagIds = addManuals.Select(x => x.TagId).Distinct().ToList();
+
+        var addTags = await _db.Tags
+            .Where(t => addTagIds.Contains(t.Id))
+            .ToListAsync();
+
+        foreach (var add in addManuals)
+        {
+            var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
+
+            if (tag == null) continue; 
+
+            if (tag.Status != "STANDBY") continue; 
+
+            tag.Status = "IN_STOCK";
+            tag.ItemId = add.ItemId;
+            tag.UpdatedBy = user;
+            tag.UpdatedAt = DateTime.UtcNow;
+
+            _db.Histories.Add(new HistoryPrint
             {
-                TrsId = Guid.NewGuid().ToString(),
-                TrsType = "STOCK_ADJUSTMENT",
-                ReferenceId = dto.SttId,
+                Id = Guid.NewGuid().ToString(),
+                TagId = tag.Id,
+                ItemId = add.ItemId,
+                Type = "STOCK_ADJUSTMENT",
+                Reference = sttId,
+                Action = "ADD_MANUAL",
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             });
-
-            st.Status = "COMPLETED";
-
-            await _db.SaveChangesAsync();
-            await trx.CommitAsync();
-
-            DailyFileLogger.Info($"StockTaking finalize berhasil. Session={dto.SttId}");
         }
-        catch (Exception ex)
+    }
+
+    //public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
+    //{
+    //    using var trx = await _db.Database.BeginTransactionAsync();
+
+    //    try
+    //    {
+    //        var st = await _db.StockTakings
+    //            .FirstOrDefaultAsync(x => x.SttId == dto.SttId && x.Status == "OPEN");
+
+    //        if (st == null)
+    //        {
+    //            DailyFileLogger.Warn($"FinalizeAsync gagal: Session {dto.SttId} tidak aktif");
+    //            throw new Exception("Session tidak aktif");
+    //        }
+
+    //        var details = await _db.StockTakingDetails
+    //            .Where(d => d.SttId == dto.SttId)
+    //            .ToListAsync();
+
+
+    //        var removeTagIds = details
+    //            .Where(d => d.Action == "REMOVE" && d.TagId != null)
+    //            .Select(d => d.TagId)
+    //            .Distinct()
+    //            .ToList();
+
+    //        var removeTags = await _db.Tags
+    //            .Where(t => removeTagIds.Contains(t.Id))
+    //            .ToListAsync();
+
+    //        foreach (var tag in removeTags)
+    //        {
+    //            if (tag.Status == "IN_STOCK")
+    //            {
+    //                tag.Status = "OUT";
+    //                tag.UpdatedBy = user;
+    //                tag.UpdatedAt = DateTime.UtcNow;
+
+    //                _db.Histories.Add(new HistoryPrint
+    //                {
+    //                    Id = Guid.NewGuid().ToString(),
+    //                    TagId = tag.Id,
+    //                    ItemId = tag.ItemId,
+    //                    Type = "STOCK_ADJUSTMENT",
+    //                    Reference = dto.SttId,
+    //                    Action = "REMOVE",
+    //                    CreatedBy = user,
+    //                    CreatedAt = DateTime.UtcNow
+    //                });
+
+    //                DailyFileLogger.Info($"StockAdjustment REMOVE. Tag={tag.TagId}, Session={dto.SttId}");
+    //            }
+    //        }
+
+    //        var addManuals = details
+    //            .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
+    //            .ToList();
+
+    //        // Validasi duplicate tag
+    //        var duplicate = addManuals
+    //            .GroupBy(x => x.TagId)
+    //            .Where(g => g.Count() > 1)
+    //            .Any();
+
+    //        if (duplicate)
+    //            throw new Exception("Ada tag yang dipakai lebih dari sekali di manual add");
+
+    //        var addTagIds = addManuals
+    //            .Select(x => x.TagId)
+    //            .Distinct()
+    //            .ToList();
+
+    //        var addTags = await _db.Tags
+    //            .Where(t => addTagIds.Contains(t.Id))
+    //            .ToListAsync();
+
+    //        foreach (var add in addManuals)
+    //        {
+    //            var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
+
+    //            if (tag == null)
+    //                throw new Exception($"Tag {add.TagId} tidak ditemukan");
+
+    //            if (tag.Status != "STANDBY")
+    //                throw new Exception($"Tag {tag.TagId} tidak dalam kondisi STANDBY");
+
+    //            tag.Status = "IN_STOCK";
+    //            tag.ItemId = add.ItemId;
+    //            tag.UpdatedBy = user;
+    //            tag.UpdatedAt = DateTime.UtcNow;
+
+    //            _db.Histories.Add(new HistoryPrint
+    //            {
+    //                Id = Guid.NewGuid().ToString(),
+    //                TagId = tag.Id,
+    //                ItemId = add.ItemId,
+    //                Type = "STOCK_ADJUSTMENT",
+    //                Reference = dto.SttId,
+    //                Action = "ADD_MANUAL",
+    //                CreatedBy = user,
+    //                CreatedAt = DateTime.UtcNow
+    //            });
+
+    //            DailyFileLogger.Info($"StockAdjustment ADD_MANUAL. Tag={tag.TagId}, Item={add.ItemId}");
+    //        }
+
+    //        _db.Transactions.Add(new Transaction
+    //        {
+    //            TrsId = Guid.NewGuid().ToString(),
+    //            TrsType = "STOCK_ADJUSTMENT",
+    //            ReferenceId = dto.SttId,
+    //            CreatedBy = user,
+    //            CreatedAt = DateTime.UtcNow
+    //        });
+
+    //        st.Status = "COMPLETED";
+
+    //        await _db.SaveChangesAsync();
+    //        await trx.CommitAsync();
+
+    //        DailyFileLogger.Info($"StockTaking finalize berhasil. Session={dto.SttId}");
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        await trx.RollbackAsync();
+    //        DailyFileLogger.Error("Error di FinalizeAsync StockTaking", ex);
+    //        throw;
+    //    }
+    //}
+
+    public async Task<object> GetProgressAsync(string sttId)
+    {
+        var total = await _db.StockTakingDetails
+            .CountAsync(x => x.SttId == sttId && x.Action == "SYSTEM");
+
+        var scanned = await _db.StockTakingDetails
+            .CountAsync(x => x.SttId == sttId && x.Action == "FOUND");
+
+        return new
         {
-            await trx.RollbackAsync();
-            DailyFileLogger.Error("Error di FinalizeAsync StockTaking", ex);
-            throw;
-        }
+            Total = total,
+            Scanned = scanned,
+            Progress = total == 0 ? 0 : (scanned * 100 / total)
+        };
     }
 }

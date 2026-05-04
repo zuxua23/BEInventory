@@ -144,8 +144,8 @@
             if (!response.ok) {
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Gagal load location"
+                    title: "Failed",
+                    text: "Failed to load location"
                 });
                 return;
             }
@@ -161,8 +161,8 @@
           if (!canUpdate) {
             Swal.fire({
                 icon: 'error',
-                title: 'Akses ditolak',
-                text: 'Tidak punya permission update'
+                title: 'Access Denied',
+                text: 'You do not have permission to update'
             });
             return;
         }
@@ -184,8 +184,8 @@
 
                 Swal.fire({
                     icon: "success",
-                    title: "Berhasil",
-                    text: "Location berhasil diupdate",
+                    title: "Success",
+                    text: "Location updated successfully",
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
@@ -196,8 +196,8 @@
 
                 Swal.fire({
                     icon: "error",
-                    title: "Gagal",
-                    text: "Gagal update location"
+                    title: "Failed",
+                    text: "Failed to update location"
                 });
 
             }

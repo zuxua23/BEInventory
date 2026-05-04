@@ -1,13 +1,10 @@
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
-
     <div class="wrapper">
-
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
         @Html.Partial("_Dashboard")
 
         <div class="content-wrapper dash-content-wrapper">
-
             <section class="content-header dash-content-header">
                 <div class="container-fluid">
                     <div class="dash-page-header">
@@ -29,12 +26,12 @@
                     </div>
                 </div>
             </section>
-
+            <hr>
             <section class="content">
                 <div class="container-fluid">
 
+                    <!-- Baris Atas: 4 KPI Cards -->
                     <div class="dash-kpi-grid">
-
                         <div class="dash-kpi-card dash-kpi-blue">
                             <div>
                                 <div class="dash-kpi-label">Total Items</div>
@@ -74,94 +71,38 @@
                                 <i class="fas fa-clipboard-list"></i>
                             </div>
                         </div>
-
                     </div>
 
-                    <div class="dash-bottom-grid">
-
-                        <div class="dash-card dash-card-table">
-                            <div class="dash-card-header">
-                                <span class="dash-card-dot"></span>
-                                <span class="dash-card-title">Recent Picking Activity</span>
-                            </div>
-                            <div class="dash-table-wrap">
-                                <table class="dash-table">
-                                    <thead>
-                                        <tr>
-                                            <th>DO Number</th>
-                                            <th>Scanner</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentPicking">
-                                        <tr>
-                                            <td colspan="3" class="dash-table-empty">Loading…</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="dash-right-col">
-
-                            <div class="dash-card">
+                    <!-- Main Content: 7:3 Grid (Left: Tables, Right: Status + Chart) -->
+                    <div class="dash-main-grid">
+                        <!-- Sisi Kiri (70%) - 2 Tables Vertikal -->
+                        <div class="dash-left-col">
+                            <!-- Recent Picking Activity -->
+                            <div class="dash-card dash-card-full-height">
                                 <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-green"></span>
-                                    <span class="dash-card-title">System Status</span>
+                                    <span class="dash-card-dot"></span>
+                                    <span class="dash-card-title">5 Recent Picking Activity</span>
                                 </div>
-                                <div class="dash-status-row">
-                                    <span class="dash-status-label">API Status</span>
-                                    <span class="dash-status-online">
-                                        <span class="dash-online-dot"></span> Online
-                                    </span>
-                                </div>
-                                <div class="dash-status-row">
-                                    <span class="dash-status-label">Database</span>
-                                    <span class="dash-status-online">
-                                        <span class="dash-online-dot"></span> Connected
-                                    </span>
-                                </div>
-                                <div class="dash-status-row dash-status-row-last">
-                                    <span class="dash-status-label">Last Sync</span>
-                                    <span class="dash-status-time" id="lastSyncStatus">—</span>
-                                </div>
-                            </div>
-
-                            <div class="dash-card dash-card-users">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-violet"></span>
-                                    <span class="dash-card-title">Active Users</span>
-                                </div>
-                                <div class="dash-users-body">
-                                    <div class="dash-users-ring">
-                                        <i class="fas fa-users"></i>
-                                    </div>
-                                    <div class="dash-users-num" id="totalUsers">—</div>
-                                    <div class="dash-users-label">Active Users</div>
+                                <div class="dash-table-wrap">
+                                    <table class="dash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>DO Number</th>
+                                                <th>Scanner</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentPicking">
+                                            <tr>
+                                                <td colspan="3" class="dash-table-empty">Loading…</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="dash-card">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-blue"></span>
-                                    <span class="dash-card-title">Stock Level</span>
-                                </div>
-                                <div class="dash-stock-chart">
-                                    <canvas id="stockLevelChart" height="200"></canvas>
-                                    <div class="dash-chart-placeholder" id="stockChartPlaceholder">
-                                        <i class="fas fa-chart-pie"></i>
-                                        <p>Loading stock data...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="dash-card">
+                            <!-- Item Stock Detail (di bawah Recent Picking) -->
+                            <div class="dash-card mt-3">
                                 <div class="dash-card-header">
                                     <span class="dash-card-dot dash-card-dot-orange"></span>
                                     <span class="dash-card-title">Item Stock Detail</span>
@@ -184,14 +125,78 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Sisi Kanan (30%) - 2 KPI Horizontal + Chart -->
+                        <div class="dash-right-col">
+                            <!-- System Status & Active Users Berdampingan Horizontal -->
+                            <div class="dash-status-users-row">
+                                <!-- System Status (KPI size - Kiri) -->
+                                <div class="dash-card dash-status-height">
+                                    <div class="dash-card-header">
+                                        <span class="dash-card-dot dash-card-dot-green"></span>
+                                        <span class="dash-card-title">System Status</span>
+                                    </div>
+                                    <div class="dash-status-content">
+                                        <div class="dash-status-row">
+                                            <span class="dash-status-label">API Status</span>
+                                            <span class="dash-status-online">
+                                                <span class="dash-online-dot"></span> Online
+                                            </span>
+                                        </div>
+                                        <div class="dash-status-row">
+                                            <span class="dash-status-label">Database</span>
+                                            <span class="dash-status-online">
+                                                <span class="dash-online-dot"></span> Connected
+                                            </span>
+                                        </div>
+                                        <div class="dash-status-row dash-status-row-last">
+                                            <span class="dash-status-label">Last Sync</span>
+                                            <span class="dash-status-time" id="lastSyncStatus">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Active Users (KPI size - Kanan) -->
+                                <div class="dash-card dash-status-height">
+                                    <div class="dash-card-header">
+                                        <span class="dash-card-dot dash-card-dot-violet"></span>
+                                        <span class="dash-card-title">Active Users</span>
+                                    </div>
+                                    <div class="dash-users-body">
+                                        <div class="dash-users-top">
+                                            <div class="dash-users-ring">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+
+                                            <div class="dash-users-num" id="totalUsers">—</div>
+                                        </div>
+
+                                        <div class="dash-users-label">Active Users</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stock Level Chart (Mengisi sisa ruang) -->
+                            <div class="dash-card dash-chart-card mt-3">
+                                <div class="dash-card-header">
+                                    <span class="dash-card-dot dash-card-dot-blue"></span>
+                                    <span class="dash-card-title">Stock Level</span>
+                                </div>
+                                <div class="dash-stock-chart">
+                                    <canvas id="stockLevelChart" height="300"></canvas>
+                                    <div class="dash-chart-placeholder" id="stockChartPlaceholder">
+                                        <i class="fas fa-chart-pie"></i>
+                                        <p>Loading stock data...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
-
         </div>
 
         @Html.Partial("_Footer")
-
     </div>
 
     @Html.Partial("_BaseScript")
@@ -322,5 +327,4 @@
             });
         }
     </script>
-
 </body>

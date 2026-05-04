@@ -55,6 +55,7 @@ public class SeedAccess
     ("STOCK_TAKING_REMOVE", "Remove Stock Taking", "PER023"),
     ("STOCK_TAKING_MANUAL", "Manual Stock Taking", "PER024"),
     ("STOCK_TAKING_FINALIZE", "Finalize Stock Taking", "PER025"),
+    ("STOCK_TAKING_GET", "View Stock Taking", "PER038"),
 
             ("USER_GET", "View Master User","PER026"),
             ("USER_CREATE", "Create Master User", "PER027"),
@@ -65,8 +66,8 @@ public class SeedAccess
             ("PERMISSION_CREATE", "Create Master PERMISSION", "PER035"),
             ("PERMISSION_UPDATE", "Update Master PERMISSION", "PER032"),
             ("PERMISSION_DELETE", "Delete Master PERMISSION", "PER033"),
-            ("TRANSACTION_GET", "VIEW Master PERMISSION", "PER037"),
             ("TAG_GET", "VIEW Master TAG", "PER036"),
+            ("TRANSACTION_GET", "VIEW Master PERMISSION", "PER037"),
 };
         foreach (var (code, name, perid) in permissionSeeds)
         {

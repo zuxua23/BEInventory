@@ -1,4 +1,3 @@
-
 namespace InventoryControl.Routes;
 
 public static class Web
@@ -12,7 +11,6 @@ public static class Web
             defaults: new { controller = "Dashboard", action = "Index" })
             .AddEndpointFilter(async (context, next) =>
             {
-                // Jika user sudah login, redirect ke dashboard
                 if (context.HttpContext.Session.GetString("is_login") != "OK")
                 {
                     context.HttpContext.Response.Redirect("/");
@@ -79,6 +77,13 @@ public static class Web
             name: "TransactionHistory",
             pattern: "/TransactionHistory",
             defaults: new { controller = "TransactionHistory", action = "Index" })
+            .AddEndpointFilter(AuthFilter)
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "stockTaking",
+            pattern: "/stockTaking",
+            defaults: new { controller = "StockTaking", action = "Index" })
             .AddEndpointFilter(AuthFilter)
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 

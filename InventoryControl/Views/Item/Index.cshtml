@@ -136,271 +136,131 @@
     </div>
 
     @Html.Partial("_BaseScript")
-
-
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         const canDelete = @canDelete.ToString().ToLower();
-
-
-         function generateItemId(data) {
-
-            let max = 0;
-
-            data.forEach(item => {
-
-                if (!item.itemId) return;
-
-                let number = parseInt(item.itemId.replace("ITM", ""));
-
-                if (number > max) {
-                    max = number;
-                }
-
-            });
-
-            let next = max + 1;
-
-            let formatted = "ITM" + String(next).padStart(5, '0');
-
-            $("#itemId").val(formatted);
-
-        }
 
         let table;
 
         $(document).ready(function () {
             loadItems();
+            $(window).trigger('resize');
         });
 
         async function loadItems() {
 
-            const response = await fetch("/api/item", {
-                method: "GET",
-                credentials: "include"
+            const data = await Api.get("/api/item");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "itemId" },
+                    { data: "itemName" },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
             });
-            if (response.status === 401) {
-            window.location.href = "/login";
-            return;
         }
 
-        if (response.status === 403) {
-            alert("Tidak punya akses");
-            return;
-        }
+        function renderAction(data) {
 
-            const data = await response.json();
+            let buttons = `<div class="btn-group btn-group-sm">`;
 
-            let showAction = canUpdate || canDelete;
-
-            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-                $('#datatablesIndex').DataTable().clear().destroy();
+            if (canUpdate) {
+                buttons += `
+                    <a href="/item/detail?id=${data.id}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                `;
             }
 
-        table = $("#datatablesIndex").DataTable({
-            data: data,
-
-            responsive: true,
-            pageLength: 5,
-                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
-
-            columnDefs: [
-                {
-                    targets: 0,
-                    data: null,
-                    render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1,
-                    orderable: false,
-                    searchable: false,
-                    width: "5%",
-                    className: "text-center"
-                },
-                {
-                    targets: 1,
-                    data: "itemId",
-                    width: "18%",
-                    orderable: true,
-                    className: "text-nowrap"
-                },
-                {
-                    targets: 2,
-                    data: "itemName",
-                    width: "55%",
-                    responsivePriority: 1
-                },
-                {
-                    targets: 3,
-                    visible: showAction,
-                    data: null,
-                    render: data => {
-
-                        let buttons = `<div class="btn-group btn-group-sm">`;
-
-                        if (canUpdate) {
-                            buttons += `
-                                <a href="/item/detail?id=${data.id}" class="btn btn-info">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            `;
-                        }
-
-                        if (canDelete) {
-                            buttons += `
-                                <button class="btn btn-danger" onclick="deleteItem('${data.id}')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            `;
-                        }
-
-                        buttons += `</div>`;
-
-                        return buttons;
-                    },
-                    orderable: false,
-                    width: "22%",
-                    className: "text-center",
-                    responsivePriority: 2
-                }
-            ],
-
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: " Search items...",
-                lengthMenu: "Show _MENU_ Items",
-                paginate: { first: "«", last: "»", next: "›", previous: "‹" },
-                info: "Showing _START_ to _END_ of _TOTAL_ items"
-            },
-
-            dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                 "<'table-responsive card-body p-0't>" +
-                 "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
-
-            scrollCollapse: true,
-            deferRender: true,
-
-            autoWidth:false,
-            fixedHeader:false,
-
-            drawCallback: function() {
-                $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
-                $('.dataTables_filter input').addClass('form-control rounded shadow-sm');
-
-                if($.fn.responsive){
-                    table.responsive.recalc();
-                }
+            if (canDelete) {
+                buttons += `
+                    <button class="btn btn-danger" onclick="deleteItem('${data.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
             }
-        });
 
+            buttons += `</div>`;
+            return buttons;
         }
 
         $("#createItemForm").submit(async function (e) {
             e.preventDefault();
 
-            const form = e.target;
-
             const payload = {
-                itemName: form.itemName.value
+                itemName: e.target.itemName.value
             };
 
-            const response = await fetch("/api/item", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.post("/api/item", payload);
 
-
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Item berhasil dibuat',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    $("#createItem").modal("hide");
-                    loadItems();
-                    form.reset();
-                });
+            if (res && res.ok) {
+                await Alert.success("Item created successfully");
+                $("#createItem").modal("hide");
+                loadItems();
+                e.target.reset();
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: 'Create item gagal'
-                });
-
+                Alert.error("Failed to create item");
             }
         });
 
-             async function deleteItem(id) {
+        async function deleteItem(id) {
 
-            const result = await Swal.fire({
-                title: 'Yakin?',
-                text: "Item akan dihapus!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            });
+            const confirm = await Alert.confirm("Item will be deleted!");
+            if (!confirm.isConfirmed) return;
 
-            if (!result.isConfirmed) return;
+            const res = await Api.delete(`/api/item/${id}`);
 
-            const response = await fetch(`/api/item/${id}`, {
-                method: "DELETE",
-                credentials: "include"
-            });
-
-            if (response.ok) {
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Item berhasil dihapus',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    loadItems();
-                });
-
+            if (res && res.ok) {
+                await Alert.success("Item deleted successfully");
+                loadItems();
             } else {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: 'Delete item gagal'
-                });
-
+                Alert.error("Failed to delete item");
             }
         }
 
-         $('#createItem').on('shown.bs.modal', function () {
+        function generateItemId() {
 
             const data = table.rows().data().toArray();
 
-            generateItemId(data);
+            let max = 0;
 
+            data.forEach(item => {
+                if (!item.itemId) return;
+
+                let number = parseInt(item.itemId.replace("ITM", ""));
+                if (number > max) max = number;
+            });
+
+            let formatted = "ITM" + String(max + 1).padStart(5, '0');
+
+            $("#itemId").val(formatted);
+        }
+
+        $('#createItem').on('shown.bs.modal', function () {
+            generateItemId();
         });
 
-
-        $(window).on('resize', function() {
+        $(window).on('resize', function () {
             clearTimeout(window.datatableResizeTimeout);
-            window.datatableResizeTimeout = setTimeout(function() {
+            window.datatableResizeTimeout = setTimeout(function () {
                 if (table) {
                     table.columns.adjust().responsive.recalc();
                 }
-            }, 250); // 250ms debounce
+            }, 250);
         });
 
-        $(document).ready(function() {
-            $(window).trigger('resize');
-        });
-
-        document.addEventListener('visibilitychange', function() {
+        document.addEventListener('visibilitychange', function () {
             if (!document.hidden && table) {
                 setTimeout(() => table.columns.adjust().responsive.recalc(), 100);
             }
         });
+
     </script>
 
 </body>
