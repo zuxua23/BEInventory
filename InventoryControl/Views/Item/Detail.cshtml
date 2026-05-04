@@ -108,6 +108,7 @@
     @Html.Partial("_BaseScript")
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         let id = "@ViewData["id"]";
@@ -141,10 +142,7 @@
                 itemName: $("#itemName").val()
             };
 
-            const res = await Api.request(`/api/item/${id}`, {
-                method: "PUT",
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.put(`/api/item/${id}`, payload);
 
             if (res && res.ok) {
 

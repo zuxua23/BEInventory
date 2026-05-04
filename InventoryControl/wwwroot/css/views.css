@@ -502,15 +502,14 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before
     }
 
 
-
-
-
 .select2-container--bootstrap4 .select2-selection--multiple {
     min-height: 38px !important;
-    height: auto !important;
+    max-height: 38px !important; 
+    height: 38px !important;
     padding: 4px 6px;
     display: flex !important;
     align-items: center;
+    overflow-y: auto; 
 }
 
     .select2-container--bootstrap4 .select2-selection--multiple .select2-search {
@@ -525,8 +524,8 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before
 
     .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
 /* Pills Style Alternative */

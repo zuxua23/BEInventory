@@ -30,12 +30,34 @@
                 deferRender: true,
 
                 drawCallback: function () {
-                    $('.dataTables_filter input').addClass('form-control');
-                    $('.dataTables_length select').addClass('custom-select custom-select-sm');
 
-                    if ($.fn.responsive) {
-                        this.api().responsive.recalc();
+                    const api = this.api();
+                    const info = api.page.info();
+
+                    const current = info.page;
+                    const total = info.pages;
+
+                    let start = Math.max(current - 1, 0);
+                    let end = Math.min(start + 3, total);
+
+                    if (end - start < 3) {
+                        start = Math.max(end - 3, 0);
                     }
+
+                    const pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate ul');
+                    pagination.find("li").hide();
+
+                    pagination.find('.previous').show();
+                    pagination.find('.next').show();
+
+                    pagination.find('li:first').show();
+                    pagination.find('li:last').show();
+
+                    pagination.find('li').each(function (index) {
+                        if (index - 1 >= start && index - 1 < end) {
+                            $(this).show();
+                        }
+                    });
                 }
             });
         },

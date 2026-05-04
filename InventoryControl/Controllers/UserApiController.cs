@@ -68,6 +68,16 @@ public class UserApiController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    [HttpPut("{id}/password")]
+    [AuthorizePermissionHybrid("USER_UPDATE")]
+    public async Task<IActionResult> UpdatePassword(string id, UpdatePasswordDto dto)
+    {
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.UpdatePasswordAsync(id, dto, user);
+
+        return Ok(new { message = "Password updated successfully" });
+    }
 
     [HttpDelete("{id}")]
     [AuthorizePermissionHybrid("USER_DELETE")]

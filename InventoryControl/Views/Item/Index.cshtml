@@ -139,6 +139,7 @@
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
     <script src="~/helper/table.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         const canDelete = @canDelete.ToString().ToLower();
@@ -211,8 +212,9 @@
 
         async function deleteItem(id) {
 
-            const confirm = await Alert.confirm("Item will be deleted!");
-            if (!confirm.isConfirmed) return;
+        const confirm = await Alert.deleteConfirm("Item", "This Item will be permanently deleted!");
+
+        if (!confirm.isConfirmed) return;
 
             const res = await Api.delete(`/api/item/${id}`);
 

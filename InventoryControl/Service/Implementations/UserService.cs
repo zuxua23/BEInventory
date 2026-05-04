@@ -84,7 +84,7 @@ public class UserService : IUserService
         try
         {
             var lastItem = await _db.Users
-                .Where(x => !x.IsDelete)
+                .IgnoreQueryFilters()
                 .OrderByDescending(x => x.UserId)
                 .FirstOrDefaultAsync();
 
@@ -217,6 +217,33 @@ public class UserService : IUserService
         catch (Exception)
         {
             await trx.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task UpdatePasswordAsync(string id, UpdatePasswordDto dto, string updatedBy)
+    {
+        try
+        {
+            var user = await _db.Users.FindAsync(id);
+
+            if (user == null || user.IsDelete)
+                throw new Exception("User tidak ditemukan");
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                throw new Exception("Password tidak boleh kosong");
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            user.UpdatedBy = updatedBy;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            DailyFileLogger.Info($"UpdatePasswordAsync berhasil untuk ID {id}");
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error($"Error di UpdatePasswordAsync untuk ID {id}", ex);
             throw;
         }
     }

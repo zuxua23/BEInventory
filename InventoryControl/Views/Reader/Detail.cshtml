@@ -134,9 +134,11 @@
 
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
-
         let id = "@ViewData["id"]";
 
         $(document).ready(function () {
@@ -145,17 +147,12 @@
 
         async function loadReader() {
 
-            const response = await fetch(`/api/reader/${id}`, {
-                method: "GET",
-                credentials:"include",
-            });
+            const data = await Api.get(`/api/reader/${id}`);
 
-            if (!response.ok) {
-                Swal.fire({ icon: "error",title: "Failed to load data" });
+            if (!data) {
+                Alert.error("Failed to load data");
                 return;
             }
-
-            const data = await response.json();
 
             $("#rdrId").val(data.rdrId);
             $("#rdrName").val(data.rdrName);
@@ -165,14 +162,12 @@
         }
 
         async function updateReader() {
-                                if (!canUpdate) {
-            Swal.fire({
-                icon: 'error',
-        title: 'Access denied',
-        text: 'You do not have permission to update'
-            });
-            return;
-        }
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
             const payload = {
                 rdrId: $("#rdrId").val(),
                 rdrName: $("#rdrName").val(),
@@ -180,33 +175,21 @@
                 ipAddress: $("#ipAddress").val()
             };
 
-            const response = await fetch(`/api/reader/${id}`, {
-                method: "PUT",
-                credentials:"include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.put(`/api/reader/${id}`, payload);
 
-            if (response.ok) {
-                Swal.fire({
-                    icon: "success",
-        title: "Success",
-        text: "Reader updated successfully"
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/reader";
-                });
+            if (res && res.ok) {
+
+                await Alert.success("Reader updated successfully");
+                window.location.href = "/reader";
+
             } else {
-                Swal.fire({
-                    icon: "error",
-        title: "Error",
-        text: "Failed to update reader"
-                });
+
+                Alert.error("Failed to update reader");
+
             }
         }
 
-        $(document).keydown(function(e) {
+        $(document).keydown(function (e) {
             if (e.ctrlKey && e.key === 'Enter') updateReader();
             if (e.key === 'Escape') window.location.href = "/reader";
         });

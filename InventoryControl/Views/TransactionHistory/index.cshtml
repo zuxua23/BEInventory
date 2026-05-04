@@ -135,256 +135,165 @@
 
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
     <script>
-            let table;
-            let currentTxType = "";
 
-            async function fetchTransactions(fromDate, toDate, txType) {
+        let table;
+        let currentTxType = "";
 
-        const params = new URLSearchParams();
+        async function fetchTransactions(fromDate, toDate, txType) {
 
-        if (fromDate) params.append("fromDate", fromDate);
-        if (toDate) params.append("toDate", toDate);
-        if (txType) params.append("txType", txType);
+            const params = new URLSearchParams();
 
-        const url = `/api/transaction/history?${params.toString()}`;
+            if (fromDate) params.append("fromDate", fromDate);
+            if (toDate) params.append("toDate", toDate);
+            if (txType) params.append("txType", txType);
 
-        const res = await fetch(url, {
-            credentials: "include"
+            const data = await Api.get(`/api/transaction/history?${params}`);
+
+            if (!data) {
+                Alert.error("Failed to load transactions");
+                return [];
+            }
+
+            return data;
+        }
+
+        $(document).ready(function () {
+
+            loadData();
+
+            $(".custom-tab-item").on("click", function () {
+                $(".custom-tab-item").removeClass("active");
+                $(this).addClass("active");
+
+                currentTxType = $(this).data("value");
+                loadData();
+            });
+
+            $("#btnFilter").on("click", loadData);
+
+            $("#btnReset").on("click", function () {
+                $("#filterFromDate").val("");
+                $("#filterToDate").val("");
+
+                $(".custom-tab-item").removeClass("active");
+                $(".custom-tab-item[data-value='']").addClass("active");
+
+                currentTxType = "";
+                loadData();
+            });
         });
 
-                if (!res.ok) {
-            Swal.fire("Error", "Failed to load transactions", "error");
-            return [];
-        }
-                                if (res.status === 401) {
-            window.location.href = "/login";
-            return [];
-        }
+        async function loadData() {
 
-        if (res.status === 403) {
-            Swal.fire("Access denied", "", "warning");
-            return [];
-        }
-        return await res.json();
-        }
-
-            $(document).ready(function () {
-                loadData();
-
-                $(".custom-tab-item").on("click", function() {
-                    $(".custom-tab-item").removeClass("active");
-                    $(this).addClass("active");
-                    
-                    currentTxType = $(this).data("value");
-                    
-                    loadData();
-                });
-
-                $("#btnFilter").on("click", function() {
-                    loadData();
-                });
-
-                $("#btnReset").on("click", function() {
-                    $("#filterFromDate").val("");
-                    $("#filterToDate").val("");
-                    
-                    $(".custom-tab-item").removeClass("active");
-                    $(".custom-tab-item[data-value='']").addClass("active");
-                    currentTxType = "";
-
-                    loadData();
-                });
-            });
-
-            async function loadData() {
-
-
-
-                const fromDate = $("#filterFromDate").val();
-                const toDate = $("#filterToDate").val();
-
-                const data = await fetchTransactions(fromDate, toDate, currentTxType);
-
-                if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-                    $('#datatablesIndex').DataTable().clear().destroy();
-                }
-
-                table = $("#datatablesIndex").DataTable({
-                    data: data,
-                    responsive: true,
-                    pageLength: 5,
-                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
-
-                    autoWidth: false, 
-                    columnDefs: [
-                        { targets: 0, data: null, render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1, orderable: false, searchable: false, width: "5%", className: "text-center" },
-                        {
-                            targets: 1,
-                            data: "txDate",
-                            width: "10%",
-                            className: "text-nowrap",
-                            render: function (data) {
-                                if (!data) return "-";
-
-                                return new Date(data).toLocaleDateString("id-ID");
-                            }
-                        },
-                        {
-                            targets: 2,
-                            data: "txType",
-                            width: "15%",
-                            responsivePriority: 2, 
-                            render: function (data) {
-                                if (data === "STOCK_IN") return `<span class="badge badge-success">${data}</span>`;
-                                if (data === "STOCK_PREPARATION") return `<span class="badge badge-warning">${data}</span>`;
-                                if (data === "STOCK_OUT") return `<span class="badge badge-danger">${data}</span>`;
-                                return data;
-                            }
-                        },
-                        {
-                            targets: 3,
-                            data: "doNumber",
-                            width: "15%",
-                            className: "text-nowrap" 
-                        },
-                        { targets: 4, data: "readerName", render: data => data || "-", width: "15%" },
-                        { targets: 5, data: "tagId", width: "15%", render: function(data) { return `<code>${data}</code>`; } },
-                        {
-                            targets: 6,
-                            data: "itemName",
-                            width: "15%",
-                            responsivePriority: 1  
-                        },
-                        { targets: 7,
-                            data: "locationName",
-                            width: "15%",
-                        }
-                    ],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: " Search transactions...",
-                        lengthMenu: "Show _MENU_ Entries",
-                        emptyTable: "No transactions found.",
-                        paginate: { previous: "Previous", next: "Next" }
-                    },
-                    dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                         "<'table-responsive card-body p-0't>" +
-                         "<'row mt-3 align-items-center'<'col-md-5'i><'col-md-7'p>>",
-                    drawCallback: function() {
-                        $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
-                        $('.dataTables_filter input').addClass('form-control form-control-sm rounded shadow-sm');
-                        if($.fn.responsive){
-                            table.responsive.recalc();
-                        }
-                    }
-                });
-            }
-            $(window).on('resize', function() {
-                clearTimeout(window.datatableResizeTimeout);
-                window.datatableResizeTimeout = setTimeout(function() {
-                    if (table) {
-                        table.columns.adjust().responsive.recalc();
-                    }
-                }, 250);
-            });
-
-            $(document).ready(function() {
-                $(window).trigger('resize');
-            });
-
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden && table) {
-                    setTimeout(() => table.columns.adjust().responsive.recalc(), 100);
-                }
-            });
-
-
-        function buildExportUrl(type) {
             const fromDate = $("#filterFromDate").val();
             const toDate = $("#filterToDate").val();
 
-        const params = new URLSearchParams();
+            const data = await fetchTransactions(fromDate, toDate, currentTxType);
 
-        if (fromDate) params.append("fromDate", fromDate);
-        if (toDate) params.append("toDate", toDate);
-        if (currentTxType) params.append("txType", currentTxType);
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
 
-        return `/api/transaction/export/${type}?${params.toString()}`;
+                    {
+                        data: "txDate",
+                        className: "text-nowrap",
+                        render: d => d ? new Date(d).toLocaleDateString("id-ID") : "-"
+                    },
+
+                    {
+                        data: "txType",
+                        render: d => {
+                            if (d === "STOCK_IN") return `<span class="badge badge-success">${d}</span>`;
+                            if (d === "STOCK_PREPARATION") return `<span class="badge badge-warning">${d}</span>`;
+                            if (d === "STOCK_OUT") return `<span class="badge badge-danger">${d}</span>`;
+                            return d;
+                        }
+                    },
+
+                    { data: "doNumber", className: "text-nowrap" },
+                    { data: "readerName", render: d => d || "-" },
+                    { data: "tagId", render: d => `<code>${d}</code>` },
+                    { data: "itemName" },
+                    { data: "locationName" }
+                ],
+
+                pageLength: 5
+            });
         }
 
-        $("#btnExportExcel").on("click", function () {
-            exportFile("excel");
-        });
+        function buildExportUrl(type) {
 
-        $("#btnExportCsv").on("click", function () {
-            exportFile("csv");
-        });
+            const params = new URLSearchParams();
+
+            const fromDate = $("#filterFromDate").val();
+            const toDate = $("#filterToDate").val();
+
+            if (fromDate) params.append("fromDate", fromDate);
+            if (toDate) params.append("toDate", toDate);
+            if (currentTxType) params.append("txType", currentTxType);
+
+            return `/api/transaction/export/${type}?${params}`;
+        }
+
+        $("#btnExportExcel").on("click", () => exportFile("excel"));
+        $("#btnExportCsv").on("click", () => exportFile("csv"));
 
         async function exportFile(type) {
-            const url = buildExportUrl(type); 
+
+            const url = buildExportUrl(type);
 
             try {
+
                 $("#btnExportExcel, #btnExportCsv").prop("disabled", true);
 
                 Swal.fire({
                     title: "Exporting...",
-                    text: "Please wait while file is being generated",
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
 
-                const response = await fetch(url, {
-                    method: "GET",
+                const res = await fetch(url, {
                     credentials: "include"
                 });
 
-                if (!response.ok) throw new Error("Export failed");
+                if (!res.ok) throw new Error("Export failed");
 
-                const blob = await response.blob();
+                const blob = await res.blob();
 
                 let fileName = "export";
-                const disposition = response.headers.get("Content-Disposition");
+                const disposition = res.headers.get("Content-Disposition");
 
                 if (disposition) {
-                    let fileNameMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
-
-                    if (fileNameMatch && fileNameMatch[1]) {
-                        fileName = decodeURIComponent(fileNameMatch[1]);
-                    } else {
-                        fileNameMatch = disposition.match(/filename="?([^"]+)"?/);
-                        if (fileNameMatch && fileNameMatch[1]) {
-                            fileName = fileNameMatch[1];
-                        }
-                    }
+                    let match = disposition.match(/filename\*=UTF-8''([^;]+)/);
+                    if (match) fileName = decodeURIComponent(match[1]);
                 }
 
-                const urlBlob = window.URL.createObjectURL(blob);
+                const urlBlob = URL.createObjectURL(blob);
                 const a = document.createElement("a");
+
                 a.href = urlBlob;
                 a.download = fileName;
-                document.body.appendChild(a);
                 a.click();
-                a.remove();
 
-                window.URL.revokeObjectURL(urlBlob);
+                URL.revokeObjectURL(urlBlob);
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Export Complete",
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                await Alert.success("Export complete");
 
             } catch (err) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Export Failed",
-                    text: err.message
-                });
+
+                Alert.error(err.message);
+
             } finally {
+
                 $("#btnExportExcel, #btnExportCsv").prop("disabled", false);
             }
         }
+
     </script>
 </body>

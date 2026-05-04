@@ -213,58 +213,52 @@
   
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
     <script>
-                $(document).ready(function () {
+
+        let pollingInterval = null;
+        let currentDo = null;
+
+        $(document).ready(function () {
             loadDODropdown();
             loadReaderDropdown();
         });
-         async function loadDODropdown() {
 
-            const response = await fetch("/api/pickinglist", {
-                method: "GET",
-                credentials: "include"
-            });
+        async function loadDODropdown() {
 
-            const data = await response.json();
-                    if (!response.ok) {
-                                        Swal.fire("Error", "Failed to load DO data", "warning");
+            const data = await Api.get("/api/pickinglist");
+            if (!data) return Alert.error("Failed to load DO data");
 
-            return;
-        }
             let options = `<option value="">-- Select DO --</option>`;
-            console.log("Dropdown value:", $("#doIdSelect").val());
-            data.forEach(data => {
-                options += `<option value="${data.doId}">${data.doNumber}</option>`;
+
+            data.forEach(d => {
+                options += `<option value="${d.doId}">${d.doNumber}</option>`;
             });
 
             $("#doIdSelect").html(options);
-                    initSelect2();
+            initSelect2();
         }
 
-         async function loadReaderDropdown() {
+        async function loadReaderDropdown() {
 
-            const response = await fetch("/api/reader", {
-                method: "GET",
-                credentials: "include"
-            });
+            const data = await Api.get("/api/reader");
+            if (!data) return Alert.error("Failed to load Reader data");
 
-            const data = await response.json();
-                    if (!response.ok) {
-                                        Swal.fire("Error", "Failed to load Reader data", "warning");
-
-            return;
-        }
             let options = `<option value="">-- Select Reader --</option>`;
 
-            data.forEach(data => {
-        options += `<option value="${data.id}" data-ip="${data.ipAddress}">
-            ${data.rdrName}        </option>`;
+            data.forEach(r => {
+                options += `
+                    <option value="${r.id}" data-ip="${r.ipAddress}">
+                        ${r.rdrName}
+                    </option>`;
             });
-console.log("Readers loaded:", data);
-$("#rdrIdSelect").html(options);
-                    initSelect2();
-        }
 
+            $("#rdrIdSelect").html(options);
+            initSelect2();
+        }
 
         function initSelect2() {
             $('#rdrIdSelect, #doIdSelect').select2({
@@ -274,95 +268,93 @@ $("#rdrIdSelect").html(options);
                 dropdownParent: $('body')
             });
         }
-                $(document).on('select2:open', () => {
+
+        $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
 
+        async function startScanning() {
 
-        let pollingInterval = null;
-        let currentDo = null;
-
-         async function startScanning() {
             const doId = $("#doIdSelect").val();
             const readerSelect = document.getElementById("rdrIdSelect");
+
             const readerId = readerSelect.value;
             const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
-                    if (!ip) {
-                    Swal.fire("Error", "Reader IP not found", "warning");
-            return;
-        }
 
-            if (!doId || !readerId) {
-        Swal.fire("Error", "Please select DO and Reader first", "warning");
-        return;
-            }
-            console.log("FETCH DO ID:", doId);
-            console.log("IP Address:", ip);
-            currentDo = doId; 
+            if (!ip) return Alert.error("Reader IP not found");
+            if (!doId || !readerId) return Alert.error("Select DO & Reader first");
 
-            await fetch('/stockout/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    doId: doId,
-                    readerId: readerId,
-                    ipAddress: ip
-                })
+            currentDo = doId;
+
+            await Api.post("/stockout/start", {
+                doId,
+                readerId,
+                ipAddress: ip
             });
 
-            document.getElementById('processStatus').textContent = 'Scanning...';
-            document.getElementById('processStatus').className = 'status-badge status-scanning';
+            $("#processStatus")
+                .text("Scanning...")
+                .removeClass()
+                .addClass("badge badge-warning");
 
-            loadItems(doId); 
+            loadItems(doId);
             startPolling(doId);
         }
 
-        // STOP SCAN
         async function stopScan() {
-            const readerId = document.getElementById('rdrIdSelect').value;
 
-            await fetch(`/stockout/stop?readerId=${readerId}`, {
-                method: 'POST'
-            });
+            const readerId = $("#rdrIdSelect").val();
+
+            await Api.post(`/stockout/stop?readerId=${readerId}`);
 
             clearInterval(pollingInterval);
 
-        document.getElementById("scanProgress").style.width = "0%";
-        document.getElementById("progressText").textContent = "0 / 0 scanned";
-        document.getElementById('processStatus').className = 'status-badge status-ready';
+            $("#scanProgress").css("width", "0%");
+            $("#progressText").text("0 / 0 scanned");
+
+            $("#processStatus")
+                .text("Ready")
+                .removeClass()
+                .addClass("badge badge-secondary");
         }
 
-        // POLLING
-        async function startPolling(doId) {
+        function startPolling(doId) {
+
             if (pollingInterval) clearInterval(pollingInterval);
-            console.log("FETCH DO ID:", doId);
+
             pollingInterval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/stockout/items?doId=${doId}`);
-                    const items = await res.json();
+
+                    const items = await Api.get(`/stockout/items?doId=${doId}`);
+                    if (!items) return;
 
                     updateItemProgress(items);
                     updateGlobalProgress(items);
 
-                    await loadTags(); 
+                    await loadTags();
+
                 } catch (err) {
                     console.error(err);
                 }
+
             }, 1000);
         }
 
-        // UPDATE PROGRESS
         function updateItemProgress(items) {
+
             items.forEach(item => {
+
                 const row = document.querySelector(`[data-item="${item.itemId}"]`);
                 if (!row) return;
 
                 const percent = item.required
                     ? (item.scanned / item.required * 100)
                     : 0;
-                            if (item.scanned >= item.required) {
-            row.style.background = "#d4edda";
-        }
+
+                if (item.scanned >= item.required) {
+                    row.style.background = "#d4edda";
+                }
+
                 row.querySelector(".progress-bar").style.width = percent + "%";
                 row.querySelector("small").textContent =
                     `${item.scanned}/${item.required}`;
@@ -372,91 +364,74 @@ $("#rdrIdSelect").html(options);
             });
         }
 
-                function updateGlobalProgress(items) {
-            const totalRequired = items.reduce((sum, i) => sum + i.required, 0);
-            const totalScanned = items.reduce((sum, i) => sum + i.scanned, 0);
+        function updateGlobalProgress(items) {
+
+            const totalRequired = items.reduce((s, i) => s + i.required, 0);
+            const totalScanned = items.reduce((s, i) => s + i.scanned, 0);
 
             const percent = totalRequired
                 ? (totalScanned / totalRequired * 100)
                 : 0;
 
-            document.getElementById("scanProgress").style.width = percent + "%";
-            document.getElementById("progressText").textContent =
-                `${totalScanned} / ${totalRequired} scanned`;
+            $("#scanProgress").css("width", percent + "%");
+            $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
 
             if (totalScanned === totalRequired && totalRequired > 0) {
-                document.getElementById("processStatus").textContent = "Completed";
-                document.getElementById("processStatus").className =
-                    "status-badge status-completed";
+                $("#processStatus")
+                    .text("Completed")
+                    .removeClass()
+                    .addClass("badge badge-success");
             }
         }
-        // LOAD TAG LIST
+
         async function loadTags() {
-            const res = await fetch(`/stockout/tags?doId=${currentDo}`);
-            const tags = await res.json();
-            console.log("Loaded tags:", tags);
-                    if (!res.ok) {
-                                        Swal.fire("Error", "Failed to load tags data", "warning");
 
-            return;
-        }
+            const tags = await Api.get(`/stockout/tags?doId=${currentDo}`);
+            if (!tags) return;
 
-            const tagList = document.getElementById('tagList');
-            tagList.innerHTML = '';
-
+            const tagList = $("#tagList");
+            tagList.html("");
 
             tags.forEach(tag => {
-                const div = document.createElement('div');
-                div.className = 'tag-item scanned';
 
-                div.innerHTML = `
-                    <div class="tag-icon tag-scanned">✓</div>
-                    <div>
-                        <div class="font-weight-bold small">${tag.tagId}</div>
-                        <div class="text-muted small">${tag.itemId}</div>
+                tagList.append(`
+                    <div class="tag-item scanned">
+                        <div class="tag-icon tag-scanned">✓</div>
+                        <div>
+                            <div class="font-weight-bold small">${tag.tagId}</div>
+                            <div class="text-muted small">${tag.itemId}</div>
+                        </div>
                     </div>
-                `;
-
-                tagList.appendChild(div);
+                `);
             });
         }
 
-         async function loadItems(doId) {
-            if (!doId || doId === "undefined") {
-        console.error("Invalid DO ID:", doId);
-        return;
-            }
-            console.log("FETCH DO ID:", doId);
+        async function loadItems(doId) {
 
-            const res = await fetch(`/stockout/items?doId=${doId}`);
-                    if (!res.ok) {
-            const text = await res.text();
-            console.error("API Error:", text);
-                                    Swal.fire("Error", "Server error occurred", "warning");
+            const items = await Api.get(`/stockout/items?doId=${doId}`);
+            if (!items) return;
 
-        return;
-                }
-            const items = await res.json();
-
-            const tbody = document.getElementById("itemList");
-            tbody.innerHTML = "";
+            const tbody = $("#itemList");
+            tbody.html("");
 
             if (items.length === 0) {
-                tbody.innerHTML = `
+                tbody.html(`
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
-        No items available                        </td>
+                            No items available
+                        </td>
                     </tr>
-                `;
+                `);
                 return;
             }
 
             items.forEach(item => {
+
                 const percent = item.required
                     ? (item.scanned / item.required * 100)
                     : 0;
 
-                const row = `
+                tbody.append(`
                     <tr data-item="${item.itemId}">
                         <td><strong>${item.itemCode}</strong></td>
                         <td>${item.itemName}</td>
@@ -468,22 +443,20 @@ $("#rdrIdSelect").html(options);
                             </span>
                         </td>
                         <td>
-                            <div class="progress-item">
+                            <div class="progress">
                                 <div class="progress-bar bg-info"
-                                     style="width:${percent}%">
-                                </div>
+                                     style="width:${percent}%"></div>
                             </div>
                             <small>${item.scanned}/${item.required}</small>
                         </td>
                     </tr>
-                `;
-
-                tbody.innerHTML += row;
+                `);
             });
         }
-        $("#doIdSelect").on("change", function () {
-            const doId = $(this).val();
 
+        $("#doIdSelect").on("change", function () {
+
+            const doId = $(this).val();
             if (!doId) return;
 
             currentDo = doId;
