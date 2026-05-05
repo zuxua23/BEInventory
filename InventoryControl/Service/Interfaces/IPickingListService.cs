@@ -1,4 +1,4 @@
-using InventoryControl.DTO;
+﻿using InventoryControl.DTO;
 using InventoryControl.Entity;
 
 namespace InventoryControl.Service.Interfaces;
@@ -6,9 +6,9 @@ namespace InventoryControl.Service.Interfaces;
 public interface IPickingListService
 {
     Task<List<DOResponseDto>> GetAllAsync();
+    Task<DOResponseDto?> GetByIdAsync(string id);  // ← tambah ini
     Task CreateAsync(PickingListDTO dto, string createdBy);
-    Task UpdateAsync(string id, PickingListUpdateDTO dto);
+    Task UpdateAsync(string id, PickingListDTO dto);
     Task DeleteAsync(string id);
-    Task UpdateStatusAsync(string id, string status);
-    Task<DOResponseDto?> GetByIdAsync(string id);
+    //Task UpdateStatusAsync(string id, string status);
 }

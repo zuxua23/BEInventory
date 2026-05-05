@@ -112,4 +112,23 @@ public class StockInService : IStockInService
 
         return tag;
     }
+
+    public async Task<TagResponseDto> GetTagByCodeAsync(string code)
+    {
+        var tag = await _db.Tags
+            .Include(t => t.Item)
+            .Include(t => t.Location)
+            .FirstOrDefaultAsync(t => t.EpcTag == code || t.TagId == code);
+
+
+        if (tag == null) return null;
+
+        return new TagResponseDto
+        {
+            TagId = tag.TagId,
+            ItemName = tag.Item?.Name,
+            Status = tag.Status,
+            Location = tag.Location?.Name
+        };
+    }
 }

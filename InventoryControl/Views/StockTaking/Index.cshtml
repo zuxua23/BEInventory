@@ -1,0 +1,424 @@
+<body class="hold-transition sidebar-mini layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("_Views")
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-check  nav-icon text-primary" style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Stock Taking</h1>
+                                <p class="mb-0 text-muted small">Manage stock taking process </p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item"><a href="/dashboard" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-box mr-1"></i>Stock Taking</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENT -->
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="card card-primary card-outline shadow-sm">
+                        <!-- INPUT (1 BARIS) -->
+                        <div class="card-body">
+                            <div class="row align-items-end">
+
+                                <div class="col-md-5">
+                                    <label class="small font-weight-bold">Remark</label>
+                                    <input type="text" class="form-control form-control-sm">
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label class="small font-weight-bold">Location</label>
+                                    <select id="locIdSelect" class="form-control select2" multiple style="width:100%"><option></option></select>
+
+                                </div>
+
+                                <div class="col-md-2 d-flex">
+                                    <button id="startBtn" class="btn btn-success btn-sm w-100">
+                                        <i class="fas fa-play mr-1"></i> Start
+                                    </button>
+                                    <button id="endBtn" class="btn btn-danger btn-sm w-100">
+                                        <i class="fas fa-play mr-1"></i> End
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLES -->
+                    <div class="card card-primary card-outline shadow-sm">
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- TABLE 1 -->
+                                <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-clipboard-list  nav-icon text-primary mr-2"></i>
+                                                <h5 class="mb-0">Data System</h5>
+                                            </div>
+
+                                            <small class="text-primary font-weight-bold">
+                                                Total Items: <span id="totalItems">24</span> |
+                                                Total Stock: <span id="totalStock">1245</span> pcs
+                                            </small>
+                                        </div>
+                                        <div class="d-flex">
+
+                                            <div class="d-flex align-items-center gap-2">
+
+                                                <button id="exportOriginalExcel" class="btn btn-sm btn-success mr-1">
+                                                    <i class="fas fa-file-excel mr-1"></i> Excel
+                                                </button>
+
+                                                <button id="exportOriginalCsv" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-file-csv mr-1"></i> CSV
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="table-responsive">
+
+                                        <table id="originalTable" class="table table-bordered table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Stock</th>
+                                                    <th>Lokasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+
+                                <!-- TABLE 2 -->
+                                <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-broadcast-tower nav-icon text-primary mr-2"></i>
+                                                <h5 class="mb-0">Data Scanning</h5>
+                                            </div>
+                                            <small class="text-success font-weight-bold">
+                                                Scanned: <span id="scannedCount">1</span>/<span id="totalData">24</span> |
+                                                Progress: <span id="progressPercent">4%</span>
+                                            </small>
+                                        </div>
+
+
+
+                                        <div class="d-flex">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <select id="filterStatus" class="form-control form-control-sm mr-1">
+                                                    <option value="">All</option>
+                                                    <option value="scanned">Scanned</option>
+                                                    <option value="pending">Pending</option>
+                                                </select>
+
+                                            </div>
+
+                                            <button id="exportCollectExcel" class="btn btn-sm btn-success mr-1">
+                                                <i class="fas fa-file-excel mr-1"></i> Excel
+                                            </button>
+
+                                            <button id="exportCollectCsv" class="btn btn-sm btn-info">
+                                                <i class="fas fa-file-csv mr-1"></i> CSV
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <table id="collectTable" class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Stock</th>
+                                                <th>Lokasi</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")y
+
+
+
+    <script>
+            let currentSttId = null;
+            let refreshInterval = null;
+            let isSessionActive = false;
+                    let tableOriginal = null;
+            let tableCollect = null;
+
+
+            async function loadLocationDropdown() {
+
+                const response = await fetch("/api/location", {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                if (!response.ok) {
+                    Swal.fire("Error", "Failed to load locations", "error");
+                    return;
+                }
+
+                const data = await response.json();
+
+                let options = '<option value=""></option>';
+
+                options += data.map(r => {
+                    return `<option value="${String(r.id)}">${String(r.name)}</option>`;
+                }).join("");
+
+                const select = $("#locIdSelect");
+
+                if (select.hasClass("select2-hidden-accessible")) {
+                    select.select2('destroy');
+                }
+
+                select.html(options);
+
+                select.select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Select location...",
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('body'),
+                    closeOnSelect: false
+                });
+
+                select.val([]).trigger('change');
+            }
+
+
+            async function checkActiveSession() {
+                const res = await fetch("/api/stock-taking/active");
+
+                if (!res.ok) {
+                    console.error("API error:", res.status);
+                    return;
+                }
+
+                let data = null;
+
+                const text = await res.text();
+
+                if (text) {
+                    data = JSON.parse(text);
+                }
+
+            if (data && data.sttId) {
+                currentSttId = data.sttId;
+                isSessionActive = true;
+
+
+                loadSystemData();
+                startAutoRefresh();
+            } else {
+                isSessionActive = false;
+                }
+                updateButtonState();
+            }
+
+            $("#startBtn").click(async function () {
+
+                if (isSessionActive) {
+                    alert("Active session still exists!");
+                    return;
+                }
+
+                const remark = $("input").val();
+            const locations = $("#locIdSelect").val();
+
+                const res = await fetch("/api/stock-taking", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        remark: remark,
+            locationIds: locations && locations.length > 0 ? locations : null
+                        })
+                });
+
+            if (!res.ok) {
+                alert("Failed to start stock taking");
+                return;
+            }
+
+            const data = await res.json();
+                currentSttId = data.stockTakingId;
+                isSessionActive = true;
+            updateButtonState();
+            loadSystemData();
+                startAutoRefresh();
+            });
+
+                  async function loadSystemData() {
+                if (!currentSttId) return;
+
+                const res = await fetch(`/api/stock-taking/system/${currentSttId}`);
+                const data = await res.json();
+                console.log("SYSTEM DATA:", data);
+                tableOriginal.clear();
+
+                let totalItems = 0;
+                let totalStock = 0;
+
+                data.forEach(x => {
+                    totalItems++;
+                    totalStock += x.qty;
+
+                    tableOriginal.row.add([
+                        x.itemId,
+                        x.qty,
+                        x.location
+                    ]);
+                });
+
+                tableOriginal.draw();
+
+                $("#totalItems").text(totalItems);
+                $("#totalStock").text(totalStock);
+            }
+                    async function loadScanData() {
+                if (!currentSttId) return;
+
+                const res = await fetch(`/api/stock-taking/compare/${currentSttId}`);
+                const data = await res.json();
+
+                tableCollect.clear();
+
+                let scanned = 0;
+                let total = data.length;
+
+                data.forEach(x => {
+
+                    if (x.qtyScan > 0) scanned++;
+
+                    let row = tableCollect.row.add([
+                        x.itemId,
+                        x.qtyScan || "-",
+                        "-",
+                        x.status
+                    ]).node();
+
+                    if (x.selisih < 0) {
+                        $(row).addClass("table-danger");
+                    } else if (x.selisih > 0) {
+                        $(row).addClass("table-success");
+                    }
+                });
+
+                tableCollect.draw();
+
+                $("#scannedCount").text(scanned);
+                $("#totalData").text(total);
+
+                let percent = total === 0 ? 0 : Math.round((scanned / total) * 100);
+                $("#progressPercent").text(percent + "%");
+            }
+                    function startAutoRefresh() {
+                if (refreshInterval) clearInterval(refreshInterval);
+
+                refreshInterval = setInterval(() => {
+                    loadScanData();
+                }, 3000);
+            }
+            $("#endBtn").click(async function () {
+                if (!currentSttId) return;
+
+                if (!confirm("Finish the stock taking?")) return;
+
+                await fetch("/api/stock-taking/finalize", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        sttId: currentSttId
+                    })
+                });
+
+                alert("Finished");
+
+                clearInterval(refreshInterval);
+                currentSttId = null;
+                isSessionActive = false;
+            updateButtonState();
+            checkActiveSession();
+            });
+
+            $(document).ready(function () {
+
+                // INIT TABLE DULU (WAJIB)
+                tableOriginal = $("#originalTable").DataTable({
+                    pageLength: 5
+                });
+
+                tableCollect = $("#collectTable").DataTable({
+                    pageLength: 5
+                });
+
+                // BARU LOAD DATA
+                checkActiveSession();
+                loadLocationDropdown();
+            });
+
+                    function updateButtonState() {
+                if (isSessionActive) {
+                    $("#startBtn").prop("disabled", true);
+                    $("#endBtn").prop("disabled", false);
+                } else {
+                    $("#startBtn").prop("disabled", false);
+                    $("#endBtn").prop("disabled", true);
+                }
+            }
+    </script>
+
+</body>

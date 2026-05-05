@@ -111,7 +111,7 @@ public class PickingListService : IPickingListService
         }
         
     }
-    public async Task UpdateAsync(string id, PickingListUpdateDTO dto)
+    public async Task UpdateAsync(string id, PickingListDTO dto)
     {
         try
         {
@@ -132,7 +132,7 @@ public class PickingListService : IPickingListService
             }
 
             doEntity.DoNumber = dto.DoNumber;
-            doEntity.ScannerType = dto.ScannerType;
+            //doEntity.ScannerType = dto.ScannerType;
 
             _db.DODetails.RemoveRange(doEntity.Details);
 
@@ -165,17 +165,17 @@ public class PickingListService : IPickingListService
 
             if (dO == null || dO.IsDelete == true)
             {
-                DailyFileLogger.Warn($"DO with ID: {id} not found for status update");
-                throw new Exception("DO not found");
+                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan untuk pembaruan status");
+                throw new Exception("DO tidak ditemukan");
             }
 
             dO.Status = status;
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"Successfully updated DO status for ID: {id} to {status}");
+            DailyFileLogger.Info($"Berhasil memperbarui status DO dengan ID: {id} menjadi {status}");
         } catch(Exception ex)
         {
-            DailyFileLogger.Error($"Failed to update DO status for ID: {id}", ex);
+            DailyFileLogger.Error($"Gagal memperbarui status DO dengan ID: {id}", ex);
             throw;
         }
 

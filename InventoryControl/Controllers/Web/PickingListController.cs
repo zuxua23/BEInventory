@@ -14,7 +14,7 @@ public class PickingListController : Controller
         if (user == null)
             return Redirect("/");
         ViewData["pages"] = "pickinglist";
-        ViewData["parent"] = "";
+        ViewData["parent"] = "master";
         return View();
     }
 

@@ -89,6 +89,12 @@ public static class Api
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute(
+            name: "api-stocktaking-apply-adjustment",
+            pattern: "/api/stock-taking/apply-adjustment",
+            defaults: new { controller = "StockTaking", action = "ApplyAdjustment" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
+        app.MapControllerRoute(
             name: "api-stocktaking-finalize",
             pattern: "/api/stocktaking/finalize",
             defaults: new { controller = "StockTaking", action = "Finalize" })

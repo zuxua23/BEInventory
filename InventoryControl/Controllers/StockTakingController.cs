@@ -1,13 +1,12 @@
-﻿namespace InventoryControl.Controllers;
+namespace InventoryControl.Controllers;
 
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
-
+[ApiController]
+[Route("api/stock-taking")]
 public class StockTakingController : ControllerBase
 {
     private readonly IStockTakingService _service;
@@ -20,9 +19,39 @@ public class StockTakingController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(StockTakingCreateDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        var id = await _service.CreateAsync(dto, user);
-        return Ok(new { StockTakingId = id });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            var id = await _service.CreateAsync(dto, user);
+            return Ok(new { stockTakingId = id });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActive()
+    {
+        var data = await _service.GetActiveAsync();
+        if (data == null) return NotFound(new { message = "Tidak ada sesi aktif" });
+        return Ok(data);
+    }
+
+    [HttpGet("tags/{sttId}")]
+    public async Task<IActionResult> GetSessionTags(string sttId)
+    {
+        try
+        {
+            var data = await _service.GetSessionTagsAsync(sttId);
+            return Ok(data);
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error("GetSessionTags error", ex);
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 
     [HttpGet]
@@ -33,32 +62,111 @@ public class StockTakingController : ControllerBase
         return Ok(data);
     }
 
-    [HttpPost]
+    [HttpPost("scan")]
     public async Task<IActionResult> Scan(StockTakingScanDto dto)
     {
-        await _service.ScanAsync(dto);
-        return Ok(new { message = "Tag discan" });
+        try
+        {
+            await _service.ScanAsync(dto);
+            return Ok(new { message = "Tag discan" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 
-    [HttpPost]
+    [HttpPost("scan/bulk")]
+    public async Task<IActionResult> BulkScan(StockTakingBulkScanDto dto)
+    {
+        try
+        {
+            await _service.BulkScanAsync(dto);
+            return Ok(new { message = "Bulk scan berhasil" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("progress/{sttId}")]
+    public async Task<IActionResult> GetProgress(string sttId)
+    {
+        var data = await _service.GetProgressAsync(sttId);
+        return Ok(data);
+    }
+
+    [HttpGet("compare/{id}")]
+    public async Task<IActionResult> Compare(string id)
+    {
+        var data = await _service.GetCompareAsync(id);
+        return Ok(data);
+    }
+
+    [HttpGet("system/{sttId}")]
+    public async Task<IActionResult> GetSystem(string sttId)
+    {
+        var data = await _service.GetSystemDataAsync(sttId);
+        return Ok(data);
+    }
+
+    [HttpPost("remove")]
     public async Task<IActionResult> Remove(StockTakingRemoveDto dto)
     {
-        await _service.RemoveAsync(dto);
-        return Ok(new { message = "Tag ditandai remove" });
+        try
+        {
+            await _service.RemoveAsync(dto);
+            return Ok(new { message = "Tag ditandai remove" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 
-    [HttpPost]
+    [HttpPost("manual-add")]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
-        await _service.ManualAddAsync(dto);
-        return Ok(new { message = "Manual add dicatat" });
+        try
+        {
+            await _service.ManualAddAsync(dto);
+            return Ok(new { message = "Manual add dicatat" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 
-    [HttpPost]
+    [HttpPost("finalize")]
     public async Task<IActionResult> Finalize(StockTakingFinalizeDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.FinalizeAsync(dto, user);
-        return Ok(new { message = "Stock Taking selesai" });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.FinalizeAsync(dto, user);
+            return Ok(new { message = "Stock Taking selesai" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("apply-adjustment")]
+    public async Task<IActionResult> ApplyAdjustment([FromBody] StockTakingFinalizeDto dto)
+    {
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.ApplyAdjustmentAsync(dto.SttId, user);
+            return Ok(new { message = "Adjustment berhasil diterapkan" });
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error("ApplyAdjustment error", ex);
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 }
