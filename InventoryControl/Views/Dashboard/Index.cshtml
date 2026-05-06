@@ -81,18 +81,18 @@
                             <div class="dash-card dash-card-full-height">
                                 <div class="dash-card-header">
                                     <span class="dash-card-dot"></span>
-                                    <span class="dash-card-title">5 Recent Picking Activity</span>
+                                    <span class="dash-card-title">Recent System Activity</span>
                                 </div>
                                 <div class="dash-table-wrap">
                                     <table class="dash-table">
                                         <thead>
                                             <tr>
-                                                <th>DO Number</th>
-                                                <th>Scanner</th>
-                                                <th>Status</th>
+                                                <th>Time</th>
+                                                <th>Activity</th>
+                                                <th>User</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="recentPicking">
+                                        <tbody id="recentActivity">
                                             <tr>
                                                 <td colspan="3" class="dash-table-empty">Loading…</td>
                                             </tr>
@@ -209,51 +209,154 @@
 
         async function loadDashboard() {
             try {
-                const [items, locations, readers, picking, users] = await Promise.all([
-                    fetch("/api/item",        { credentials: "include" }),
-                    fetch("/api/location",    { credentials: "include" }),
-                    fetch("/api/reader",      { credentials: "include" }),
-                    fetch("/api/pickinglist", { credentials: "include" }),
-                    fetch("/api/user",        { credentials: "include" })
+
+                const [
+                    items,
+                    locations,
+                    readers,
+                    picking,
+                    users,
+                    activities
+                ] = await Promise.all([
+                    fetch("/api/item", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/location", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/reader", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/pickinglist", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/user", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/logs/recent-activity", {
+                        credentials: "include"
+                    })
                 ]);
 
-                const itemData = await items.json();
-                const locData  = await locations.json();
-                const rdrData  = await readers.json();
-                const pickData = await picking.json();
-                const userData = await users.json();
+                const itemData =
+                    await items.json();
 
-                $("#totalItems").text(itemData.length);
-                $("#totalLocations").text(locData.length);
-                $("#totalReaders").text(rdrData.length);
-                $("#totalPicking").text(pickData.length);
-                $("#totalUsers").text(userData.length);
+                const locData =
+                    await locations.json();
 
-                const syncTime = new Date().toLocaleString();
-                $("#lastSync").text(syncTime);
-                $("#lastSyncStatus").text(syncTime);
+                const rdrData =
+                    await readers.json();
 
-                let recentHtml = "";
-                if (pickData.length === 0) {
-                    recentHtml = `<tr><td colspan="3" class="dash-table-empty">No picking data found.</td></tr>`;
+                const pickData =
+                    await picking.json();
+
+                const userData =
+                    await users.json();
+
+                const activityData =
+                    await activities.json();
+
+                $("#totalItems")
+                    .text(itemData.length);
+
+                $("#totalLocations")
+                    .text(locData.length);
+
+                $("#totalReaders")
+                    .text(rdrData.length);
+
+                $("#totalPicking")
+                    .text(pickData.length);
+
+                $("#totalUsers")
+                    .text(userData.length);
+
+                const syncTime =
+                    new Date().toLocaleString();
+
+                $("#lastSync")
+                    .text(syncTime);
+
+                $("#lastSyncStatus")
+                    .text(syncTime);
+
+
+                let activityHtml = "";
+
+                if (activityData.length === 0) {
+
+                    activityHtml = `
+                        <tr>
+                            <td colspan="3"
+                                class="dash-table-empty">
+                                No recent activity found.
+                            </td>
+                        </tr>
+                    `;
+
                 } else {
-                    pickData.slice(0, 5).forEach(p => {
-                        let badgeClass = "dash-badge-draft";
-                        if (p.status === "PREPARATION") badgeClass = "dash-badge-prep";
-                        if (p.status === "DONE")        badgeClass = "dash-badge-done";
 
-                        recentHtml += `
+                    activityData.forEach(a => {
+
+                        let badgeClass =
+                            "dash-badge-prep";
+
+                        if (
+                            a.action.includes("DELETE")
+                        ) {
+                            badgeClass =
+                                "dash-badge-draft";
+                        }
+
+                        if (
+                            a.action.includes("LOGIN")
+                        ) {
+                            badgeClass =
+                                "dash-badge-done";
+                        }
+
+                        activityHtml += `
                             <tr>
-                                <td><span class="dash-do-num">${p.doNumber}</span></td>
-                                <td><span class="dash-scanner-tag">${p.scannerType}</span></td>
-                                <td><span class="dash-badge ${badgeClass}">${p.status}</span></td>
+                                <td>
+                                    <span class="dash-do-num">
+                                        ${a.time}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-semibold">
+                                            ${a.action}
+                                        </span>
+
+                                        <small class="text-muted">
+                                            ${a.entity}
+                                        </small>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="dash-badge ${badgeClass}">
+                                        ${a.user}
+                                    </span>
+                                </td>
                             </tr>
                         `;
                     });
                 }
-                $("#recentPicking").html(recentHtml);
+
+                $("#recentActivity")
+                    .html(activityHtml);
 
             } catch (e) {
+
+                console.error(e);
+
                 Swal.fire({
                     icon: "error",
                     title: "Dashboard failed to load",

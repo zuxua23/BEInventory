@@ -205,8 +205,6 @@
                 $("#createItem").modal("hide");
                 loadItems();
                 e.target.reset();
-            } else {
-                Alert.error("Failed to create item");
             }
         });
 
@@ -221,8 +219,6 @@
             if (res && res.ok) {
                 await Alert.success("Item deleted successfully");
                 loadItems();
-            } else {
-                Alert.error("Failed to delete item");
             }
         }
 

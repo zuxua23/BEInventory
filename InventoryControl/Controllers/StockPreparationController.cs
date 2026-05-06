@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
-
+[InventoryLock]
 //[ApiController]
 //[Route("stockpreparation")]
 public class StockPreparationController : ControllerBase

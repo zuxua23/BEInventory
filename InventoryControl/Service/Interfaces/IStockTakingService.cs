@@ -15,5 +15,9 @@ public interface IStockTakingService
     Task<object> GetCompareAsync(string sttId);
     Task<List<object>> GetSystemDataAsync(string sttId);
     Task<object?> GetActiveAsync();
+    Task<byte[]> ExportSystemExcelAsync(string sttId);
+    Task<string> ExportSystemCsvAsync(string sttId);
+    Task<byte[]> ExportCompareExcelAsync(string sttId);
+    Task<string> ExportCompareCsvAsync(string sttId);
 
 }

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
-
+[InventoryLock]
 [ApiController]
 [Route("api/location")]
 public class LocationApiController : ControllerBase

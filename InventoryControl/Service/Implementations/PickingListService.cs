@@ -20,33 +20,46 @@ public class PickingListService : IPickingListService
     {
         try
         {
-            var result= await _db.DOs
-            .Include(x => x.Details)
-            .ThenInclude(d => d.Item)
-            .Where(x => !x.IsDelete)
-            .Select(x => new DOResponseDto
-            {
-                DoId = x.DoId,
-                DoNumber = x.DoNumber,
-                ScannerType = x.ScannerType,
-                Status = x.Status,
-                CreatedAt = x.CreatedAt,
-                Details = x.Details.Select(d => new DODetailResponseDto
-                {
-                    DoDetailId = d.DoDetailId,
-                    ItemId = d.ItemId,
-                    ItemName = d.Item.Name,
-                    QtyRequired = d.QtyRequired
-                }).ToList()
-            })
-            .ToListAsync();
+            DailyFileLogger.Info(
+                "Retrieving all active delivery orders."
+            );
 
-            DailyFileLogger.Info($"Berhasil mengambil data DO, total: {result.Count}");
+            var result = await _db.DOs
+                .Include(x => x.Details)
+                .ThenInclude(d => d.Item)
+                .IgnoreQueryFilters()
+                .Select(x => new DOResponseDto
+                {
+                    DoId = x.DoId,
+                    DoNumber = x.DoNumber,
+                    ScannerType = x.ScannerType,
+                    Status = x.Status,
+                    CreatedAt = x.CreatedAt,
+                    Details = x.Details.Select(d =>
+                        new DODetailResponseDto
+                        {
+                            DoDetailId = d.DoDetailId,
+                            ItemId = d.ItemId,
+                            ItemName = d.Item.Name,
+                            QtyRequired = d.QtyRequired
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved {result.Count} delivery order(s)."
+            );
+
             return result;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            DailyFileLogger.Error("Gagal mengambil data DO", ex);
+            DailyFileLogger.Error(
+                "An error occurred while retrieving delivery orders.",
+                ex
+            );
+
             throw;
         }
     }
@@ -55,23 +68,73 @@ public class PickingListService : IPickingListService
     {
         try
         {
-            return await _db.DOs
-            .Include(x => x.Details)
-            .FirstOrDefaultAsync(x => x.DoId == id && !x.IsDelete);
+            DailyFileLogger.Info(
+                $"Retrieving delivery order with ID '{id}'."
+            );
 
+            var result = await _db.DOs
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x =>
+                    x.DoId == id &&
+                    !x.IsDelete
+                );
+
+            if (result == null)
+            {
+                DailyFileLogger.Warn(
+                    $"Delivery order with ID '{id}' was not found."
+                );
+
+                return null;
+            }
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved delivery order with ID '{id}'."
+            );
+
+            return result;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            DailyFileLogger.Error($"Gagal mengambil data DO dengan ID: {id}", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while retrieving delivery order with ID '{id}'.",
+                ex
+            );
+
             throw;
         }
-
     }
 
-    public async Task CreateAsync(PickingListDTO request, string createdBy)
+    public async Task CreateAsync(
+        PickingListDTO request,
+        string createdBy
+    )
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Creating new delivery order with number '{request.DoNumber}'.",
+                createdBy
+            );
+
+            var doExists = await _db.DOs
+                .AnyAsync(x =>
+                    x.DoNumber == request.DoNumber &&
+                    !x.IsDelete
+                );
+
+            if (doExists)
+            {
+                DailyFileLogger.Warn(
+                    $"Delivery order number '{request.DoNumber}' already exists.",
+                    createdBy
+                );
+
+                throw new Exception(
+                    "Delivery order number already exists."
+                );
+            }
+
             var doEntity = new DO
             {
                 DoId = Guid.NewGuid().ToString(),
@@ -82,115 +145,180 @@ public class PickingListService : IPickingListService
                 IsDelete = false
             };
 
-            var details = request.Details.Select(d => new DODetail
-            {
-                DoDetailId = Guid.NewGuid().ToString(),
-                DoId = doEntity.DoId,
-                ItemId = d.ItemId,
-                QtyRequired = d.QtyRequired
-            }).ToList();
+            var details = request.Details
+                .Select(d => new DODetail
+                {
+                    DoDetailId = Guid.NewGuid().ToString(),
+                    DoId = doEntity.DoId,
+                    ItemId = d.ItemId,
+                    QtyRequired = d.QtyRequired
+                })
+                .ToList();
 
             _db.DOs.Add(doEntity);
+
             _db.DODetails.AddRange(details);
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"Berhasil membuat DO baru dengan ID: {doEntity.DoId}");
 
-        } catch(Exception ex)
+            DailyFileLogger.Info(
+                $"Delivery order successfully created with ID '{doEntity.DoId}'.",
+                createdBy
+            );
+
+            DailyFileLogger.Audit(
+                action: "CREATE",
+                entity: "DELIVERY_ORDER",
+                entityId: doEntity.DoNumber,
+                performedBy: createdBy,
+                description:
+                    $"Created delivery order with {details.Count} item(s)."
+            );
+        }
+        catch (Exception ex)
         {
-            DailyFileLogger.Error("Gagal membuat DO baru", ex);
+            DailyFileLogger.Error(
+                "An error occurred while creating delivery order.",
+                ex,
+                createdBy
+            );
+
             throw;
         }
-        
     }
-    public async Task UpdateAsync(string id, PickingListDTO dto)
+
+    public async Task UpdateAsync(
+        string id,
+        PickingListDTO dto
+    )
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Updating delivery order with ID '{id}'."
+            );
+
             var doEntity = await _db.DOs
                 .Include(x => x.Details)
-                .FirstOrDefaultAsync(x => x.DoId == id && !x.IsDelete);
+                .FirstOrDefaultAsync(x =>
+                    x.DoId == id &&
+                    !x.IsDelete
+                );
 
             if (doEntity == null)
             {
-                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan");
-                throw new Exception("DO tidak ditemukan");
+                DailyFileLogger.Warn(
+                    $"Update failed. Delivery order with ID '{id}' was not found."
+                );
+
+                throw new Exception(
+                    "Delivery order not found."
+                );
             }
 
             if (doEntity.Status != "DRAFT")
             {
-                DailyFileLogger.Warn($"DO dengan ID: {id} tidak bisa diupdate karena status bukan DRAFT");
-                throw new Exception("DO hanya bisa diupdate jika status masih DRAFT");
+                DailyFileLogger.Warn(
+                    $"Update denied. Delivery order with ID '{id}' is not in DRAFT status."
+                );
+
+                throw new Exception(
+                    "Delivery order can only be updated in DRAFT status."
+                );
             }
 
+            var oldDoNumber = doEntity.DoNumber;
+
             doEntity.DoNumber = dto.DoNumber;
-            //doEntity.ScannerType = dto.ScannerType;
 
-            _db.DODetails.RemoveRange(doEntity.Details);
+            _db.DODetails.RemoveRange(
+                doEntity.Details
+            );
 
-            var newDetails = dto.Details.Select(d => new DODetail
-            {
-                DoDetailId = Guid.NewGuid().ToString(),
-                DoId = doEntity.DoId,
-                ItemId = d.ItemId,
-                QtyRequired = d.QtyRequired
-            }).ToList();
+            var newDetails = dto.Details
+                .Select(d => new DODetail
+                {
+                    DoDetailId = Guid.NewGuid().ToString(),
+                    DoId = doEntity.DoId,
+                    ItemId = d.ItemId,
+                    QtyRequired = d.QtyRequired
+                })
+                .ToList();
 
             _db.DODetails.AddRange(newDetails);
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"Berhasil update DO dengan ID: {id}");
+            DailyFileLogger.Info(
+                $"Delivery order successfully updated. ID='{id}'."
+            );
+
+            DailyFileLogger.Audit(
+                action: "UPDATE",
+                entity: "DELIVERY_ORDER",
+                entityId: doEntity.DoNumber,
+                performedBy: "SYSTEM",
+                description:
+                    $"Updated delivery order from Number='{oldDoNumber}' to Number='{dto.DoNumber}'."
+            );
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error($"Gagal update DO dengan ID: {id}", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while updating delivery order with ID '{id}'.",
+                ex
+            );
+
             throw;
         }
     }
-
-    //public async Task UpdateStatusAsync(string id, string status)
-    //{
-    //    try
-    //    {
-    //        var dO = await _db.DOs.FindAsync(id);
-
-    //        if (dO == null || dO.IsDelete == true)
-    //        {
-    //                DailyFileLogger.Warn($"DO dengan ID: {id} tidak ditemukan untuk pembaruan status");
-    //            throw new Exception("DO tidak ditemukan");
-    //        }
-
-    //        dO.Status = status;
-
-    //        await _db.SaveChangesAsync();
-    //        DailyFileLogger.Info($"Berhasil memperbarui status DO dengan ID: {id} menjadi {status}");
-    //    } catch(Exception ex)
-    //    {
-    //        DailyFileLogger.Error($"Gagal memperbarui status DO dengan ID: {id}", ex);
-    //        throw;
-    //    }
-
-    //}
 
     public async Task DeleteAsync(string id)
     {
         try
         {
-            var doData = await _db.DOs.FindAsync(id);
+            DailyFileLogger.Info(
+                $"Deleting delivery order with ID '{id}'."
+            );
+
+            var doData = await _db.DOs
+                .FindAsync(id);
 
             if (doData == null || doData.IsDelete)
-                throw new Exception("DO tidak ditemukan");
+            {
+                DailyFileLogger.Warn(
+                    $"Delete failed. Delivery order with ID '{id}' was not found."
+                );
+
+                throw new Exception(
+                    "Delivery order not found."
+                );
+            }
 
             doData.IsDelete = true;
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"DO dengan ID {id} berhasil dihapus");
+            DailyFileLogger.Info(
+                $"Delivery order successfully soft deleted. ID='{id}'."
+            );
+
+            DailyFileLogger.Audit(
+                action: "DELETE",
+                entity: "DELIVERY_ORDER",
+                entityId: doData.DoNumber,
+                performedBy: "SYSTEM",
+                description:
+                    $"Soft deleted delivery order '{doData.DoNumber}'."
+            );
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error($"Gagal menghapus DO dengan ID {id}", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while deleting delivery order with ID '{id}'.",
+                ex
+            );
+
             throw;
         }
     }

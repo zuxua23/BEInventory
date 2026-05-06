@@ -6,6 +6,8 @@ using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
+using ClosedXML.Excel;
+using System.Text;
 
 public class StockTakingService : IStockTakingService
 {
@@ -18,18 +20,32 @@ public class StockTakingService : IStockTakingService
 
     public async Task<object?> GetActiveAsync()
     {
-        var data = await _db.StockTakings
+        var session = await _db.StockTakings
             .Where(x => x.Status == "OPEN")
             .OrderByDescending(x => x.CreatedAt)
-            .Select(x => new
-            {
-                x.SttId,
-                x.Remark,
-                x.Status
-            })
             .FirstOrDefaultAsync();
 
-        return data;
+        if (session == null)
+            return null;
+
+        var locationIds = await _db.StockTakingDetails
+            .Where(x =>
+                x.SttId == session.SttId &&
+                x.Action == "SYSTEM")
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => tag.LocationId)
+            .Distinct()
+            .ToListAsync();
+
+        return new
+        {
+            session.SttId,
+            session.Remark,
+            session.Status,
+            LocationIds = locationIds
+        };
     }
 
     public async Task<List<object>> GetSystemDataAsync(string sttId)
@@ -473,136 +489,284 @@ public class StockTakingService : IStockTakingService
         }
     }
 
-    //public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
-    //{
-    //    using var trx = await _db.Database.BeginTransactionAsync();
+    private async Task<List<StockTakingExportDto>> GetSystemExportData(string sttId)
+    {
+        return await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
 
-    //    try
-    //    {
-    //        var st = await _db.StockTakings
-    //            .FirstOrDefaultAsync(x => x.SttId == dto.SttId && x.Status == "OPEN");
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => new
+                {
+                    std.ItemId,
+                    tag.LocationId
+                })
 
-    //        if (st == null)
-    //        {
-    //            DailyFileLogger.Warn($"FinalizeAsync gagal: Session {dto.SttId} tidak aktif");
-    //            throw new Exception("Session tidak aktif");
-    //        }
+            .Join(_db.Locations,
+                x => x.LocationId,
+                loc => loc.Id,
+                (x, loc) => new
+                {
+                    x.ItemId,
+                    LocationName = loc.Name
+                })
 
-    //        var details = await _db.StockTakingDetails
-    //            .Where(d => d.SttId == dto.SttId)
-    //            .ToListAsync();
+            .GroupBy(x => new
+            {
+                x.ItemId,
+                x.LocationName
+            })
+
+            .Select(g => new StockTakingExportDto
+            {
+                ItemId = g.Key.ItemId,
+                Location = g.Key.LocationName,
+                Qty = g.Count(),
+                Status = "SYSTEM"
+            })
+
+            .ToListAsync();
+    }
+
+    private byte[] GenerateExcel(List<StockTakingExportDto> data)
+    {
+        using var workbook = new XLWorkbook();
+
+        var ws = workbook.Worksheets.Add("StockTaking");
+
+        ws.Cell(1, 1).Value = "Item";
+        ws.Cell(1, 2).Value = "Qty";
+        ws.Cell(1, 3).Value = "Location";
+        ws.Cell(1, 4).Value = "Status";
+
+        var headerRange = ws.Range(1, 1, 1, 4);
+
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+        int row = 2;
+
+        foreach (var item in data)
+        {
+            ws.Cell(row, 1).Value = item.ItemId;
+            ws.Cell(row, 2).Value = item.Qty;
+            ws.Cell(row, 3).Value = item.Location;
+            ws.Cell(row, 4).Value = item.Status;
+
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        return stream.ToArray();
+    }
+
+    private string GenerateCsv(List<StockTakingExportDto> data)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("Item,Qty,Location,Status");
+
+        foreach (var item in data)
+        {
+            sb.AppendLine(
+                $"{item.ItemId}," +
+                $"{item.Qty}," +
+                $"{item.Location}," +
+                $"{item.Status}"
+            );
+        }
+
+        return sb.ToString();
+    }
+
+    private byte[] GenerateCompareExcel(List<StockTakingCompareExportDto> data)
+    {
+        using var workbook = new XLWorkbook();
+
+        var ws = workbook.Worksheets.Add("Compare");
+
+        ws.Cell(1, 1).Value = "Item";
+        ws.Cell(1, 2).Value = "System Qty";
+        ws.Cell(1, 3).Value = "Scan Qty";
+        ws.Cell(1, 4).Value = "Difference";
+        ws.Cell(1, 5).Value = "Status";
+
+        var header = ws.Range(1, 1, 1, 5);
+
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor =
+            XLColor.LightGray;
+
+        int row = 2;
+
+        foreach (var item in data)
+        {
+            ws.Cell(row, 1).Value = item.ItemId;
+            ws.Cell(row, 2).Value = item.QtySystem;
+            ws.Cell(row, 3).Value = item.QtyScan;
+            ws.Cell(row, 4).Value = item.Selisih;
+            ws.Cell(row, 5).Value = item.Status;
+
+            var range = ws.Range(row, 1, row, 5);
+
+            if (item.Status == "MATCH")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightGreen;
+            }
+            else if (item.Status == "MISSING")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightPink;
+            }
+            else if (item.Status == "OVER")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightYellow;
+            }
+
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        return stream.ToArray();
+    }
+    private async Task<List<StockTakingCompareExportDto>>GetCompareExportData(string sttId)
+    {
+        var systemData = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .GroupBy(x => new
+            {
+                x.ItemId
+            })
+            .Select(g => new
+            {
+                g.Key.ItemId,
+                QtySystem = g.Count()
+            })
+            .ToListAsync();
+
+        var scanData = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "FOUND")
+            .GroupBy(x => new
+            {
+                x.ItemId
+            })
+            .Select(g => new
+            {
+                g.Key.ItemId,
+                QtyScan = g.Count()
+            })
+            .ToListAsync();
+
+        var result = systemData
+            .GroupJoin(
+                scanData,
+                s => s.ItemId,
+                f => f.ItemId,
+                (s, f) => new { s, f }
+            )
+            .SelectMany(
+                x => x.f.DefaultIfEmpty(),
+                (x, f) =>
+                {
+                    int qtyScan = f?.QtyScan ?? 0;
+
+                    int selisih =
+                        qtyScan - x.s.QtySystem;
+
+                    string status =
+                        selisih == 0
+                            ? "MATCH"
+                            : selisih < 0
+                                ? "MISSING"
+                                : "OVER";
+
+                    return new StockTakingCompareExportDto
+                    {
+                        ItemId = x.s.ItemId,
+                        QtySystem = x.s.QtySystem,
+                        QtyScan = qtyScan,
+                        Selisih = selisih,
+                        Status = status
+                    };
+                })
+            .ToList();
+
+        return result;
+    }
+
+    private string GenerateCompareCsv(
+    List<StockTakingCompareExportDto> data)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine(
+            "Item,System Qty,Scan Qty,Difference,Status"
+        );
+
+        foreach (var item in data)
+        {
+            sb.AppendLine(
+                $"{item.ItemId}," +
+                $"{item.QtySystem}," +
+                $"{item.QtyScan}," +
+                $"{item.Selisih}," +
+                $"{item.Status}"
+            );
+        }
+
+        return sb.ToString();
+    }
+
+    public async Task<byte[]> ExportSystemExcelAsync(string sttId)
+    {
+        var data = await GetSystemExportData(sttId);
+        if (!data.Any())
+            throw new Exception("No system data available to export");
+
+        return GenerateExcel(data);
+    }
 
 
-    //        var removeTagIds = details
-    //            .Where(d => d.Action == "REMOVE" && d.TagId != null)
-    //            .Select(d => d.TagId)
-    //            .Distinct()
-    //            .ToList();
+    public async Task<string> ExportSystemCsvAsync(string sttId)
+    {
+        var data = await GetSystemExportData(sttId);
+        if (!data.Any())
+            throw new Exception("No system data available to export");
 
-    //        var removeTags = await _db.Tags
-    //            .Where(t => removeTagIds.Contains(t.Id))
-    //            .ToListAsync();
+        return GenerateCsv(data);
+    }
 
-    //        foreach (var tag in removeTags)
-    //        {
-    //            if (tag.Status == "IN_STOCK")
-    //            {
-    //                tag.Status = "OUT";
-    //                tag.UpdatedBy = user;
-    //                tag.UpdatedAt = DateTime.UtcNow;
+    public async Task<byte[]> ExportCompareExcelAsync(string sttId)
+    {
+        var data = await GetCompareExportData(sttId);
 
-    //                _db.Histories.Add(new HistoryPrint
-    //                {
-    //                    Id = Guid.NewGuid().ToString(),
-    //                    TagId = tag.Id,
-    //                    ItemId = tag.ItemId,
-    //                    Type = "STOCK_ADJUSTMENT",
-    //                    Reference = dto.SttId,
-    //                    Action = "REMOVE",
-    //                    CreatedBy = user,
-    //                    CreatedAt = DateTime.UtcNow
-    //                });
+        if (!data.Any())
+            throw new Exception("No compare data to export");
 
-    //                DailyFileLogger.Info($"StockAdjustment REMOVE. Tag={tag.TagId}, Session={dto.SttId}");
-    //            }
-    //        }
+        return GenerateCompareExcel(data);
+    }
+    public async Task<string> ExportCompareCsvAsync(string sttId)
+    {
+        var data = await GetCompareExportData(sttId);
 
-    //        var addManuals = details
-    //            .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
-    //            .ToList();
+        if (!data.Any())
+            throw new Exception("No compare data to export");
 
-    //        // Validasi duplicate tag
-    //        var duplicate = addManuals
-    //            .GroupBy(x => x.TagId)
-    //            .Where(g => g.Count() > 1)
-    //            .Any();
-
-    //        if (duplicate)
-    //            throw new Exception("Ada tag yang dipakai lebih dari sekali di manual add");
-
-    //        var addTagIds = addManuals
-    //            .Select(x => x.TagId)
-    //            .Distinct()
-    //            .ToList();
-
-    //        var addTags = await _db.Tags
-    //            .Where(t => addTagIds.Contains(t.Id))
-    //            .ToListAsync();
-
-    //        foreach (var add in addManuals)
-    //        {
-    //            var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
-
-    //            if (tag == null)
-    //                throw new Exception($"Tag {add.TagId} tidak ditemukan");
-
-    //            if (tag.Status != "STANDBY")
-    //                throw new Exception($"Tag {tag.TagId} tidak dalam kondisi STANDBY");
-
-    //            tag.Status = "IN_STOCK";
-    //            tag.ItemId = add.ItemId;
-    //            tag.UpdatedBy = user;
-    //            tag.UpdatedAt = DateTime.UtcNow;
-
-    //            _db.Histories.Add(new HistoryPrint
-    //            {
-    //                Id = Guid.NewGuid().ToString(),
-    //                TagId = tag.Id,
-    //                ItemId = add.ItemId,
-    //                Type = "STOCK_ADJUSTMENT",
-    //                Reference = dto.SttId,
-    //                Action = "ADD_MANUAL",
-    //                CreatedBy = user,
-    //                CreatedAt = DateTime.UtcNow
-    //            });
-
-    //            DailyFileLogger.Info($"StockAdjustment ADD_MANUAL. Tag={tag.TagId}, Item={add.ItemId}");
-    //        }
-
-    //        _db.Transactions.Add(new Transaction
-    //        {
-    //            TrsId = Guid.NewGuid().ToString(),
-    //            TrsType = "STOCK_ADJUSTMENT",
-    //            ReferenceId = dto.SttId,
-    //            CreatedBy = user,
-    //            CreatedAt = DateTime.UtcNow
-    //        });
-
-    //        st.Status = "COMPLETED";
-
-    //        await _db.SaveChangesAsync();
-    //        await trx.CommitAsync();
-
-    //        DailyFileLogger.Info($"StockTaking finalize berhasil. Session={dto.SttId}");
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        await trx.RollbackAsync();
-    //        DailyFileLogger.Error("Error di FinalizeAsync StockTaking", ex);
-    //        throw;
-    //    }
-    //}
-
+        return GenerateCompareCsv(data);
+    }
     public async Task<object> GetProgressAsync(string sttId)
     {
         var total = await _db.StockTakingDetails
@@ -618,4 +782,5 @@ public class StockTakingService : IStockTakingService
             Progress = total == 0 ? 0 : (scanned * 100 / total)
         };
     }
+
 }

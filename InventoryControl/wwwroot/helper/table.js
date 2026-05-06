@@ -1,34 +1,42 @@
 ﻿    window.Table = {
-
-        init(selector, { data, columns }) {
+        init(selector, options = {}) {
 
             if ($.fn.DataTable.isDataTable(selector)) {
                 $(selector).DataTable().clear().destroy();
             }
 
             return $(selector).DataTable({
-                data: data,
+
                 responsive: true,
-                pageLength: 5,
+                pageLength: options.pageLength || 5,
                 lengthMenu: [[5, 10, 25], [5, 10, 25]],
 
-                columns: columns,
+                data: options.data || null,
+                columns: options.columns || null,
 
                 language: {
+                    emptyTable: "No data available in table",
+                    zeroRecords: "No matching records found",
                     search: "_INPUT_",
                     searchPlaceholder: " Search...",
                     lengthMenu: "Show _MENU_",
-                    paginate: { first: "«", last: "»", next: "›", previous: "‹" },
+                    paginate: {
+                        first: "«",
+                        last: "»",
+                        next: "›",
+                        previous: "‹"
+                    },
                     info: "Showing _START_ to _END_ of _TOTAL_ data"
                 },
 
-                dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                    "<'table-responsive card-body p-0't>" +
+                dom:
+                    "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                    "<'table-responsive't>" +
                     "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
 
                 autoWidth: false,
                 deferRender: true,
-
+         
                 drawCallback: function () {
 
                     const api = this.api();

@@ -138,6 +138,7 @@
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
     <script src="~/helper/table.js"></script>
+    <script src="~/helper/export.js"></script>
 
     <script>
 
@@ -241,59 +242,17 @@
             return `/api/transaction/export/${type}?${params}`;
         }
 
-        $("#btnExportExcel").on("click", () => exportFile("excel"));
-        $("#btnExportCsv").on("click", () => exportFile("csv"));
+        Export.bind("#btnExportExcel", {
+            url: () => buildExportUrl("excel"),
+            fileName: "transaction-history.xlsx"
+        });
 
-        async function exportFile(type) {
+        Export.bind("#btnExportCsv", {
+            url: () => buildExportUrl("csv"),
+            fileName: "transaction-history.csv"
+        });
 
-            const url = buildExportUrl(type);
-
-            try {
-
-                $("#btnExportExcel, #btnExportCsv").prop("disabled", true);
-
-                Swal.fire({
-                    title: "Exporting...",
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                const res = await fetch(url, {
-                    credentials: "include"
-                });
-
-                if (!res.ok) throw new Error("Export failed");
-
-                const blob = await res.blob();
-
-                let fileName = "export";
-                const disposition = res.headers.get("Content-Disposition");
-
-                if (disposition) {
-                    let match = disposition.match(/filename\*=UTF-8''([^;]+)/);
-                    if (match) fileName = decodeURIComponent(match[1]);
-                }
-
-                const urlBlob = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-
-                a.href = urlBlob;
-                a.download = fileName;
-                a.click();
-
-                URL.revokeObjectURL(urlBlob);
-
-                await Alert.success("Export complete");
-
-            } catch (err) {
-
-                Alert.error(err.message);
-
-            } finally {
-
-                $("#btnExportExcel, #btnExportCsv").prop("disabled", false);
-            }
-        }
+     
 
     </script>
 </body>

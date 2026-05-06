@@ -237,11 +237,6 @@
                 $("#createLocation").modal("hide");
                 e.target.reset();
                 loadLocations();
-
-            } else {
-
-                Alert.error("Create location failed");
-
             }
         });
 
@@ -258,11 +253,6 @@
 
                 await Alert.success("Location deleted successfully");
                 loadLocations();
-
-            } else {
-
-                Alert.error("Delete location failed");
-
             }
         }
 

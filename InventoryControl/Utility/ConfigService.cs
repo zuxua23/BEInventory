@@ -14,15 +14,33 @@ public class ConfigService
 
     public void UpdateConnection(UpdateConnectionDto dto)
     {
-        var json = File.ReadAllText(_filePath);
-        dynamic obj = JsonConvert.DeserializeObject(json);
+        try
+        {
+            SystemLogger.Info(
+                $"Updating database configuration. Server='{dto.Server}', Database='{dto.Database}'."
+            );
+            var json = File.ReadAllText(_filePath);
+            dynamic obj = JsonConvert.DeserializeObject(json);
 
-        string newConn =
-            $"Server={dto.Server};Database={dto.Database};User Id={dto.UserId};Password={dto.Password};Encrypt=True;TrustServerCertificate=True;";
+            string newConn =
+                $"Server={dto.Server};Database={dto.Database};User Id={dto.UserId};Password={dto.Password};Encrypt=True;TrustServerCertificate=True;";
 
-        obj["ConnectionStrings"]["DefaultConnection"] = newConn;
+            obj["ConnectionStrings"]["DefaultConnection"] = newConn;
 
-        string output = JsonConvert.SerializeObject(obj, Formatting.Indented);
-        File.WriteAllText(_filePath, output);
+            string output = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            File.WriteAllText(_filePath, output);
+            SystemLogger.Info(
+                "Application configuration updated successfully."
+            );
+        }
+        catch (Exception ex)
+        {
+            SystemLogger.Error(
+                "Failed to update application configuration.",
+                ex
+            );
+
+            throw;
+        }
     }
 }

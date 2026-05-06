@@ -286,11 +286,13 @@
 
             currentDo = doId;
 
-            await Api.post("/stockout/start", {
+            const res = await Api.post("/stockout/start", {
                 doId,
                 readerId,
                 ipAddress: ip
             });
+
+            if (!res?.ok) return;
 
             $("#processStatus")
                 .text("Scanning...")
@@ -298,6 +300,7 @@
                 .addClass("badge badge-warning");
 
             loadItems(doId);
+
             startPolling(doId);
         }
 

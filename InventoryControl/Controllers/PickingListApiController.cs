@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
-
+[InventoryLock]
 [ApiController]
 [Route("api/pickinglist")]
 public class PickingListApiController : ControllerBase

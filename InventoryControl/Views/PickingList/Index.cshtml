@@ -339,11 +339,6 @@
                 $("#createPickingList").modal("hide");
                 form.reset();
                 loadDO();
-
-            } else {
-
-                Alert.error("Failed to create picking list");
-
             }
         });
 
@@ -358,11 +353,6 @@
 
                 await Alert.success("Deleted successfully");
                 loadDO();
-
-            } else {
-
-                Alert.error("Failed to delete");
-
             }
         }
 

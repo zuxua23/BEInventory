@@ -16,16 +16,34 @@ public class StockInService : IStockInService
         _db = db;
     }
 
-    public async Task StockInAsync(StockInDto dto, string user)
+    public async Task StockInAsync(
+        StockInDto dto,
+        string user
+    )
     {
-        using var trx = await _db.Database.BeginTransactionAsync();
+        using var trx =
+            await _db.Database.BeginTransactionAsync();
 
         try
         {
-            if (dto.ScannedCodes == null || !dto.ScannedCodes.Any())
+            DailyFileLogger.Info(
+                $"Starting stock in process using scanner type '{dto.ScannerType}'.",
+                user
+            );
+
+            if (
+                dto.ScannedCodes == null ||
+                !dto.ScannedCodes.Any()
+            )
             {
-                DailyFileLogger.Warn("StockInAsync gagal: Tidak ada tag yang discan");
-                throw new Exception("Tidak ada tag yang discan");
+                DailyFileLogger.Warn(
+                    "Stock in failed because no tags were scanned.",
+                    user
+                );
+
+                throw new Exception(
+                    "No tags were scanned."
+                );
             }
 
             List<Tag> tags;
@@ -33,41 +51,75 @@ public class StockInService : IStockInService
             if (dto.ScannerType == "RFID")
             {
                 tags = await _db.Tags
-                    .Where(t => dto.ScannedCodes.Contains(t.EpcTag))
+                    .Where(t =>
+                        dto.ScannedCodes.Contains(t.EpcTag)
+                    )
                     .ToListAsync();
 
-                DailyFileLogger.Info($"StockInAsync menggunakan scanner RFID. Total scan: {dto.ScannedCodes.Count}");
+                DailyFileLogger.Info(
+                    $"RFID scanner detected {dto.ScannedCodes.Count} scanned tag(s).",
+                    user
+                );
             }
             else
             {
                 tags = await _db.Tags
-                    .Where(t => dto.ScannedCodes.Contains(t.TagId))
+                    .Where(t =>
+                        dto.ScannedCodes.Contains(t.TagId)
+                    )
                     .ToListAsync();
 
-                DailyFileLogger.Info($"StockInAsync menggunakan scanner QR. Total scan: {dto.ScannedCodes.Count}");
+                DailyFileLogger.Info(
+                    $"QR scanner detected {dto.ScannedCodes.Count} scanned tag(s).",
+                    user
+                );
             }
 
             if (!tags.Any())
             {
-                DailyFileLogger.Warn("StockInAsync gagal: Tag tidak ditemukan");
-                throw new Exception("Tag tidak ditemukan");
+                DailyFileLogger.Warn(
+                    "Stock in failed because no matching tags were found.",
+                    user
+                );
+
+                throw new Exception(
+                    "Tags not found."
+                );
             }
 
             var location = await _db.Locations
-                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == dto.LocId &&
+                    !x.IsDelete
+                );
 
             if (location == null)
             {
-                DailyFileLogger.Warn("StockInAsync gagal: Location WAREHOUSE tidak ditemukan");
-                throw new Exception("Location WAREHOUSE tidak ditemukan");
+                DailyFileLogger.Warn(
+                    $"Location with ID '{dto.LocId}' was not found.",
+                    user
+                );
+
+                throw new Exception(
+                    "Location not found."
+                );
             }
 
             foreach (var tag in tags)
             {
-                if (tag.Status != "STANDBY" && tag.Status != "PRINTED")
+                if (
+                    tag.Status != "STANDBY" &&
+                    tag.Status != "PRINTED"
+                )
                 {
-                    DailyFileLogger.Warn($"StockInAsync gagal: Tag {tag.TagId} tidak bisa di Stock In. Status: {tag.Status}");
-                    throw new Exception($"Tag {tag.TagId} tidak bisa di Stock In");
+                    DailyFileLogger.Warn(
+                        $"Stock in denied for TagId '{tag.TagId}'. Current status is '{tag.Status}'.",
+                        user
+                    );
+
+                    throw new Exception(
+                        $"Tag '{tag.TagId}' cannot be processed for stock in."
+                    );
                 }
 
                 tag.Status = "IN_STOCK";
@@ -75,7 +127,10 @@ public class StockInService : IStockInService
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
 
-                DailyFileLogger.Info($"Tag {tag.TagId} berhasil diubah status menjadi IN_STOCK");
+                DailyFileLogger.Info(
+                    $"Tag '{tag.TagId}' successfully updated to IN_STOCK.",
+                    user
+                );
             }
 
             var trxHeader = new Transaction
@@ -90,56 +145,116 @@ public class StockInService : IStockInService
 
             foreach (var tag in tags)
             {
-                _db.TransactionDetails.Add(new Transaction_Detail
-                {
-                    TrdId = Guid.NewGuid().ToString(),
-                    TrsId = trxHeader.TrsId,
-                    TagId = tag.Id,
-                    ItemId = tag.ItemId
-                });
+                _db.TransactionDetails.Add(
+                    new Transaction_Detail
+                    {
+                        TrdId = Guid.NewGuid().ToString(),
+                        TrsId = trxHeader.TrsId,
+                        TagId = tag.Id,
+                        ItemId = tag.ItemId
+                    }
+                );
 
-                _db.Histories.Add(new HistoryPrint
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    TagId = tag.Id,
-                    ItemId = tag.ItemId,
-                    Type = "STOCK_IN",
-                    Reference = trxHeader.TrsId,
-                    Action = "MOVE_TO_" + location.Name.Replace(" ", "_").ToUpper(),
-                    CreatedBy = user,
-                    CreatedAt = DateTime.UtcNow
-                });
+                _db.Histories.Add(
+                    new HistoryPrint
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        TagId = tag.Id,
+                        ItemId = tag.ItemId,
+                        Type = "STOCK_IN",
+                        Reference = trxHeader.TrsId,
+                        Action =
+                            "MOVE_TO_" +
+                            location.Name
+                                .Replace(" ", "_")
+                                .ToUpper(),
+                        CreatedBy = user,
+                        CreatedAt = DateTime.UtcNow
+                    }
+                );
             }
 
             await _db.SaveChangesAsync();
+
             await trx.CommitAsync();
 
-            DailyFileLogger.Info($"StockInAsync berhasil. TransactionId: {trxHeader.TrsId}, Total Tag: {tags.Count}");
+            DailyFileLogger.Info(
+                $"Stock in transaction completed successfully. " +
+                $"TransactionId='{trxHeader.TrsId}', " +
+                $"TotalTags='{tags.Count}'.",
+                user
+            );
+
+            DailyFileLogger.Audit(
+                action: "STOCK_IN",
+                entity: "TAG",
+                entityId: trxHeader.TrsId,
+                performedBy: user,
+                description:
+                    $"Processed stock in for {tags.Count} tag(s) to location '{location.Name}'."
+            );
         }
         catch (Exception ex)
         {
             await trx.RollbackAsync();
-            DailyFileLogger.Error("Error di StockInAsync.", ex);
+
+            DailyFileLogger.Error(
+                "An error occurred during stock in process.",
+                ex,
+                user
+            );
+
             throw;
         }
     }
 
-    public async Task<TagResponseDto> GetTagByCodeAsync(string code)
+    public async Task<TagResponseDto?> GetTagByCodeAsync(
+        string code
+    )
     {
-        var tag = await _db.Tags
-            .Include(t => t.Item)
-            .Include(t => t.Location)
-            .FirstOrDefaultAsync(t => t.EpcTag == code || t.TagId == code);
-
-
-        if (tag == null) return null;
-
-        return new TagResponseDto
+        try
         {
-            TagId = tag.TagId,
-            ItemName = tag.Item?.Name,
-            Status = tag.Status,
-            Location = tag.Location?.Name
-        };
+            DailyFileLogger.Info(
+                $"Retrieving tag information using code '{code}'."
+            );
+
+            var tag = await _db.Tags
+                .Include(t => t.Item)
+                .Include(t => t.Location)
+                .FirstOrDefaultAsync(t =>
+                    t.EpcTag == code ||
+                    t.TagId == code
+                );
+
+            if (tag == null)
+            {
+                DailyFileLogger.Warn(
+                    $"Tag with code '{code}' was not found."
+                );
+
+                return null;
+            }
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved tag with TagId '{tag.TagId}'."
+            );
+
+            return new TagResponseDto
+            {
+                TagId = tag.TagId,
+                ItemName = tag.Item?.Name,
+                Status = tag.Status,
+                Location = tag.Location?.Name
+            };
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                $"An error occurred while retrieving tag with code '{code}'.",
+                ex
+            );
+
+            throw;
+        }
     }
 }

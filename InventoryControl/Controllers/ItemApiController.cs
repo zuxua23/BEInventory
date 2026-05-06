@@ -5,6 +5,7 @@ using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Mvc;
 
+[InventoryLock]
 [ApiController]
 [Route("api/item")]
 public class ItemApiController : ControllerBase

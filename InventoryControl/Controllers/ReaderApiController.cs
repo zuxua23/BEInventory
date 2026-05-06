@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 
-
+[InventoryLock]
 [ApiController]
 [Route("api/reader")]
 public class ReaderApiController : ControllerBase

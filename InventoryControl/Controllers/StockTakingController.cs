@@ -1,11 +1,13 @@
 ﻿namespace InventoryControl.Controllers;
 
+using DocumentFormat.OpenXml.Packaging;
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text;
 
 [ApiController]
 [Route("api/stock-taking")]
@@ -101,6 +103,62 @@ public class StockTakingController : ControllerBase
     {
         var data = await _service.GetSystemDataAsync(sttId);
         return Ok(data);
+    }
+
+    [HttpGet("export/system/excel")]
+    public async Task<IActionResult> ExportSystemExcel(string sttId)
+    {
+        var file = await _service.ExportSystemExcelAsync(sttId);
+
+        var fileName = $"StockTaking-System-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+
+        return File(
+            file,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName
+        );
+    }
+
+    [HttpGet("export/system/csv")]
+    public async Task<IActionResult> ExportSystemCsv(string sttId)
+    {
+        var csv = await _service.ExportSystemCsvAsync(sttId);
+
+        var fileName = $"StockTaking-System-{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+        return File(
+            Encoding.UTF8.GetBytes(csv),
+            "text/csv",
+            fileName
+        );
+    }
+
+    [HttpGet("export/scan/excel")]
+    public async Task<IActionResult> ExportScanExcel(string sttId)
+    {
+        var file = await _service.ExportCompareExcelAsync(sttId);
+
+        var fileName = $"StockTaking-Scan-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+        return File(
+            file,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName
+        );
+    }
+
+    [HttpGet("export/scan/csv")]
+    public async Task<IActionResult> ExportScanCsv(string sttId)
+    {
+        var csv = await _service.ExportCompareCsvAsync(sttId);
+        var fileName = $"StockTaking-Scan-{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+        return File(
+            Encoding.UTF8.GetBytes(csv),
+            "text/csv",
+            fileName
+        );
     }
 
 }

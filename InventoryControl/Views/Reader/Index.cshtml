@@ -265,10 +265,6 @@
                 $("#locIdSelect").val(null).trigger("change");
                 loadReaders();
 
-            } else {
-
-                Alert.error("Failed to create reader");
-
             }
         });
 
@@ -283,11 +279,6 @@
 
                 await Alert.success("Reader deleted successfully");
                 loadReaders();
-
-            } else {
-
-                Alert.error("Failed to delete reader");
-
             }
         }
 

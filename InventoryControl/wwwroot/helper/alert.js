@@ -18,6 +18,14 @@
         });
     },
 
+    warning(msg) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Warning',
+            text: msg
+        });
+    },
+
     confirm(options) {
 
         if (typeof options === "string") {

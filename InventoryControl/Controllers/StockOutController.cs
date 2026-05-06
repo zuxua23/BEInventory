@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using static InventoryControl.Service.Implementations.StockOutService;
 
 namespace InventoryControl.Controllers;
+
+[InventoryLock]
 [ApiController]
 [Route("stockout")]
 public class StockOutController : ControllerBase

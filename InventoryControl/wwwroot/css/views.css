@@ -365,8 +365,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before {
 table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before {
     background-color: #1d4ed8 !important;
 }
-
-
+table.dataTable tbody td.dataTables_empty {
+    background-color: #f4f6f9 !important;
+}
 /* ===== MODERN TAB DESIGN ===== */
 .modern-tabs {
     display: flex;
