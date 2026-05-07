@@ -59,7 +59,9 @@ public class InventoryLockFilter
                         new
                         {
                             message =
-                                "System is locked during stock taking"
+                                "System is locked during stock taking",
+                                                type = "warning"
+
                         });
 
                 return;

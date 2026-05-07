@@ -144,13 +144,19 @@
 
             const res = await Api.put(`/api/item/${id}`, payload);
 
-            if (res && res.ok) {
+                if (res && res.ok) {
 
-                await Alert.success("Item updated successfully");
+                    await Alert.success("Item updated successfully");
 
-                window.location.href = "/item";
+                    window.location.href = "/item";
+
+                } else if (res && !res.ok) {
+                      if (res.errorData?.type === "warning")
+                      return;
+
+                    Alert.error("Failed to update item");
+                }        
             }
-        }
 
 
         $(document).keydown(function (e) {

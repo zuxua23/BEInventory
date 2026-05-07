@@ -245,8 +245,14 @@
 
                 await Alert.success("Picking List updated successfully");
                 window.location.href = "/pickinglist";
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to update picking list");
+            }        
             }
-        }
 
         $(document).keydown(function(e) {
             if (e.ctrlKey && e.key === 'Enter') updateDO();

@@ -26,25 +26,36 @@
 
             if (!res.ok) {
 
-                let message = "Request failed";
+                let errorData = {
+                    message: "Request failed",
+                    type: "error"
+                };
 
                 try {
 
                     const text = await res.text();
 
                     if (text) {
-
-                        const err = JSON.parse(text);
-
-                        if (err.message)
-                            message = err.message;
+                        errorData = JSON.parse(text);
                     }
 
                 } catch { }
 
-                Alert.warning(message);
+                switch (errorData.type) {
 
-                return res;
+                    case "warning":
+                        Alert.warning(errorData.message);
+                        break;
+
+                    default:
+                        Alert.error(errorData.message);
+                        break;
+                }
+                return {
+                    ok: false,
+                    status: res.status,
+                    errorData
+                };
             }
 
             return res;

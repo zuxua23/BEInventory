@@ -237,6 +237,12 @@
                 $("#createLocation").modal("hide");
                 e.target.reset();
                 loadLocations();
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create location");
             }
         });
 
@@ -253,6 +259,11 @@
 
                 await Alert.success("Location deleted successfully");
                 loadLocations();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to delete location");
             }
         }
 

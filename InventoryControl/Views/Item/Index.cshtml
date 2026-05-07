@@ -201,10 +201,18 @@
             const res = await Api.post("/api/item", payload);
 
             if (res && res.ok) {
+
                 await Alert.success("Item created successfully");
+
                 $("#createItem").modal("hide");
                 loadItems();
                 e.target.reset();
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create item");
             }
         });
 
@@ -217,9 +225,17 @@
             const res = await Api.delete(`/api/item/${id}`);
 
             if (res && res.ok) {
+
                 await Alert.success("Item deleted successfully");
                 loadItems();
+
+            } else if (res && !res.ok) {
+                 if (res.errorData?.type === "warning")
+                  return;
+                Alert.error("Failed to delete item");
             }
+
+
         }
 
         function generateItemId() {

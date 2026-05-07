@@ -94,4 +94,22 @@ public class StockOutController : ControllerBase
         var data = await _service.GetTagsAsync(doId);
         return Ok(data);
     }
+
+    [HttpGet("invalid-scan")]
+    public IActionResult GetInvalidScan()
+    {
+        if (StockOutService.LastInvalidTag == null)
+        {
+            return Ok(null);
+        }
+
+        var result = new
+        {
+            tagId = StockOutService.LastInvalidTag
+        };
+
+        StockOutService.LastInvalidTag = null;
+
+        return Ok(result);
+    }
 }

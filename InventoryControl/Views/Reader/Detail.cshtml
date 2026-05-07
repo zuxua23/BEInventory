@@ -182,6 +182,12 @@
                 await Alert.success("Reader updated successfully");
                 window.location.href = "/reader";
 
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to update reader");
             }
         }
 

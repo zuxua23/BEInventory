@@ -171,7 +171,12 @@
 
                 window.location.href = "/location";
 
-            } 
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to update location");
+            }
         }
 
         $(document).keydown(function (e) {

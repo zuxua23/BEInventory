@@ -339,6 +339,11 @@
                 $("#createPickingList").modal("hide");
                 form.reset();
                 loadDO();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create picking list");
             }
         });
 
@@ -353,6 +358,11 @@
 
                 await Alert.success("Deleted successfully");
                 loadDO();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to delete picking list");
             }
         }
 

@@ -353,8 +353,13 @@
                     resetForm();
                     loadTagTable();
 
-                }
 
+                } else if (res && !res.ok) {
+                      if (res.errorData?.type === "warning")
+                      return;
+
+                    Alert.error("Failed to print tags");
+                }
             } catch (err) {
 
                 Alert.error(err.message);

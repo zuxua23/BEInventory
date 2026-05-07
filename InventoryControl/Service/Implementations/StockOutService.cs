@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 public class StockOutService : IStockOutService
 {
     private readonly AppDBContext _db;
+    public static string? LastInvalidTag { get; set; }
 
     public StockOutService(AppDBContext db)
     {
@@ -251,6 +252,8 @@ public class StockOutService : IStockOutService
                     $"Tag '{tag.TagId}' is not reserved for DO '{dto.DoId}'.",
                     user
                 );
+
+                LastInvalidTag = tag.TagId;
 
                 return;
             }

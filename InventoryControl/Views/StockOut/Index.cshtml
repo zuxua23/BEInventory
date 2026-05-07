@@ -222,6 +222,9 @@
         let pollingInterval = null;
         let currentDo = null;
 
+        const invalidSound = new Audio('/sound/out.mp3');
+
+
         $(document).ready(function () {
             loadDODropdown();
             loadReaderDropdown();
@@ -286,13 +289,24 @@
 
             currentDo = doId;
 
-            const res = await Api.post("/stockout/start", {
-                doId,
-                readerId,
-                ipAddress: ip
-            });
+        const res = await Api.post("/stockout/start", {
+            doId,
+            readerId,
+            ipAddress: ip
+        });
 
-            if (!res?.ok) return;
+        if (res && res.ok) {
+
+            await Alert.success("Stock out scanning started successfully");
+
+        } else if (res && !res.ok) {
+
+            if (res.errorData?.type === "warning")
+                return;
+
+            Alert.error("Failed to start stock out scanning");
+            return;
+        }
 
             $("#processStatus")
                 .text("Scanning...")
@@ -308,8 +322,20 @@
 
             const readerId = $("#rdrIdSelect").val();
 
-            await Api.post(`/stockout/stop?readerId=${readerId}`);
+            const res = await Api.post(`/stockout/stop?readerId=${readerId}`);
 
+            if (res && res.ok) {
+
+                await Alert.success("Stock out scanning stopped");
+
+            } else if (res && !res.ok) {
+
+                if (res.errorData?.type === "warning")
+                    return;
+
+                Alert.error("Failed to stop stock out scanning");
+                return;
+            }
             clearInterval(pollingInterval);
 
             $("#scanProgress").css("width", "0%");
@@ -321,27 +347,42 @@
                 .addClass("badge badge-secondary");
         }
 
-        function startPolling(doId) {
+    function startPolling(doId) {
 
-            if (pollingInterval) clearInterval(pollingInterval);
+    if (pollingInterval) clearInterval(pollingInterval);
 
-            pollingInterval = setInterval(async () => {
-                try {
+    pollingInterval = setInterval(async () => {
 
-                    const items = await Api.get(`/stockout/items?doId=${doId}`);
-                    if (!items) return;
+        try {
 
-                    updateItemProgress(items);
-                    updateGlobalProgress(items);
+            const invalid = await Api.get('/stockout/invalid-scan');
 
-                    await loadTags();
+            if (invalid?.tagId) {
 
-                } catch (err) {
-                    console.error(err);
-                }
+                invalidSound.pause();
+                invalidSound.currentTime = 0;
 
-            }, 1000);
+                await invalidSound.play();
+
+                Alert.error(`Invalid Tag : ${invalid.tagId}`);
+            }
+
+            const items = await Api.get(`/stockout/items?doId=${doId}`);
+
+            if (!items) return;
+
+            updateItemProgress(items);
+            updateGlobalProgress(items);
+
+            await loadTags();
+
+        } catch (err) {
+
+            console.error(err);
         }
+
+    }, 1000);
+}
 
         function updateItemProgress(items) {
 

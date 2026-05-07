@@ -265,6 +265,12 @@
                 $("#locIdSelect").val(null).trigger("change");
                 loadReaders();
 
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create reader");
             }
         });
 
@@ -279,7 +285,12 @@
 
                 await Alert.success("Reader deleted successfully");
                 loadReaders();
-            }
+            } else if (res && !res.ok) {
+                    if (res.errorData?.type === "warning")
+                    return;
+    
+                    Alert.error("Failed to delete reader");
+                }
         }
 
         $('#createReader').on('shown.bs.modal', function () {
