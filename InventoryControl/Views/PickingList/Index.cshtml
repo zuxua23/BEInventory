@@ -274,7 +274,7 @@
                         <select class="form-control select2 item-select" required></select>
                     </div>
                     <div class="col">
-                        <input class="form-control qty" placeholder="Qty" type="number">
+                     <input class="form-control qty" type="number" placeholder="Qty" min="1" step="1" inputmode="numeric">
                     </div>
                     <div class="col-2 text-center">
                         <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -301,8 +301,11 @@
                 const itemId = $(this).find(".item-select").val();
                 const qty = parseInt($(this).find(".qty").val());
 
-                if (!itemId || !qty || qty <= 0) {
-                    isValid = false;
+                if (!itemId) return;
+
+                if (!qty || qty <= 0) {
+                    Alert.error("Qty must be greater than 0");
+                    throw new Error("Invalid qty");
                 }
 
                 details.push({

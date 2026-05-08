@@ -174,7 +174,7 @@
 
 .dash-main-grid {
     display: grid;
-    grid-template-columns: 2.4fr 2.6fr;
+    grid-template-columns: 2.3fr 2.7fr;
     gap: 24px;
     align-items: stretch;
 }
@@ -222,6 +222,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
+}
+.dash-card-recent {
+    height: 460px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .dash-card-dot {
@@ -274,6 +280,13 @@
     max-height: 420px;
 }
 
+.dash-table-fixed {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+
+}
+
 .dash-table {
     width: 100%;
     border-collapse: collapse;
@@ -287,6 +300,9 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         background: #f8fafc;
+        position: sticky;
+        top: 0;
+        z-index: 2;
     }
 
     .dash-table tbody td {
@@ -311,7 +327,10 @@
     font-size: 13px;
     padding: 24px !important;
 }
-
+.dash-table-fixed-small {
+    height: 320px;
+    overflow-y: auto;
+}
 /* =========================================================
    ITEM DETAIL
 ========================================================= */
@@ -323,7 +342,7 @@
 }
 
 .dash-item-name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: #1e293b;
 }
@@ -333,22 +352,25 @@
     color: #94a3b8;
 }
 
-.dash-stock-number {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
-}
 
 /* =========================================================
    STOCK BADGE
 ========================================================= */
+.dash-stock-number {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    display: inline-block;
+    min-width: 40px;
+    font-variant-numeric: tabular-nums;
+}
 
 .dash-stock-critical,
 .dash-stock-low,
 .dash-stock-good {
     padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 14px;
+    border-radius: 99px;
+    font-size: 12px;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
@@ -368,6 +390,9 @@
 .dash-stock-good {
     background: #dcfce7;
     color: #166534;
+}
+.dash-stock-col {
+    text-align: center;
 }
 
 /* =========================================================
@@ -402,17 +427,17 @@
 .dash-status-label {
     font-size: 14px;
     color: #64748b;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .dash-status-time {
-    font-size: 13px;
+    font-size: 14px;
     color: #16a34a;
     font-weight: 600;
 }
 
 .dash-status-online {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: #16a34a;
     display: flex;
@@ -477,9 +502,10 @@
 
 .dash-users-label {
     font-size: 12px;
-    color: #94a3b8;
+    color: #4f6ef7;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 700;
 }
 
 .dash-users-trend {
@@ -488,6 +514,35 @@
     font-weight: 700;
 }
 
+/* =========================================================
+   activity
+========================================================= */
+.dash-activity-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dash-activity-action {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.dash-activity-entity {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.dash-activity-time {
+    white-space: nowrap;
+}
+
+.dash-do-num {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4f6ef7;
+}
 /* =========================================================
    CHART
 ========================================================= */
@@ -500,7 +555,7 @@
     position: relative;
     height: 420px;
     padding: 20px;
-    margin-top:20px;
+    margin-top:8px;
 }
 
 .dash-chart-placeholder {
@@ -518,7 +573,7 @@
     }
 
 .dash-stock-total {
-    margin-top: 68px;
+    margin-top: 24px;
     padding: 16px;
     border-radius: 16px;
     background: #f8fafc;

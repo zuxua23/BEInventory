@@ -5,6 +5,7 @@ namespace InventoryControl.Service.Interfaces;
 
 public interface IStockTakingService
 {
+    Task<List<Location>> GetLocAsync();
     Task<string> CreateAsync(StockTakingCreateDto dto, string user);
     Task<List<Tag>> GetStockDataAsync();
     Task ScanAsync(StockTakingScanDto dto);

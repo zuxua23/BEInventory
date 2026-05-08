@@ -105,8 +105,7 @@ public class ItemService : IItemService
             );
 
             var lastItem = await _db.Items
-                 //.IgnoreQueryFilters()
-                 .Where(x => !x.IsDelete)
+                 .IgnoreQueryFilters()
                 .OrderByDescending(x => x.ItmId)
                 .FirstOrDefaultAsync();
 

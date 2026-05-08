@@ -287,8 +287,10 @@
                 $("#updatePassword").modal("hide");
 
                 await Alert.success("Password updated");
-                window.location.href = "/user";
+                $("#newPassword").val("");
 
+                loadUser();
+                $("#detailContainer").empty();
             } else {
 
                 Alert.error("Failed to update password");
@@ -391,11 +393,11 @@
 
             if (res && res.ok) {
 
-                await Alert.success("Role updated successfully");
 
                 $("#roleUpdate").modal("hide");
-                window.location.href = "/user";
-
+                await Alert.success("Role updated successfully");
+                loadUser();
+                $("#detailContainer").empty();
             } else {
 
                 Alert.error("Failed to update role");

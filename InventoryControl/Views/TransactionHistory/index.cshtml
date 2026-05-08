@@ -145,14 +145,14 @@
         let table;
         let currentTxType = "";
 
-        async function fetchTransactions(fromDate, toDate, txType) {
+        async function fetchTransactions(fromDate, toDate, txType, keyword = "") {
 
             const params = new URLSearchParams();
 
             if (fromDate) params.append("fromDate", fromDate);
             if (toDate) params.append("toDate", toDate);
             if (txType) params.append("txType", txType);
-
+                if (keyword) params.append("keyword", keyword);
             const data = await Api.get(`/api/transaction/history?${params}`);
 
             if (!data) {
@@ -187,17 +187,36 @@
                 currentTxType = "";
                 loadData();
             });
+                    $("#filterFromDate").on("change", function () {
+
+                const fromDate = $(this).val();
+
+                $("#filterToDate").attr("min", fromDate);
+
+                const toDate = $("#filterToDate").val();
+
+                if (toDate && toDate < fromDate) {
+
+                    $("#filterToDate").val(fromDate);
+
+                    Alert.error("To Date cannot be less than From Date");
+                }
+            });
         });
 
         async function loadData() {
 
             const fromDate = $("#filterFromDate").val();
             const toDate = $("#filterToDate").val();
-
+                const keyword = table ? table.search() : "";
+                    if (fromDate && toDate && toDate < fromDate) {
+                  return Alert.error("To Date cannot be less than From Date");
+             }
             const data = await fetchTransactions(fromDate, toDate, currentTxType);
 
             table = Table.init("#datatablesIndex", {
                 data: data,
+                searching: false,
                 columns: [
                     Table.rowNumber(),
 
@@ -234,10 +253,19 @@
 
             const fromDate = $("#filterFromDate").val();
             const toDate = $("#filterToDate").val();
+            const keyword = table.search();
 
-            if (fromDate) params.append("fromDate", fromDate);
-            if (toDate) params.append("toDate", toDate);
-            if (currentTxType) params.append("txType", currentTxType);
+            if (fromDate)
+                params.append("fromDate", fromDate);
+
+            if (toDate)
+                params.append("toDate", toDate);
+
+            if (currentTxType)
+                params.append("txType", currentTxType);
+
+            if (keyword)
+                params.append("keyword", keyword);
 
             return `/api/transaction/export/${type}?${params}`;
         }

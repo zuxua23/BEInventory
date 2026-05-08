@@ -1,0 +1,99 @@
+﻿
+/* Main Navbar */
+.navbar-light-industrial {
+    background: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08) !important;
+    padding: 0.5rem 1rem !important;
+}
+
+/* Nav Links */
+.navbar-light-industrial .nav-link {
+    color: #64748b !important;
+    font-weight: 500 !important;
+    padding: 0.6rem 1rem !important;
+    border-radius: 10px !important;
+    transition: all 0.25s ease !important;
+    margin: 0 0.25rem !important;
+}
+
+    .navbar-light-industrial .nav-link:hover {
+        background: rgba(255,255,255,1) !important;
+        color: #1e293b !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        transform: translateY(-1px) !important;
+    }
+
+/* Icons */
+.navbar-light-industrial .nav-icon,
+.navbar-light-industrial i {
+    font-size: 1.1rem !important;
+    color: #64748b !important;
+    transition: color 0.25s ease !important;
+}
+
+.navbar-light-industrial .nav-link:hover i {
+    color: #1e293b !important;
+}
+
+
+/* Push Menu Button */
+[data-widget="pushmenu"] .fas.fa-bars {
+    font-size: 1.3rem !important;
+    color: #475569 !important;
+}
+
+.stocktaking-indicator {
+    display: flex;
+    align-items: center;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+
+    .stocktaking-indicator.active {
+        background: rgba(34,197,94,0.12);
+        color: #15803d;
+        border-color: rgba(34,197,94,0.25);
+        animation: pulseStock 2s infinite;
+    }
+
+@@keyframes pulseStock {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34,197,94,0.35);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(34,197,94,0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34,197,94,0);
+    }
+}
+
+@media (max-width: 768px) {
+    .stocktaking-indicator {
+        font-size: 0.72rem;
+        padding: 0.35rem 0.7rem;
+    }
+}
+
+.stocktaking-indicator.active i {
+    color: #16a34a !important;
+}
+
+.stocktaking-indicator.inactive {
+    background: rgba(148,163,184,0.12);
+    color: #64748b;
+    border-color: rgba(148,163,184,0.2);
+}
+
+    .stocktaking-indicator.inactive i {
+        color: #94a3b8 !important;
+    }
+

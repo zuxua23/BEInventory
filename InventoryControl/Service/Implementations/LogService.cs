@@ -29,7 +29,7 @@ public class LogService : ILogService
             return new List<ActivityLogDto>();
         }
 
-        var lines = File.ReadAllLines(filePath)
+        var lines = File.ReadLines(filePath)
             .Reverse()
             .Take(take)
             .ToList();
@@ -44,9 +44,12 @@ public class LogService : ILogService
                 var dto =
                     new ActivityLogDto();
 
-                dto.Time =
+                var rawTime =
                     line.Substring(0, 23);
 
+                dto.Time =
+                    DateTime.Parse(rawTime)
+                        .ToString("HH:mm:ss");
                 dto.Action =
                     Extract(line, "Action='", "'");
 

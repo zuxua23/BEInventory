@@ -285,7 +285,7 @@
 
         async function loadLocationDropdown() {
 
-            const data = await Api.get("/api/location");
+            const data = await Api.get("/api/stock-taking/loc");
             if (!data) return Alert.error("Failed to load locations");
 
             let options = `<option></option>`;

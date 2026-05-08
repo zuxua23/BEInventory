@@ -25,6 +25,7 @@ public class PickingListService : IPickingListService
             );
 
             var result = await _db.DOs
+                .Where(x => !x.IsDelete)
                 .Include(x => x.Details)
                 .ThenInclude(d => d.Item)
                 .IgnoreQueryFilters()
@@ -257,7 +258,7 @@ public class PickingListService : IPickingListService
                 action: "UPDATE",
                 entity: "DELIVERY_ORDER",
                 entityId: doEntity.DoNumber,
-                performedBy: "SYSTEM",
+                performedBy: doEntity.CreatedBy,
                 description:
                     $"Updated delivery order from Number='{oldDoNumber}' to Number='{dto.DoNumber}'."
             );
@@ -307,7 +308,7 @@ public class PickingListService : IPickingListService
                 action: "DELETE",
                 entity: "DELIVERY_ORDER",
                 entityId: doData.DoNumber,
-                performedBy: "SYSTEM",
+                performedBy: doData.CreatedBy,
                 description:
                     $"Soft deleted delivery order '{doData.DoNumber}'."
             );

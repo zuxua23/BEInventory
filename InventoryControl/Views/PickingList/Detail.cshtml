@@ -142,7 +142,7 @@
             });
         }
 
-        async function loadItemDropdown(selectedId = "") {
+        async function loadItemDropdown(selectElement, selectedId = "") {
 
             const data = await Api.get("/api/item");
             if (!data) return;
@@ -150,27 +150,27 @@
             let options = `<option value="">-- Select Item --</option>`;
 
             data.forEach(item => {
-                options += `<option value="${item.id}">${item.itemName}</option>`;
+                options += `
+                    <option value="${item.id}">
+                        ${item.itemName}
+                    </option>
+                `;
             });
 
-            let lastSelect = $(".item-select").last();
-            lastSelect.html(options);
+            $(selectElement).html(options);
 
             if (selectedId) {
-                lastSelect.val(selectedId);
+                $(selectElement).val(selectedId);
             }
 
-            initSelect2();
-        }
-
-        function initSelect2(parent = document) {
-            $(parent).find('.select2').select2({
+            $(selectElement).select2({
                 theme: 'bootstrap4',
                 placeholder: "Search...",
                 width: '100%',
                 dropdownParent: $('body')
             });
         }
+
 
         $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
@@ -195,7 +195,7 @@
                         <select class="form-control select2 item-select"></select>
                     </div>
                     <div class="col">
-                        <input class="form-control qty" value="${qty}" type="number">
+                     <input class="form-control qty"  value="${qty}" type="number" min="1" step="1" inputmode="numeric">
                     </div>
                     <div class="col-2 text-center">
                         <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -205,8 +205,9 @@
                 </div>
             `);
 
-            loadItemDropdown(selectedId);
-            initSelect2($("#details"));
+                const select = $("#details .item-select").last();
+
+                loadItemDropdown(select, selectedId);
         }
 
         async function updateDO() {
@@ -222,8 +223,12 @@
                 const itemId = $(this).find(".item-select").val();
                 const qty = parseInt($(this).find(".qty").val());
 
-                if (!itemId || !qty || qty <= 0) return;
+                if (!itemId) return;
 
+                if (!qty || qty <= 0) {
+                    Alert.error("Qty must be greater than 0");
+                    throw new Error("Invalid qty");
+                }
                 details.push({
                     itemId,
                     qtyRequired: qty

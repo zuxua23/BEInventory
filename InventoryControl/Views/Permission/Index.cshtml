@@ -1,4 +1,4 @@
-@using InventoryControl.Utility
+﻿@using InventoryControl.Utility
 
 @{
     var canCreate = PermissionHelper.HasPermission(Context, "PERMISSION_CREATE");
@@ -114,7 +114,7 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label><i class="fas fa-hashtag mr-2"></i>Role Code</label>
+                                    <label><i class="fas fa-hashtag mr-2"></i>Role Code <span class="text-danger">*</span></label>
                                     <input type="text" id="roleCode" name="roleCode" class="form-control" required placeholder="Enter role code...">
                                 </div>
                             </div>
@@ -137,12 +137,9 @@
                                     </div>
                                     <div class="d-flex align-items-center">
                                         <div class="custom-control custom-checkbox mr-3">
-                                            <input type="checkbox" class="custom-control-input" id="selectAllCheck" onchange="toggleSelectAll(this.checked)">
+                                            <input type="checkbox" class="custom-control-input" id="selectAllCheck" onchange="PermissionComponent.toggleSelectAll(this.checked)">
                                             <label class="custom-control-label font-weight-bold" for="selectAllCheck">Select All</label>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
-                                            <i class="fas fa-times mr-1"></i>Deselect All
-                                        </button>
                                     </div>
                                 </div>
                             </div>

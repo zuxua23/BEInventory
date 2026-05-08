@@ -21,7 +21,7 @@ public class LogsController : ControllerBase
     public IActionResult GetRecentActivity()
     {
         var result =
-            _logService.GetRecentActivities(5);
+            _logService.GetRecentActivities(10);
 
         return Ok(result);
     }

@@ -41,6 +41,14 @@ public class StockTakingController : ControllerBase
         }
     }
 
+    [HttpGet("loc")]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetLocData()
+    {
+        var data = await _service.GetLocAsync();
+        return Ok(data);
+    }
+
     [HttpGet]
     [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetStockData()

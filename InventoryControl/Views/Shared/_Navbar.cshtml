@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true">
+
 <!-- Navbar - Light Industrial Theme -->
 <nav class="main-header navbar navbar-expand navbar-light navbar-light-industrial">
     <!-- Left navbar links -->
@@ -14,7 +16,14 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
-
+        <!-- Stock Taking Status -->
+        <li class="nav-item mr-2"
+            id="stockTakingWrapper"
+            style="display:none;">
+            <div id="stockTakingStatus"
+                 class="stocktaking-indicator inactive d-flex align-items-center">
+            </div>
+        </li>
         <!-- Fullscreen -->
         <li class="nav-item">
             <a class="nav-link" data-widget="fullscreen" href="#" role="button" title="Fullscreen">
@@ -23,52 +32,69 @@
         </li>
     </ul>
 </nav>
+<script src="~/helper/api.js"></script>
+<script src="~/helper/alert.js"></script>
 
-<style>
+<script>
 
+    document.addEventListener("DOMContentLoaded", function () {
 
-    /* Main Navbar */
-    .navbar-light-industrial {
-        background: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%) !important;
-        backdrop-filter: blur(20px) !important;
-        border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.08) !important;
-        padding: 0.5rem 1rem !important;
-    }
+        loadStockTakingStatus();
 
-        /* Nav Links */
-        .navbar-light-industrial .nav-link {
-            color: #64748b !important;
-            font-weight: 500 !important;
-            padding: 0.6rem 1rem !important;
-            border-radius: 10px !important;
-            transition: all 0.25s ease !important;
-            margin: 0 0.25rem !important;
-        }
+        setInterval(loadStockTakingStatus, 10000);
+    });
+      async function loadStockTakingStatus() {
 
-            .navbar-light-industrial .nav-link:hover {
-                background: rgba(255,255,255,1) !important;
-                color: #1e293b !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-                transform: translateY(-1px) !important;
+        try {
+
+            const path = window.location.pathname
+                .toLowerCase();
+
+            if (path.includes("/stocktaking")) {
+                return;
             }
 
-        /* Icons */
-        .navbar-light-industrial .nav-icon,
-        .navbar-light-industrial i {
-            font-size: 1.1rem !important;
-            color: #64748b !important;
-            transition: color 0.25s ease !important;
+            const data = await Api.get(
+                "/api/stock-taking/active"
+            );
+
+            const wrapper = document.getElementById(
+                "stockTakingWrapper"
+            );
+
+            const el = document.getElementById(
+                "stockTakingStatus"
+            );
+
+            if (!wrapper || !el) return;
+
+            if (data && data.status === "OPEN") {
+
+                wrapper.style.display = "flex";
+
+                el.classList.remove("inactive");
+                el.classList.add("active");
+
+                el.innerHTML = `
+                    <i class="fas fa-circle mr-1"></i>
+                    Stock Taking Active
+                `;
+
+            } else {
+
+                wrapper.style.display = "none";
+            }
+
+        } catch {
+
+            const wrapper = document.getElementById(
+                "stockTakingWrapper"
+            );
+
+            if (wrapper) {
+                wrapper.style.display = "none";
+            }
         }
-
-        .navbar-light-industrial .nav-link:hover i {
-            color: #1e293b !important;
-        }
-
-
-    /* Push Menu Button */
-    [data-widget="pushmenu"] .fas.fa-bars {
-        font-size: 1.3rem !important;
-        color: #475569 !important;
     }
-</style>
+
+</script>

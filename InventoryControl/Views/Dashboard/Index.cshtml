@@ -75,30 +75,53 @@
 
                     <div class="dash-main-grid">
                         <div class="dash-left-col">
-                            <div class="dash-card dash-card-full-height">
-                                <div class="dash-card-header">
+
+                            <div class="dash-card dash-card-recent">
+
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+
                                     <div class="dash-card-header-left">
 
-                                    <span class="dash-card-dot dash-card-dot-gray"></span>
-                                    <span class="dash-card-title">Recent System Activity</span>
+                                        <span class="dash-card-dot dash-card-dot-gray"></span>
+
+                                        <span class="dash-card-title">
+                                            Recent System Activity
+                                        </span>
+
+                                    </div>
+
+                                    <span class="dash-card-subtitle">
+                                        Live operational activity feed
+                                    </span>
+
                                 </div>
-                                </div>
-                                <div class="dash-table-wrap">
-                                    <table class="dash-table">
+
+                                <div class="dash-table-wrap dash-table-fixed">
+
+                                    <table class="dash-table dash-table-sm">
+
                                         <thead>
                                             <tr>
                                                 <th>Time</th>
                                                 <th>Activity</th>
-                                                <th>User</th>
+                                                <th class="dash-stock-col">User</th>
                                             </tr>
                                         </thead>
+
                                         <tbody id="recentActivity">
+
                                             <tr>
-                                                <td colspan="3" class="dash-table-empty">Loading…</td>
+                                                <td colspan="3" class="dash-table-empty">
+                                                    Loading recent activity...
+                                                </td>
                                             </tr>
+
                                         </tbody>
+
                                     </table>
+
                                 </div>
+
                             </div>
 
                             <div class="dash-card mt-3">
@@ -117,15 +140,14 @@
                                         </span>
                                 </div>
 
-                                <div class="dash-table-wrap">
-
+                                <div class="dash-table-wrap dash-table-fixed-small">
                                     <table class="dash-table dash-table-sm">
 
                                         <thead>
                                             <tr>
                                                 <th>Item</th>
-                                                <th>Available</th>
-                                                <th>Condition</th>
+                                                <th class="dash-stock-col">Available</th>
+                                                <th class="dash-stock-col">Condition</th>
                                             </tr>
                                         </thead>
 
@@ -341,68 +363,68 @@
                 $("#lastSyncStatus")
                     .text(syncTime);
 
-                let activityHtml = "";
 
-                if (activityData.length === 0) {
+        let activityHtml = "";
 
-                    activityHtml = `
-                        <tr>
-                            <td colspan="3"
-                                class="dash-table-empty">
-                                No recent activity found.
-                            </td>
-                        </tr>
-                    `;
+        if (activityData.length === 0) {
 
-                } else {
+            activityHtml = `
+                <tr>
+                    <td colspan="3"
+                        class="dash-table-empty">
+                        No recent activity found.
+                    </td>
+                </tr>
+            `;
 
-                    activityData.forEach(a => {
+        } else {
 
-                        let badgeClass =
-                            "dash-badge-prep";
+            activityData.forEach(a => {
 
-                        if (a.action.includes("DELETE")) {
-                            badgeClass =
-                                "dash-badge-draft";
-                        }
+                let badgeClass =
+                    "dash-badge-prep";
 
-                        if (a.action.includes("LOGIN")) {
-                            badgeClass =
-                                "dash-badge-done";
-                        }
-
-                        activityHtml += `
-                            <tr>
-                                <td>
-                                    <span class="dash-do-num">
-                                        ${a.time}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-semibold">
-                                            ${a.action}
-                                        </span>
-
-                                        <small class="text-muted">
-                                            ${a.entity}
-                                        </small>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <span class="dash-badge ${badgeClass}">
-                                        ${a.user}
-                                    </span>
-                                </td>
-                            </tr>
-                        `;
-                    });
+                if (a.action.includes("DELETE")) {
+                    badgeClass =
+                        "dash-badge-draft";
                 }
 
-                $("#recentActivity")
-                    .html(activityHtml);
+                if (a.action.includes("LOGIN")) {
+                    badgeClass =
+                        "dash-badge-done";
+                }
+
+                activityHtml += `
+                    <tr>
+                        <td>
+                            <div class="dash-activity-time">
+                                <span class="dash-do-num">
+                                    ${a.time}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dash-activity-cell">
+                                <div class="dash-activity-action">
+                                    ${a.action}
+                                </div>
+                                <div class="dash-activity-entity">
+                                    ${a.entity}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="dash-stock-col">
+                            <span class="dash-badge ${badgeClass}">
+                                ${a.user}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        $("#recentActivity")
+            .html(activityHtml);
 
             } catch (e) {
 
@@ -488,13 +510,13 @@
                                 </div>
                             </td>
 
-                            <td>
+                            <td class="dash-stock-col">
                                 <span class="dash-stock-number">
                                     ${item.totalStock}
                                 </span>
                             </td>
 
-                            <td>
+                            <td class="dash-stock-col">
                                 <span class="${badgeClass}">
                                     ${status}
                                 </span>
@@ -652,7 +674,7 @@
                     layout: {
                         padding: {
                             top: 10,
-                            right: 20,
+                            right: 50,
                             left: 10,
                             bottom: 10
                         }

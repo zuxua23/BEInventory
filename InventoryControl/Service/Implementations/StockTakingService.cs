@@ -17,6 +17,40 @@ public class StockTakingService : IStockTakingService
     {
         _db = db;
     }
+    public async Task<List<Location>> GetLocAsync()
+    {
+        try
+        {
+            DailyFileLogger.Info(
+                "Retrieving active locations with IN_STOCK tags."
+            );
+
+            var result = await _db.Locations
+                .Where(location =>
+                    !location.IsDelete &&
+                    _db.Tags.Any(tag =>
+                        tag.LocationId == location.Id &&
+                        tag.Status == "IN_STOCK"
+                    )
+                )
+                .ToListAsync();
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved {result.Count} location(s) containing IN_STOCK tags."
+            );
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                "An error occurred while retrieving locations with IN_STOCK tags.",
+                ex
+            );
+
+            throw;
+        }
+    }
 
     public async Task<object?> GetActiveAsync()
     {

@@ -20,7 +20,8 @@ public class TransactionService : ITransactionService
     public async Task<List<TransactionHistoryDto>> GetHistory(
         DateTime? fromDate,
         DateTime? toDate,
-        string? txType
+        string? txType,
+        string? keyword
     )
     {
         try
@@ -31,7 +32,14 @@ public class TransactionService : ITransactionService
                 $"ToDate='{toDate}', " +
                 $"TransactionType='{txType ?? "ALL"}'."
             );
-
+            if (fromDate.HasValue &&
+                toDate.HasValue &&
+                toDate < fromDate)
+            {
+                throw new Exception(
+                    "To Date cannot be less than From Date"
+                );
+            }
             var query =
                 from t in _db.Transactions
 
@@ -106,6 +114,27 @@ public class TransactionService : ITransactionService
                     x.TxType == txType
                 );
             }
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                keyword = keyword.ToLower();
+
+                query = query.Where(x =>
+                    (x.ItemName != null &&
+                     x.ItemName.ToLower().Contains(keyword))
+
+                    || (x.TagId != null &&
+                        x.TagId.ToLower().Contains(keyword))
+
+                    || (x.DoNumber != null &&
+                        x.DoNumber.ToLower().Contains(keyword))
+
+                    || (x.LocationName != null &&
+                        x.LocationName.ToLower().Contains(keyword))
+
+                    || (x.ReaderName != null &&
+                        x.ReaderName.ToLower().Contains(keyword))
+                );
+            }
 
             var result = await query
                 .OrderByDescending(x => x.TxDate)
@@ -131,7 +160,8 @@ public class TransactionService : ITransactionService
     public async Task<byte[]> ExportExcel(
         DateTime? fromDate,
         DateTime? toDate,
-        string? txType
+        string? txType,
+        string? keyword
     )
     {
         try
@@ -143,7 +173,8 @@ public class TransactionService : ITransactionService
             var data = await GetHistory(
                 fromDate,
                 toDate,
-                txType
+                txType,
+                keyword
             );
 
             using var wb = new XLWorkbook();
@@ -194,7 +225,7 @@ public class TransactionService : ITransactionService
             {
                 ws.Cell(row, 1).Value =
                     d.TxDate?.ToString(
-                        "yyyy-MM-dd"
+                        "dd/MM/yyyy"
                     ) ?? "-";
 
                 ws.Cell(row, 2).Value =
@@ -282,7 +313,8 @@ public class TransactionService : ITransactionService
     public async Task<byte[]> ExportCsv(
         DateTime? fromDate,
         DateTime? toDate,
-        string? txType
+        string? txType,
+        string? keyword
     )
     {
         try
@@ -294,7 +326,8 @@ public class TransactionService : ITransactionService
             var data = await GetHistory(
                 fromDate,
                 toDate,
-                txType
+                txType,
+                keyword
             );
 
             var sb = new StringBuilder();
@@ -309,7 +342,7 @@ public class TransactionService : ITransactionService
             foreach (var d in data)
             {
                 sb.AppendLine(
-                    $"{d.TxDate:yyyy-MM-dd}," +
+                    $"{d.TxDate:dd/MM/yyyy}," +
                     $"{Escape(d.TxType)}," +
                     $"{Escape(d.DoNumber)}," +
                     $"{Escape(d.ReaderName)}," +
