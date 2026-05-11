@@ -33,28 +33,32 @@
             const opsHtml = mod.permissions.map(op => {
 
                 const id = `perm_${mod.moduleKey}_${op}`;
+
                 const checked =
                     existing[mod.moduleKey]?.includes(op)
                         ? "checked"
                         : "";
 
                 return `
-    <div class="custom-control custom-checkbox">
-        <input type="checkbox"
-            class="custom-control-input op-check"
-            id="${id}"
-            data-module="${mod.moduleKey}"
-            data-op="${op}"
-            ${checked}
-            onchange="
+                    <label class="permission-item">
+
+                        <input type="checkbox"
+                            class="op-check"
+                            id="${id}"
+                            data-module="${mod.moduleKey}"
+                            data-op="${op}"
+                            ${checked}
+                            onchange="
                                 PermissionComponent.syncModule('${mod.moduleKey}');
                                 PermissionComponent.syncSelectAll();
                             ">
-            <label class="custom-control-label" for="${id}">
-                ${op}
-            </label>
-        </div>
-`;
+
+                        <span class="permission-pill">
+                            ${formatPermission(op)}
+                        </span>
+
+                    </label>
+                `;
             }).join("");
 
             const allChecked = mod.permissions.every(op =>
@@ -62,7 +66,7 @@
             );
 
             col.innerHTML = `
-            <div class="permission-module-card">
+            <div class="permission-module-card shadow-sm">
                     <div class="permission-module-header">
 
                         <div class="custom-control custom-checkbox mb-0">
@@ -180,6 +184,13 @@
         return document.querySelectorAll(
             ".op-check:checked"
         ).length;
+    }
+    function formatPermission(text) {
+
+        return text
+            .replaceAll("_", " ")
+            .toLowerCase()
+            .replace(/\b\w/g, l => l.toUpperCase());
     }
 
     return {

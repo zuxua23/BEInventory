@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
+
 [InventoryLock]
 [ApiController]
 [Route("api/pickinglist")]
@@ -44,7 +45,7 @@ public class PickingListApiController : ControllerBase
         if (request.Details == null || !request.Details.Any())
             return BadRequest("Detail DO tidak boleh kosong");
 
-        var createdBy = User.FindFirst(ClaimTypes.Name)?.Value ?? "system";
+        var createdBy = HttpContext.Session.GetString("UserId") ?? "system";
 
         await _service.CreateAsync(request, createdBy);
 
@@ -55,22 +56,19 @@ public class PickingListApiController : ControllerBase
     [AuthorizePermissionHybrid("PICKINGLIST_UPDATE")]
     public async Task<IActionResult> Update(string id, [FromBody] PickingListDTO dto)
     {
-        await _service.UpdateAsync(id, dto);
+        var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.UpdateAsync(id, dto, updatedBy);
         return Ok(new { message = "DO berhasil diupdate" });
     }
     [HttpDelete("{id}")]
     [AuthorizePermissionHybrid("PICKINGLIST_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
-        await _service.DeleteAsync(id);
+        var deletedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.DeleteAsync(id, deletedBy);
         return Ok(new { message = "DO berhasil dihapus" });
     }
 
-    //[HttpPut("{id}")]
-    //[AuthorizePermissionHybrid("PICKINGLIST_UPDATE_STATUS")]
-    //public async Task<IActionResult> UpdateStatus(string id, DOStatusUpdateDto dto)
-    //{
-    //    await _service.UpdateStatusAsync(id, dto.Status);
-    //    return Ok(new { message = "Status DO berhasil diperbarui" });
-    //}
 }

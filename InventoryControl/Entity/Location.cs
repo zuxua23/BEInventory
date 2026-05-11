@@ -37,4 +37,6 @@ public class Location
     public DateTime? UpdatedAt { get; set; }
     [Column("isDelete")]
     public bool IsDelete { get; set; } = false;
+    [Column("is_system")]
+    public bool IsSystem { get; set; } = false;
 }

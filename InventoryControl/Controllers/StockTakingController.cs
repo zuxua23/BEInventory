@@ -21,6 +21,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost]
+    [AuthorizePermissionHybrid("STOCK_TAKING_CREATE")]
     public async Task<IActionResult> Create(StockTakingCreateDto dto)
     {
         try
@@ -58,12 +59,16 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("scan")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
+
     public async Task<IActionResult> Scan(StockTakingScanDto dto)
     {
         await _service.ScanAsync(dto);
         return Ok(new { message = "Tag discan" });
     }
+
     [HttpPost("scan/bulk")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
     public async Task<IActionResult> Bulk(StockTakingBulkScanDto dto)
     {
         await _service.BulkScanAsync(dto);
@@ -78,6 +83,7 @@ public class StockTakingController : ControllerBase
 
 
     [HttpPost("remove")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_REMOVE")]
     public async Task<IActionResult> Remove(StockTakingRemoveDto dto)
     {
         await _service.RemoveAsync(dto);
@@ -85,6 +91,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("manual-add")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_MANUAL")]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
         await _service.ManualAddAsync(dto);
@@ -92,6 +99,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("finalize")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_FINALIZE")]
     public async Task<IActionResult> Finalize(StockTakingFinalizeDto dto)
     {
         var user = User.Identity?.Name ?? "system";

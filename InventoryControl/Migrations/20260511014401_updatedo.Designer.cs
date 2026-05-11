@@ -4,6 +4,7 @@ using InventoryControl.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InventoryControl.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260511014401_updatedo")]
+    partial class updatedo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,11 +161,6 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("itm_desc");
-
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
@@ -216,10 +214,6 @@ namespace InventoryControl.Migrations
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
-
-                    b.Property<bool>("IsSystem")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_system");
 
                     b.Property<string>("LocId")
                         .IsRequired()
@@ -288,6 +282,10 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
+                    b.Property<string>("Desc")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("per_desc");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -309,9 +307,17 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("operation");
 
+                    b.Property<string>("PerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("per_id");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleId");
+
+                    b.HasIndex("PerId")
+                        .IsUnique();
 
                     b.ToTable("tb_Permission");
                 });

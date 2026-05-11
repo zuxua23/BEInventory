@@ -1,5 +1,9 @@
 ﻿/* =========================================================
-   DASHBOARD UI - MODERN ENTERPRISE STYLE
+   DASHBOARD UI - LIGHT INDUSTRIAL STYLE
+========================================================= */
+
+/* =========================================================
+   LAYOUT
 ========================================================= */
 
 .container-fluid {
@@ -11,10 +15,6 @@
     padding-left: 22px;
     padding-right: 22px;
 }
-
-/* =========================================================
-   PAGE WRAPPER
-========================================================= */
 
 .dash-content-wrapper {
     background: #f5f7fb;
@@ -31,6 +31,7 @@
     padding: 16px 0;
 }
 
+/* Header Layout */
 .dash-page-header {
     display: flex;
     align-items: center;
@@ -39,12 +40,14 @@
     gap: 14px;
 }
 
-.dash-page-header-left {
+.dash-page-header-left,
+.dash-page-header-right {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
+/* Header Icon */
 .dash-header-icon {
     width: 46px;
     height: 46px;
@@ -57,36 +60,32 @@
     color: #4f6ef7;
 }
 
+/* Header Text */
 .dash-page-title {
+    margin: 0;
     font-size: 22px;
     font-weight: 700;
-    color: #0f172a;
-    margin: 0;
     line-height: 1.2;
+    color: #0f172a;
 }
 
 .dash-page-sub {
+    margin-top: 4px;
     font-size: 13px;
     color: #94a3b8;
-    margin: 4px 0 0;
 }
 
-.dash-page-header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
+/* Sync Status */
 .dash-sync-pill {
-    font-size: 12px;
-    background: #eef2ff;
-    color: #4f6ef7;
     padding: 7px 14px;
     border-radius: 999px;
-    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #4f6ef7;
 }
 
 .dash-sync-dot {
@@ -106,15 +105,15 @@
 }
 
 .dash-kpi-card {
-    border-radius: 20px;
-    padding: 22px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
     overflow: hidden;
-    transition: all 0.25s ease;
     min-height: 110px;
+    padding: 22px 24px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.25s ease;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
@@ -123,6 +122,7 @@
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
     }
 
+/* KPI Gradient Variants */
 .dash-kpi-blue {
     background: linear-gradient(135deg, #4f6ef7 0%, #6885ff 100%);
 }
@@ -139,33 +139,34 @@
     background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
 }
 
+/* KPI Content */
 .dash-kpi-label {
+    margin-bottom: 8px;
     font-size: 12px;
-    color: rgba(255,255,255,0.78);
     font-weight: 600;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.78);
 }
 
 .dash-kpi-num {
     font-size: 32px;
     font-weight: 700;
-    color: #ffffff;
     line-height: 1;
+    color: #ffffff;
 }
 
 .dash-kpi-icon {
     width: 48px;
     height: 48px;
-    background: rgba(255,255,255,0.18);
+    flex-shrink: 0;
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     color: #ffffff;
-    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.18);
 }
 
 /* =========================================================
@@ -177,12 +178,6 @@
     grid-template-columns: 2.3fr 2.7fr;
     gap: 24px;
     align-items: stretch;
-}
-
-@media (max-width: 1200px) {
-    .dash-main-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 .dash-left-col,
@@ -197,12 +192,12 @@
 ========================================================= */
 
 .dash-card {
-    background: #ffffff;
-    border-radius: 18px;
-    border: 1px solid #edf1f7;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    background: #ffffff;
+    border: 1px solid #edf1f7;
+    border-radius: 18px;
     transition: all 0.25s ease;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
     .dash-card:hover {
@@ -210,38 +205,34 @@
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     }
 
+/* Card Header */
 .dash-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 18px 22px;
-    border-bottom: 1px solid #f1f5f9;
     background: #ffffff;
 }
+
 .dash-card-header-left {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-.dash-card-recent {
-    height: 460px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 
+/* Card Dot */
 .dash-card-dot {
     width: 10px;
     height: 10px;
-    border-radius: 50%;
     flex-shrink: 0;
-/*    margin-right: 8px;*/
+    border-radius: 50%;
 }
-
 
 .dash-card-dot-gray {
     background: #92400e;
 }
+
 .dash-card-dot-blue {
     background: #3b82f6;
 }
@@ -258,6 +249,7 @@
     background: #7c3aed;
 }
 
+/* Card Text */
 .dash-card-title {
     font-size: 14px;
     font-weight: 700;
@@ -266,8 +258,16 @@
 
 .dash-card-subtitle {
     font-size: 14px;
-    color: #94a3b8;
     font-weight: 500;
+    color: #94a3b8;
+}
+
+/* Special Card */
+.dash-card-recent {
+    height: 460px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* =========================================================
@@ -282,9 +282,13 @@
 
 .dash-table-fixed {
     flex: 1;
-    overflow-y: auto;
     min-height: 0;
+    overflow-y: auto;
+}
 
+.dash-table-fixed-small {
+    height: 320px;
+    overflow-y: auto;
 }
 
 .dash-table {
@@ -292,24 +296,26 @@
     border-collapse: collapse;
 }
 
+    /* Table Head */
     .dash-table thead th {
-        padding: 14px 20px;
-        font-size: 14px;
-        color: #94a3b8;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        background: #f8fafc;
         position: sticky;
         top: 0;
         z-index: 2;
+        padding: 14px 20px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        background: #f8fafc;
     }
 
+    /* Table Body */
     .dash-table tbody td {
         padding: 16px 20px;
         font-size: 13px;
-        color: #334155;
         vertical-align: middle;
+        color: #334155;
     }
 
     .dash-table tbody tr {
@@ -322,47 +328,68 @@
         }
 
 .dash-table-empty {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 13px;
     padding: 24px !important;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
 }
-.dash-table-fixed-small {
-    height: 320px;
-    overflow-y: auto;
-}
+
 /* =========================================================
    ITEM DETAIL
 ========================================================= */
 
-.dash-item-cell {
+.dash-item-cell,
+.dash-activity-cell {
     display: flex;
     flex-direction: column;
+}
+
+.dash-item-cell {
     gap: 3px;
 }
 
-.dash-item-name {
+.dash-activity-cell {
+    gap: 4px;
+}
+
+.dash-item-name,
+.dash-activity-action {
     font-size: 14px;
     font-weight: 600;
     color: #1e293b;
 }
 
-.dash-item-sub {
-    font-size: 14px;
+.dash-item-sub,
+.dash-activity-entity {
+    font-size: 12px;
     color: #94a3b8;
 }
 
+.dash-activity-time {
+    white-space: nowrap;
+}
+
+.dash-do-num {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4f6ef7;
+}
 
 /* =========================================================
    STOCK BADGE
 ========================================================= */
+
+.dash-stock-col {
+    text-align: center;
+}
+
 .dash-stock-number {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
     display: inline-block;
     min-width: 40px;
+    font-size: 15px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
+    color: #0f172a;
 }
 
 .dash-stock-critical,
@@ -370,11 +397,11 @@
 .dash-stock-good {
     padding: 6px 12px;
     border-radius: 99px;
-    font-size: 12px;
-    font-weight: 700;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .dash-stock-critical {
@@ -391,24 +418,15 @@
     background: #dcfce7;
     color: #166534;
 }
-.dash-stock-col {
-    text-align: center;
-}
 
 /* =========================================================
-   STATUS
+   STATUS SECTION
 ========================================================= */
 
 .dash-status-users-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 18px;
-}
-
-@media (max-width: 768px) {
-    .dash-status-users-row {
-        grid-template-columns: 1fr;
-    }
 }
 
 .dash-status-content {
@@ -420,26 +438,24 @@
 
 .dash-status-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
 .dash-status-label {
     font-size: 14px;
-    color: #64748b;
     font-weight: 600;
+    color: #64748b;
 }
 
-.dash-status-time {
+.dash-status-time,
+.dash-status-online {
     font-size: 14px;
-    color: #16a34a;
     font-weight: 600;
+    color: #16a34a;
 }
 
 .dash-status-online {
-    font-size: 14px;
-    font-weight: 700;
-    color: #16a34a;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -448,24 +464,9 @@
 .dash-online-dot {
     width: 8px;
     height: 8px;
-    background: #22c55e;
     border-radius: 50%;
+    background: #22c55e;
     animation: pulse 1.8s infinite;
-}
-
-@keyframes pulse {
-
-    0% {
-        box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
-    }
-
-    70% {
-        box-shadow: 0 0 0 8px rgba(34,197,94,0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(34,197,94,0);
-    }
 }
 
 /* =========================================================
@@ -485,64 +486,35 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4f6ef7;
     font-size: 20px;
+    color: #4f6ef7;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
 }
 
 .dash-users-num {
+    text-align: center;
     font-size: 32px;
     font-weight: 700;
     color: #0f172a;
-    text-align:center;
 }
 
 .dash-users-label {
     font-size: 12px;
-    color: #4f6ef7;
-    text-transform: uppercase;
-    letter-spacing: 1px;
     font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4f6ef7;
 }
 
 .dash-users-trend {
     font-size: 12px;
-    color: #16a34a;
     font-weight: 700;
+    color: #16a34a;
 }
 
-/* =========================================================
-   activity
-========================================================= */
-.dash-activity-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.dash-activity-action {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.dash-activity-entity {
-    font-size: 11px;
-    color: #94a3b8;
-}
-
-.dash-activity-time {
-    white-space: nowrap;
-}
-
-.dash-do-num {
-    font-size: 14px;
-    font-weight: 600;
-    color: #4f6ef7;
-}
 /* =========================================================
    CHART
 ========================================================= */
@@ -555,44 +527,45 @@
     position: relative;
     height: 420px;
     padding: 20px;
-    margin-top:8px;
+    margin-top: 8px;
 }
 
 .dash-chart-placeholder {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
     text-align: center;
     color: #94a3b8;
+    transform: translate(-50%, -50%);
 }
 
     .dash-chart-placeholder i {
-        font-size: 32px;
         margin-bottom: 12px;
+        font-size: 32px;
     }
 
+/* Stock Total */
 .dash-stock-total {
     margin-top: 24px;
     padding: 16px;
     border-radius: 16px;
+    text-align: center;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    text-align: center;
 }
 
 .dash-stock-total-label {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 500;
     margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
 }
 
 .dash-stock-total-value {
     font-size: 32px;
     font-weight: 700;
-    color: #0f172a;
     line-height: 1;
+    color: #0f172a;
 }
 
 .dash-stock-total-sub {
@@ -628,11 +601,34 @@
 }
 
 /* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+/* =========================================================
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
+    .dash-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
+@media (max-width: 992px) {
     .dash-page-title {
         font-size: 20px;
     }
@@ -646,8 +642,13 @@
     }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+    .dash-status-users-row {
+        grid-template-columns: 1fr;
+    }
+}
 
+@media (max-width: 576px) {
     .content-wrapper .container-fluid {
         padding-left: 14px;
         padding-right: 14px;

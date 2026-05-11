@@ -534,6 +534,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                     TagId = t.TagId,
 
                     ItemName = t.Item.Name,
+                    Epc = t.EpcTag,
 
                     Location =
                         t.Location != null

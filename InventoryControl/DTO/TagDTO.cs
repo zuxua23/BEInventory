@@ -5,6 +5,7 @@ public class TagResponseDto
 {
     public string TagId { get; set; } = null!;
     public string? ItemName { get; set; }
+    public string? Epc { get; set; }
     public string? Status { get; set; }
     public string? Location { get; set; }
 }

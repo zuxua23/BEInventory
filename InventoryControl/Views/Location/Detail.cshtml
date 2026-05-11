@@ -146,6 +146,17 @@
             $("#locId").val(loc.locId);
             $("#name").val(loc.name);
             $("#description").val(loc.description);
+
+            if (loc.isSystem) {
+
+                $("#locId").prop("disabled", true);
+                $("#name").prop("disabled", true);
+                $("#description").prop("disabled", true);
+
+                $("#btnUpdate").hide();
+
+                $("#systemBadge").removeClass("d-none");
+            }
         }
 
 
@@ -153,6 +164,11 @@
 
             if (!canUpdate) {
                 Alert.error("You do not have permission to update");
+                return;
+            }
+
+            if(isSystem) {
+                Alert.error("System location cannot be modified");
                 return;
             }
 

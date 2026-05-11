@@ -79,6 +79,14 @@
                                             <input id="itemName" name="itemName" class="form-control" @(canUpdate ? "" : "disabled")>
                                         </div>
 
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-tag text-muted mr-2"></i>
+                                                Description 
+                                            </label>
+                                            <input id="itemDesc" name="itemDesc" class="form-control" @(canUpdate ? "" : "disabled")>
+                                        </div>
+
                                     </form>
 
                                     <div class="d-flex justify-content-end pt-3 border-top">
@@ -128,6 +136,7 @@
 
             $("#itemId").val(item.itemId);
             $("#itemName").val(item.itemName);
+            $("#itemDesc").val(item.itemDesc);
         }
 
 

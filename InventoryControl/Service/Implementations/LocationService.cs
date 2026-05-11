@@ -184,6 +184,9 @@ public class LocationService : ILocationService
                 );
             }
 
+            if (location.IsSystem)
+                throw new Exception("System location cannot be updated");
+
             var oldLocId = location.LocId;
             var oldName = location.Name;
 
@@ -244,6 +247,8 @@ public class LocationService : ILocationService
                     "Location not found."
                 );
             }
+            if (location.IsSystem)
+                throw new Exception("System location cannot be deleted");
 
             location.IsDelete = true;
             location.UpdatedAt = DateTime.UtcNow;

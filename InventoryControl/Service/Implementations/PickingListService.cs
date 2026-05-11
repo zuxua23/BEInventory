@@ -3,6 +3,7 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Migrations;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -190,7 +191,8 @@ public class PickingListService : IPickingListService
 
     public async Task UpdateAsync(
         string id,
-        PickingListDTO dto
+        PickingListDTO dto,
+        string updatedBy
     )
     {
         try
@@ -231,6 +233,8 @@ public class PickingListService : IPickingListService
             var oldDoNumber = doEntity.DoNumber;
 
             doEntity.DoNumber = dto.DoNumber;
+            doEntity.UpdatedBy = updatedBy;
+            doEntity.UpdatedAt = DateTime.UtcNow;
 
             _db.DODetails.RemoveRange(
                 doEntity.Details
@@ -258,7 +262,7 @@ public class PickingListService : IPickingListService
                 action: "UPDATE",
                 entity: "DELIVERY_ORDER",
                 entityId: doEntity.DoNumber,
-                performedBy: doEntity.CreatedBy,
+                performedBy: updatedBy,
                 description:
                     $"Updated delivery order from Number='{oldDoNumber}' to Number='{dto.DoNumber}'."
             );
@@ -274,21 +278,29 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(
+        string id,
+        string deletedBy
+    )
     {
         try
         {
             DailyFileLogger.Info(
-                $"Deleting delivery order with ID '{id}'."
+                $"Deleting delivery order with ID '{id}'.",
+                deletedBy
             );
 
             var doData = await _db.DOs
-                .FindAsync(id);
+                .FirstOrDefaultAsync(x =>
+                    x.DoId == id &&
+                    !x.IsDelete
+                );
 
-            if (doData == null || doData.IsDelete)
+            if (doData == null)
             {
                 DailyFileLogger.Warn(
-                    $"Delete failed. Delivery order with ID '{id}' was not found."
+                    $"Delete failed. Delivery order with ID '{id}' was not found.",
+                    deletedBy
                 );
 
                 throw new Exception(
@@ -297,18 +309,21 @@ public class PickingListService : IPickingListService
             }
 
             doData.IsDelete = true;
+            doData.UpdatedBy = deletedBy;
+            doData.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
             DailyFileLogger.Info(
-                $"Delivery order successfully soft deleted. ID='{id}'."
+                $"Delivery order successfully soft deleted. ID='{id}'.",
+                deletedBy
             );
 
             DailyFileLogger.Audit(
                 action: "DELETE",
                 entity: "DELIVERY_ORDER",
                 entityId: doData.DoNumber,
-                performedBy: doData.CreatedBy,
+                performedBy: deletedBy,
                 description:
                     $"Soft deleted delivery order '{doData.DoNumber}'."
             );
@@ -317,7 +332,8 @@ public class PickingListService : IPickingListService
         {
             DailyFileLogger.Error(
                 $"An error occurred while deleting delivery order with ID '{id}'.",
-                ex
+                ex,
+                deletedBy
             );
 
             throw;

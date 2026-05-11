@@ -197,7 +197,7 @@
 
             let buttons = `<div class="btn-group btn-group-sm">`;
 
-            if (canUpdate) {
+            if (canUpdate && !data.isSystem) {
                 buttons += `
                     <a href="/location/detail?id=${data.id}" class="btn btn-info">
                         <i class="fas fa-eye"></i>
@@ -205,7 +205,7 @@
                 `;
             }
 
-            if (canDelete) {
+            if (canDelete && !data.isSystem) {
                 buttons += `
                     <button class="btn btn-danger"
                             onclick="deleteLocation('${data.id}')">
@@ -215,6 +215,15 @@
             }
 
             buttons += `</div>`;
+
+            if (data.isSystem) {
+                buttons += `
+                    <span class="badge bg-danger ms-1">
+                        SYSTEM
+                    </span>
+                `;
+            }
+
             return buttons;
         }
 

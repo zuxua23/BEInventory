@@ -32,7 +32,7 @@ public class StockOutController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Finalize(StockOutDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
         await _service.StockOutAsync(dto, user);
 
         return Ok("Stock Out finalized");
@@ -42,7 +42,7 @@ public class StockOutController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Scan(StockOutResponseDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
         await _service.ScanStockOutAsync(dto, user);
 
         return Ok("Scanned");

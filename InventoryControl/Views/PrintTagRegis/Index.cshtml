@@ -140,6 +140,7 @@
                                                             <th class="text-center" width="60">#</th>
                                                             <th>Tag ID</th>
                                                             <th>Item Name</th>
+                                                            <th>Epc</th>
                                                             <th>Location</th>
                                                             <th>Status</th>
                                                         </tr>
@@ -187,6 +188,7 @@
                         render: d => `<code>${d}</code>`
                     },
                     { data: "itemName" },
+                    { data: "epc" },
                     { data: "location" },
                     {
                         data: "status",

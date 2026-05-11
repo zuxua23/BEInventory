@@ -41,9 +41,21 @@ public class ReaderApiController : ControllerBase
     [AuthorizePermissionHybrid("READER_CREATE")]
     public async Task<IActionResult> Create(ReaderDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.CreateAsync(dto, user);
+        var createdBy = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.CreateAsync(dto, createdBy);
         return Ok(new { message = "Reader berhasil dibuat" });
+    }
+
+
+    [HttpPut("{id}")]
+    [AuthorizePermissionHybrid("READER_UPDATE")]
+    public async Task<IActionResult> Update(string id, ReaderDto dto)
+    {
+        var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.UpdateAsync(id, dto, updatedBy);
+
+        return Ok(new { message = "Reader berhasil diupdate" });
     }
 
     [HttpDelete("{id}")]
@@ -52,16 +64,5 @@ public class ReaderApiController : ControllerBase
     {
         await _service.DeleteAsync(id);
         return Ok(new { message = "Reader berhasil dihapus" });
-    }
-
-    [HttpPut("{id}")]
-    [AuthorizePermissionHybrid("READER_UPDATE")]
-    public async Task<IActionResult> Update(string id, ReaderDto dto)
-    {
-        var user = User.Identity?.Name ?? "system";
-
-        await _service.UpdateAsync(id, dto, user);
-
-        return Ok(new { message = "Reader berhasil diupdate" });
     }
 }

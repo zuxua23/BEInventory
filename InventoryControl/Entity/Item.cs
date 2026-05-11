@@ -21,6 +21,10 @@ public class Item
     public string Name { get; set; }
 
     [Required]
+    [Column("itm_desc")]
+    public string? Description { get; set; }
+
+    [Required]
     [Column("created_by")]
     public string CreatedBy { get; set; }
 

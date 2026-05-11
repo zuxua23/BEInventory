@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace InventoryControl.Controllers;
+
 [InventoryLock]
 [ApiController]
 [Route("api/location")]
@@ -42,7 +43,7 @@ public class LocationApiController : ControllerBase
     [AuthorizePermissionHybrid("LOCATION_CREATE")]
     public async Task<IActionResult> Create(LocationDTO dto)
     {
-        var createdBy = Request.Headers["X-User-Id"].FirstOrDefault() ?? "system";
+        var createdBy = HttpContext.Session.GetString("UserId") ?? "system";
 
         await _service.CreateAsync(dto, createdBy);
         return Ok(new { message = "Location berhasil dibuat" });
@@ -52,7 +53,7 @@ public class LocationApiController : ControllerBase
     [AuthorizePermissionHybrid("LOCATION_UPDATE")]
     public async Task<IActionResult> Update(string id, LocationDTO dto)
     {
-        var updatedBy = Request.Headers["X-User-Id"].FirstOrDefault() ?? "system";
+        var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
         await _service.UpdateAsync(id, dto, updatedBy);
         return Ok(new { message = "Location berhasil diubah" });
     }

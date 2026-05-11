@@ -30,7 +30,8 @@ public class ItemService : IItemService
                 {
                     Id = x.Id,
                     ItemId = x.ItmId,
-                    ItemName = x.Name
+                    ItemName = x.Name,
+                    ItemDesc = x.Description
                 })
                 .ToListAsync();
 
@@ -65,7 +66,8 @@ public class ItemService : IItemService
                 {
                     Id = x.Id,
                     ItemId = x.ItmId,
-                    ItemName = x.Name
+                    ItemName = x.Name,
+                    ItemDesc = x.Description
                 })
                 .FirstOrDefaultAsync();
 
@@ -146,6 +148,7 @@ public class ItemService : IItemService
                 Id = Guid.NewGuid().ToString(),
                 ItmId = newItemId,
                 Name = dto.ItemName,
+                Description = dto.ItemDesc,
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow,
                 IsDelete = false
@@ -183,7 +186,7 @@ public class ItemService : IItemService
 
     public async Task UpdateAsync(
         string id,
-        ItemUpdateDto dto,
+        ItemDto dto,
         string updatedBy
     )
     {
@@ -211,6 +214,7 @@ public class ItemService : IItemService
             var oldName = item.Name;
 
             item.Name = dto.ItemName;
+            item.Description = dto.ItemDesc;
             item.UpdatedBy = updatedBy;
             item.UpdatedAt = DateTime.UtcNow;
 

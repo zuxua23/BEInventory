@@ -1,4 +1,5 @@
 ﻿using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
@@ -15,6 +16,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet("history")]
+    [AuthorizePermissionHybrid("TRANSACTION_GET")]
     public async Task<IActionResult> GetHistory(
         DateTime? fromDate,
         DateTime? toDate,

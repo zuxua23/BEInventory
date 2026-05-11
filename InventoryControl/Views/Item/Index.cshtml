@@ -78,6 +78,7 @@
                                                     <th class="text-center" width="60">#</th>
                                                     <th class="text-nowrap">Item ID</th>
                                                     <th>Item Name</th>
+                                                    <th>Description</th>
                                                     @if (canUpdate || canDelete)
                                                     {
                                                         <th class="text-center" width="160">Actions</th>
@@ -112,13 +113,18 @@
                     <div class="modal-body">
 
                         <div class="form-group">
-                            <label>Item ID</label>
-                            <input type="text" id="itemId" name="itemId" class="form-control" readonly>
+                            <label>
+                                <i class="fas fa-tag text-muted mr-2"></i>
+                                Item Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="itemName" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Item Name <span class="text-danger">*</span></label>
-                            <input type="text" name="itemName" class="form-control" required>
+                            <label>
+                                <i class="fas fa-align-left text-muted mr-2"></i>
+                                Description</label>
+                            <textarea name="description" class="form-control"></textarea>
                         </div>
 
                     </div>
@@ -160,6 +166,7 @@
                     Table.rowNumber(),
                     { data: "itemId" },
                     { data: "itemName" },
+                    { data: "itemDesc" },
                     Table.action(renderAction, canUpdate || canDelete)
                 ]
             });
@@ -193,7 +200,8 @@
             e.preventDefault();
 
             const payload = {
-                itemName: e.target.itemName.value
+                itemName: e.target.itemName.value,
+                itemDesc: e.target.description.value
             };
 
             const res = await Api.post("/api/item", payload);
@@ -234,24 +242,6 @@
             }
 
 
-        }
-
-        function generateItemId() {
-
-            const data = table.rows().data().toArray();
-
-            let max = 0;
-
-            data.forEach(item => {
-                if (!item.itemId) return;
-
-                let number = parseInt(item.itemId.replace("ITM", ""));
-                if (number > max) max = number;
-            });
-
-            let formatted = "ITM" + String(max + 1).padStart(5, '0');
-
-            $("#itemId").val(formatted);
         }
 
         $('#createItem').on('shown.bs.modal', function () {
