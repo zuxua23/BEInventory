@@ -1,66 +1,52 @@
 # InventoryControl
 
-<<<<<<< HEAD
 An ASP.NET Core-based inventory management system with comprehensive item tracking, stock management, and role-based access control.
 
 ## 📋 Overview
 
-InventoryControl is a web application designed to manage inventory operations including stock in/out transactions, item master data, tag printing, and stock-taking activities. Built with C# and ASP.NET Core, it provides both web-based and API interfaces.
-
-
+InventoryControl is a web application designed to manage inventory operations including stock in/out transactions, item master data, tag printing, and stock-taking activities. Built with modern technologies including C#, ASP.NET Core, and SQL Server.
 
 ## 🛠️ Tech Stack
 
 - **Language**: C#
-- **Framework**: ASP.NET Core (latest)
+- **Framework**: ASP.NET Core 8 (.NET 8)
 - **Database**: SQL Server
 - **ORM**: Entity Framework Core
-- **Cache**: Redis
+- **Cache**: Redis (`StackExchange.Redis`)
 - **Authentication**: JWT Bearer
+- **Password Hashing**: BCrypt
 - **Logging**: Serilog
 - **API Format**: JSON with circular reference handling
-=======
-Aplikasi backend **Inventory Control** berbasis **ASP.NET Core 8 Web API** dengan dukungan:
-- Autentikasi JWT
-- Otorisasi berbasis role/permission
-- Penyimpanan token aktif di Redis
-- Database SQL Server via Entity Framework Core
 
-## Teknologi yang Digunakan
-- .NET 8 (`net8.0`)
-- ASP.NET Core Web API
-- Entity Framework Core + SQL Server
-- JWT Bearer Authentication
-- Redis (`StackExchange.Redis`)
-- Serilog
-- BCrypt untuk hashing password
+## 📁 Project Structure
 
-## Struktur Folder (ringkas)
-```text
+```
 InventoryControl/
-├── Controllers/           # Endpoint API (Auth, User)
+├── Controllers/           # API Endpoints (Auth, User)
 ├── Database/
-│   ├── Seeder/            # Seeder role/permission
+│   ├── Seeder/            # Role/Permission Seeders
 │   └── AppDBContext.cs    # EF Core DbContext
-├── DTO/                   # Request/response DTO
-├── Entity/                # Model entity database
-├── Migrations/            # File migrasi EF Core
-├── Service/               # Business logic service
-├── Utility/               # Helper (JWT, logger, dll)
-├── Program.cs             # DI, auth, middleware pipeline
-└── appsettings.json       # Konfigurasi aplikasi
+├── DTO/                   # Request/Response DTOs
+├── Entity/                # Database Entity Models
+├── Migrations/            # EF Core Migration Files
+├── Service/               # Business Logic Services
+├── Utility/               # Helper Utilities (JWT, Logger, etc.)
+├── Program.cs             # Dependency Injection & Middleware Pipeline
+└── appsettings.json       # Application Configuration
 ```
 
-## Prasyarat
-Pastikan sudah terpasang:
-1. **.NET SDK 8**
-2. **SQL Server** (local/remote)
+## 📋 Prerequisites
+
+Make sure you have the following installed:
+1. **.NET SDK 8** or higher
+2. **SQL Server** (local or remote)
 3. **Redis** (default: `localhost:6379`)
 
-## Konfigurasi
-Edit file `InventoryControl/appsettings.json` sesuai environment Anda.
+## ⚙️ Configuration
 
-Contoh konfigurasi penting:
+Edit the `InventoryControl/appsettings.json` file according to your environment.
+
+Example configuration:
 
 ```json
 {
@@ -80,37 +66,48 @@ Contoh konfigurasi penting:
 }
 ```
 
-## Menjalankan Proyek
-Dari root repository:
+## 🚀 Running the Application
+
+From the root repository directory:
 
 ```bash
+# Restore dependencies
 dotnet restore
+
+# Build the project
 dotnet build
+
+# Run the application
 dotnet run --project InventoryControl/InventoryControl.csproj
 ```
 
-Aplikasi akan berjalan di URL yang dikonfigurasi (`http://0.0.0.0:24000` jika default).
+The application will run on the configured URL (default: `http://0.0.0.0:24000`)
 
-## Migrasi Database (EF Core)
-Jika perlu membuat/update skema database:
+## 🗄️ Database Migration (EF Core)
+
+To create or update the database schema:
 
 ```bash
 dotnet ef database update --project InventoryControl/InventoryControl.csproj
 ```
 
-> Jika tool `dotnet-ef` belum ada, install dulu:
-> `dotnet tool install --global dotnet-ef`
+> If the `dotnet-ef` tool is not installed, install it first:
+> ```bash
+> dotnet tool install --global dotnet-ef
+> ```
 
-## Seeder Data Akses
-Saat aplikasi start, seeder akan menginisialisasi:
-- Data `Permission`
-- Data `Role` (`OPERATOR`, `ADMIN`)
-- Mapping `Role_Permission`
+## 🔐 Data Access Seeding
 
-Seeder dijalankan pada startup dari `Program.cs` melalui `SeedAccess.Initialize(...)`.
+When the application starts, the seeder will initialize:
+- Permission data
+- Role data (OPERATOR, ADMIN)
+- Role-Permission mappings
 
-## Endpoint API Utama
-Base URL default: `http://localhost:24000`
+The seeder runs automatically on startup from `Program.cs` via `SeedAccess.Initialize(...)`.
+
+## 📡 Main API Endpoints
+
+Base URL (default): `http://localhost:24000`
 
 ### 1) Login
 - **POST** `/auth/login`
@@ -123,7 +120,19 @@ Base URL default: `http://localhost:24000`
 }
 ```
 
-### 2) Profil user login
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "role": "ADMIN"
+  }
+}
+```
+
+### 2) Get Current User Profile
 - **GET** `/auth/me`
 - Header: `Authorization: Bearer <token>`
 
@@ -131,28 +140,77 @@ Base URL default: `http://localhost:24000`
 - **POST** `/auth/logout`
 - Header: `Authorization: Bearer <token>`
 
-### 4) CRUD User
-Semua endpoint `/user` membutuhkan bearer token.
-- **GET** `/user`
-- **GET** `/user/{id}`
-- **POST** `/user`
-- **PUT** `/user/{id}`
-- **DELETE** `/user/{id}`
+### 4) User Management
+All `/user` endpoints require a bearer token with appropriate permissions.
+- **GET** `/user` - List all users
+- **GET** `/user/{id}` - Get user by ID
+- **POST** `/user` - Create new user
+- **PUT** `/user/{id}` - Update user
+- **DELETE** `/user/{id}` - Delete user
 
-## Contoh Penggunaan Singkat (cURL)
+## 💡 Usage Examples (cURL)
+
 ```bash
 # Login
 curl -X POST http://localhost:24000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 
-# Ambil profile (ganti <TOKEN>)
+# Get current user profile (replace <TOKEN> with token from login)
 curl http://localhost:24000/auth/me \
   -H "Authorization: Bearer <TOKEN>"
+
+# List all users
+curl http://localhost:24000/user \
+  -H "Authorization: Bearer <TOKEN>"
+
+# Get specific user
+curl http://localhost:24000/user/1 \
+  -H "Authorization: Bearer <TOKEN>"
+
+# Create new user
+curl -X POST http://localhost:24000/user \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"username":"newuser","password":"pass123","roleId":2}'
 ```
 
-## Catatan
-- Untuk endpoint API, aplikasi mengembalikan JSON khusus untuk kasus token tidak ada / invalid / expired.
-- Konfigurasi saat ini menggabungkan web session dan JWT auth; jika hanya API, session bisa disesuaikan.
-- Pastikan Redis aktif agar validasi token berjalan sesuai implementasi.
->>>>>>> ee430cb803b4bd00a26c246d8dc7c8ef394e658c
+## 🔐 Role-Based Access Control (RBAC)
+
+This system uses roles and permissions to control access:
+- **ADMIN**: Full access to all features
+- **OPERATOR**: Limited access based on assigned permissions
+
+Role-permission mappings are configured through the seeder and can be customized in the database.
+
+## 📝 Important Notes
+
+- The application returns custom JSON responses for token-related errors (missing, invalid, or expired).
+- Current configuration combines web session and JWT auth; adjust as needed if using API-only mode.
+- **Ensure Redis is running** for proper token validation according to the implementation.
+- All passwords are hashed using BCrypt for security.
+- Circular references in JSON responses are handled in the configuration.
+- Default admin credentials can be changed through the seeder or database directly.
+
+## 🐛 Troubleshooting
+
+**Issue**: Connection to SQL Server fails
+- Solution: Verify connection string in `appsettings.json` and ensure SQL Server is running.
+
+**Issue**: Redis connection error
+- Solution: Check that Redis is running on `localhost:6379` or update the connection string.
+
+**Issue**: JWT token validation fails
+- Solution: Ensure the JWT secret key in `appsettings.json` is consistent and Redis token storage is working.
+
+**Issue**: Migration fails
+- Solution: Delete `bin` and `obj` folders, then run `dotnet restore` and retry the migration.
+
+## 📄 License
+
+Please update with your project's license information.
+
+---
+
+**Last Updated**: 2026-05-11
+**Version**: 1.0
