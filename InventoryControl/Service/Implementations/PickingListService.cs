@@ -66,7 +66,7 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task<DOResponseDto?> GetByIdAsync(string id)
+    public async Task<DO?> GetByIdAsync(string id)
     {
         try
         {

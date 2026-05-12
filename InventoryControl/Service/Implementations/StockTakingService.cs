@@ -761,5 +761,39 @@ public class StockTakingService : IStockTakingService
             Progress = total == 0 ? 0 : (scanned * 100 / total)
         };
     }
+    public async Task<List<object>> GetSessionTagsAsync(string sttId)
+    {
+        try
+        {
+            var data = await _db.StockTakingDetails
+                .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+                .Join(_db.Tags,
+                    std => std.TagId,
+                    tag => tag.Id,
+                    (std, tag) => new { std, tag })
+                .Join(_db.Items,
+                    x => x.tag.ItemId,
+                    item => item.Id,
+                    (x, item) => new { x.std, x.tag, item })
+                .Join(_db.Locations,
+                    x => x.tag.LocationId,
+                    loc => loc.Id,
+                    (x, loc) => (object)new
+                    {
+                        tagId = x.tag.TagId,
+                        epcTag = x.tag.EpcTag,
+                        itemId = x.tag.ItemId,
+                        itemName = x.item.Name,
+                        location = loc.Name
+                    })
+                .ToListAsync();
 
+            return data;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error("GetSessionTagsAsync error", ex);
+            throw;
+        }
+    }
 }

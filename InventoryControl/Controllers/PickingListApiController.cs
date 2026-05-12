@@ -56,15 +56,18 @@ public class PickingListApiController : ControllerBase
     [AuthorizePermissionHybrid("PICKINGLIST_UPDATE")]
     public async Task<IActionResult> Update(string id, [FromBody] PickingListDTO dto)
     {
-        await _service.UpdateAsync(id, dto);
+        var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.UpdateAsync(id, dto, updatedBy);
         return Ok(new { message = "DO berhasil diupdate" });
     }
     [HttpDelete("{id}")]
     [AuthorizePermissionHybrid("PICKINGLIST_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
-        await _service.DeleteAsync(id);
+        var deletedBy = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.DeleteAsync(id, deletedBy);
         return Ok(new { message = "DO berhasil dihapus" });
     }
-
+    
 }

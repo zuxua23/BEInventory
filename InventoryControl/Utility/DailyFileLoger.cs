@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Utility;
+namespace InventoryControl.Utility;
 
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,8 +9,7 @@ public static class DailyFileLogger
         new object();
 
     private static string _baseLogDirectory =
-        "C:\\Users\\User\\source\\repos\\InventoryControl\\InventoryControl\\Logs\\";
-
+        "D:\\Fauzan\\Project\\API\\ver9\\InventoryControl\\InventoryControl\\Logs\\";
     private static string _appLogDirectory =
         Path.Combine(
             _baseLogDirectory,

@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Utility;
+namespace InventoryControl.Utility;
 
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,7 +8,8 @@ public static class SystemLogger
     private static readonly object _lock = new object();
 
     private static string _logDirectory =
-        "C:\\Users\\User\\source\\repos\\InventoryControl\\InventoryControl\\Logs\\System\\";
+            "D:\\Fauzan\\Project\\API\\ver9\\InventoryControl\\InventoryControl\\Logs\\System\\";
+
     public static void SetLogDirectory(string path)
     {
         _logDirectory = path;

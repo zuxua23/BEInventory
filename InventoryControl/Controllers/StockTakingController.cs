@@ -39,7 +39,6 @@ public class StockTakingController : ControllerBase
     public async Task<IActionResult> GetActive()
     {
         var data = await _service.GetActiveAsync();
-        if (data == null) return NotFound(new { message = "Tidak ada sesi aktif" });
         return Ok(data);
     }
 
