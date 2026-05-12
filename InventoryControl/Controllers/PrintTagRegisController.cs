@@ -72,6 +72,28 @@ public class PrintTagRegisController: ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("test-print")]
+    public IActionResult TestPrint()
+    {
+        string sbpl =
+            "\u0002" +
+            "\u001BA" +
+            "\u001BH0100\n" +
+            "\u001BV0100\n" +
+            "HELLO SATO\n" +
+            "\u001BQ1\n" +
+            "\u001BZ\n" +
+            "\u0003";
+
+        bool result =
+            RawPrinterHelper.SendStringToPrinter(
+                "SATO CL4NX 305dpi",
+                sbpl
+            );
+
+        return Ok(result);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

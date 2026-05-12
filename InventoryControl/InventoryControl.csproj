@@ -7,6 +7,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Remove="wwwroot\dist\adminlte.css" />
+	  <Content Remove="wwwroot\dist\adminlte.css.map" />
+	  <Content Remove="wwwroot\dist\adminlte.min.css" />
+	  <Content Remove="wwwroot\dist\adminlte.min.css.map" />
+	  <Content Remove="wwwroot\dist\js\adminlte.js" />
+	  <Content Remove="wwwroot\dist\js\adminlte.js.map" />
+	  <Content Remove="wwwroot\dist\js\adminlte.min.js" />
+	  <Content Remove="wwwroot\dist\js\adminlte.min.js.map" />
+	  <Content Remove="wwwroot\plugins\datatables\dataTables.bootstrap4.js" />
+	  <Content Remove="wwwroot\plugins\datatables\dataTables.bootstrap4.min.js" />
+	  <Content Remove="wwwroot\plugins\datatables\jquery.dataTables.js" />
+	  <Content Remove="wwwroot\plugins\datatables\jquery.dataTables.min.js" />
+	  <Content Remove="wwwroot\plugins\fontawesome\css\all.css" />
+	  <Content Remove="wwwroot\plugins\fontawesome\css\all.min.css" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.js" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.min.js" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.min.map" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Update="appsettings.Production.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
@@ -36,7 +56,27 @@
 
 	<ItemGroup>
 		<Folder Include="Logs\" />
-		<Folder Include="wwwroot\dist\js\" />
+		<Folder Include="wwwroot\lib\jquery-validation-unobtrusive\dist\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\dist\css\adminlte.css" />
+	  <None Include="wwwroot\dist\css\adminlte.css.map" />
+	  <None Include="wwwroot\dist\css\adminlte.min.css" />
+	  <None Include="wwwroot\dist\css\adminlte.min.css.map" />
+	  <None Include="wwwroot\dist\js\adminlte.js" />
+	  <None Include="wwwroot\dist\js\adminlte.js.map" />
+	  <None Include="wwwroot\dist\js\adminlte.min.js" />
+	  <None Include="wwwroot\dist\js\adminlte.min.js.map" />
+	  <None Include="wwwroot\plugins\datatables\dataTables.bootstrap4.js" />
+	  <None Include="wwwroot\plugins\datatables\dataTables.bootstrap4.min.js" />
+	  <None Include="wwwroot\plugins\datatables\jquery.dataTables.js" />
+	  <None Include="wwwroot\plugins\datatables\jquery.dataTables.min.js" />
+	  <None Include="wwwroot\plugins\fontawesome\css\all.css" />
+	  <None Include="wwwroot\plugins\fontawesome\css\all.min.css" />
+	  <None Include="wwwroot\plugins\jquery\jquery.js" />
+	  <None Include="wwwroot\plugins\jquery\jquery.min.js" />
+	  <None Include="wwwroot\plugins\jquery\jquery.min.map" />
 	</ItemGroup>
 
 </Project>

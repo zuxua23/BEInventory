@@ -12,10 +12,12 @@ using Microsoft.EntityFrameworkCore;
 public class PrintTagRegisService : IPrintTagRegisService
 {
     private readonly AppDBContext _db;
+    private readonly IConfiguration _config;
 
-    public PrintTagRegisService(AppDBContext db)
+    public PrintTagRegisService(AppDBContext db, IConfiguration config)
     {
         _db = db;
+        _config = config;
     }
 
     public async Task PrintAsync(
@@ -104,18 +106,19 @@ public class PrintTagRegisService : IPrintTagRegisService
                     $"A{item.ItmId}{lastNumber:D10}";
 
                 var qr = tagId;
-
                 var sbpl = BuildSBPL(
-                    epc,
-                    item.ItmId,
-                    qr,
-                    dto.Qty
+                    qrTag: qr,
+                    printDate: DateTime.Now.ToString("dd/MM/yyyy"),
+                    itemName: item.Name,
+                    itemId: item.ItmId,
+                    itemDesc: item.Description
                 );
+
+                var printerName = _config["PrinterSettings:PrinterName"];
 
                 bool printed =
                     RawPrinterHelper
-                        .SendStringToPrinter(
-                            "SATO CL4NX Plus (SmaPri)",
+                        .SendStringToPrinter( printerName,
                             sbpl
                         );
 
@@ -206,6 +209,8 @@ public class PrintTagRegisService : IPrintTagRegisService
         }
     }
 
+
+
     public async Task<string> PrintBulkAsync(
         List<PrintTagDto> list,
         string user
@@ -251,65 +256,95 @@ public class PrintTagRegisService : IPrintTagRegisService
 
     private const string SBPL_TEMPLATE = @"
 A
-%1
-H0040
-V00336
-2D30,L,06,1,0
-DN0009,{QR}
-%1
-H0053
-V00201
-P02
-RH0,SATO0.ttf,0,028,031,ITEM : {ITEM}
-Q1
-Z
-A
-PH";
+A3V+00000H+0000CS6#F5A1V00384H0913
+ZAPSWKpercobaan1
+%0H0425V00303P02
+RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
+%0H0656V001162D30,L,07,1,0
+DN0009,{qrTag}
+%0H0083V00303P02
+RH0,SATO0.ttf,0,034,030,{printDate}    
+%0H0684V00053P02
+RH0,SATO0.ttf,0,040,042,1 UNIT
+%0H0083V00275P02
+RH0,SATO0.ttf,0,022,025,Made in Indonesia
+%0H0083V00053P02
+RH0,SATO0.ttf,0,040,042,{itemName}
+%0H0083V00107P02
+RH0,SATO0.ttf,0,041,034,{itemId}
+%0H0083V00150P02
+RH0,SATO0.ttf,0,040,030,{itemDesc}
+Q1Z";
 
-    private string BuildSBPL(
-        string epc,
-        string itemId,
-        string qr,
-        int qty
-    )
-    {
-        return SBPL_TEMPLATE
-            .Replace("{EPC}", epc)
-            .Replace("{ITEM}", itemId)
-            .Replace("{QR}", qr)
-            .Replace("{QTY}", qty.ToString());
-    }
 
-    private byte[] SBPLStringToBytes(
-        string sbpl
-    )
-    {
-        var bytes = new List<byte>();
-
-        foreach (char c in sbpl)
+//    private const string SBPL_TEMPLATE = @"
+//A
+//%1
+//H0040
+//V00336
+//2D30,L,06,1,0
+//DN0009,{QR}
+//%1
+//H0053
+//V00201
+//P02
+//RH0,SATO0.ttf,0,028,031,ITEM : {ITEM}
+//Q1
+//Z
+//";
+    
+    //private string BuildSBPL(
+    //    //string epc,
+    //    string itemId,
+    //    string qr,
+    //    int qty
+    //)
+        private string BuildSBPL(
+            string qrTag,
+            string printDate,
+            string itemName,
+            string itemId,
+            string itemDesc
+        )
         {
-            switch (c)
-            {
-                case '\u0002':
-                    bytes.Add(0x02);
-                    break;
-
-                case '\u0003':
-                    bytes.Add(0x03);
-                    break;
-
-                case '\u001B':
-                    bytes.Add(0x1B);
-                    break;
-
-                default:
-                    bytes.Add((byte)c);
-                    break;
-            }
+        return SBPL_TEMPLATE
+            .Replace("{qrTag}", qrTag)
+            .Replace("{printDate}", printDate)
+            .Replace("{itemName}", itemName)
+            .Replace("{itemId}", itemId)
+            .Replace("{itemDesc}", itemDesc);
         }
 
-        return bytes.ToArray();
-    }
+    //private byte[] SBPLStringToBytes(
+    //    string sbpl
+    //)
+    //{
+    //    var bytes = new List<byte>();
+
+    //    foreach (char c in sbpl)
+    //    {
+    //        switch (c)
+    //        {
+    //            case '\u0002':
+    //                bytes.Add(0x02);
+    //                break;
+
+    //            case '\u0003':
+    //                bytes.Add(0x03);
+    //                break;
+
+    //            case '\u001B':
+    //                bytes.Add(0x1B);
+    //                break;
+
+    //            default:
+    //                bytes.Add((byte)c);
+    //                break;
+    //        }
+    //    }
+
+    //    return bytes.ToArray();
+    //}
 
     public async Task RegisterAsync(
         TagRegistrationDto dto,

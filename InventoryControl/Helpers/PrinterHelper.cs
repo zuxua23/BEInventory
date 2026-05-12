@@ -1,82 +1,11 @@
-﻿//using System.Runtime.InteropServices;
-//using System.Text;
-
-//namespace InventoryControl.Helpers;
-
-//using System;
-//using System.Runtime.InteropServices;
-//using System.Text;
-
-//public class PrinterHelper
-//{
-//    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-//    public class DOCINFOA
-//    {
-//        public string pDocName;
-//        public string pOutputFile;
-//        public string pDataType;
-//    }
-
-//    [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA")]
-//    public static extern bool OpenPrinter(string szPrinter, out nint hPrinter, nint pd);
-
-//    [DllImport("winspool.Drv", EntryPoint = "ClosePrinter")]
-//    public static extern bool ClosePrinter(nint hPrinter);
-
-//    [DllImport("winspool.Drv", EntryPoint = "StartDocPrinterA")]
-//    public static extern bool StartDocPrinter(nint hPrinter, int level, DOCINFOA di);
-
-//    [DllImport("winspool.Drv", EntryPoint = "EndDocPrinter")]
-//    public static extern bool EndDocPrinter(nint hPrinter);
-
-//    [DllImport("winspool.Drv", EntryPoint = "StartPagePrinter")]
-//    public static extern bool StartPagePrinter(nint hPrinter);
-
-//    [DllImport("winspool.Drv", EntryPoint = "EndPagePrinter")]
-//    public static extern bool EndPagePrinter(nint hPrinter);
-
-//    [DllImport("winspool.Drv", EntryPoint = "WritePrinter")]
-//    public static extern bool WritePrinter(
-//        nint hPrinter,
-//        byte[] pBytes,
-//        int dwCount,
-//        out int dwWritten);
-
-//    public static bool SendStringToPrinter(string printerName, string data)
-//    {
-//        nint hPrinter;
-//        DOCINFOA di = new DOCINFOA();
-//        di.pDocName = "RFID Tag Print";
-//        di.pDataType = "RAW";
-
-//        if (!OpenPrinter(printerName, out hPrinter, nint.Zero))
-//            return false;
-
-//        StartDocPrinter(hPrinter, 1, di);
-//        StartPagePrinter(hPrinter);
-
-//        byte[] bytes = Encoding.ASCII.GetBytes(data);
-
-//        WritePrinter(hPrinter, bytes, bytes.Length, out int written);
-
-//        EndPagePrinter(hPrinter);
-//        EndDocPrinter(hPrinter);
-//        ClosePrinter(hPrinter);
-
-//        return true;
-//    }
-//}
-
-
-
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 public static class RawPrinterHelper
 {
     public static bool SendStringToPrinter(string printerName, string data)
     {
-        var bytes = Encoding.ASCII.GetBytes(data);
+        var bytes = SBPLStringToBytes(data);
 
         IntPtr unmanagedBytes = Marshal.AllocCoTaskMem(bytes.Length);
         Marshal.Copy(bytes, 0, unmanagedBytes, bytes.Length);
@@ -85,6 +14,34 @@ public static class RawPrinterHelper
 
         Marshal.FreeCoTaskMem(unmanagedBytes);
         return success;
+    }
+    private static byte[] SBPLStringToBytes(string sbpl)
+    {
+        var bytes = new List<byte>();
+
+        foreach (char c in sbpl)
+        {
+            switch (c)
+            {
+                case '\u0002':
+                    bytes.Add(0x02);
+                    break;
+
+                case '\u0003':
+                    bytes.Add(0x03);
+                    break;
+
+                case '\u001B':
+                    bytes.Add(0x1B);
+                    break;
+
+                default:
+                    bytes.Add((byte)c);
+                    break;
+            }
+        }
+
+        return bytes.ToArray();
     }
 
     [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA")]
@@ -108,26 +65,43 @@ public static class RawPrinterHelper
     [DllImport("winspool.Drv")]
     static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
 
-    public static bool SendBytesToPrinter(string printerName, IntPtr pBytes, int dwCount)
+    public static bool SendBytesToPrinter(
+        string printerName,
+        IntPtr pBytes,
+        int dwCount
+    )
     {
-        OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero);
+        bool success = false;
 
-        DOCINFO di = new DOCINFO
+        if (OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero))
         {
-            pDocName = "SBPL Print",
-            pDataType = "RAW"
-        };
+            DOCINFO di = new DOCINFO
+            {
+                pDocName = "SBPL Print",
+                pDataType = "RAW"
+            };
 
-        StartDocPrinter(hPrinter, 1, di);
-        StartPagePrinter(hPrinter);
+            if (StartDocPrinter(hPrinter, 1, di))
+            {
+                if (StartPagePrinter(hPrinter))
+                {
+                    success = WritePrinter(
+                        hPrinter,
+                        pBytes,
+                        dwCount,
+                        out int written
+                    );
 
-        WritePrinter(hPrinter, pBytes, dwCount, out _);
+                    EndPagePrinter(hPrinter);
+                }
 
-        EndPagePrinter(hPrinter);
-        EndDocPrinter(hPrinter);
-        ClosePrinter(hPrinter);
+                EndDocPrinter(hPrinter);
+            }
 
-        return true;
+            ClosePrinter(hPrinter);
+        }
+
+        return success;
     }
 
     [StructLayout(LayoutKind.Sequential)]
