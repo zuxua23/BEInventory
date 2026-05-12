@@ -55,10 +55,6 @@ public class AppDBContext : DbContext
         .IsUnique();
 
 
-        modelBuilder.Entity<Permission>()
-            .HasIndex(p => p.PerId)
-            .IsUnique();
-
         modelBuilder.Entity<User_Role>()
             .HasOne(ur => ur.User)
             .WithMany(u => u.UserRoles)

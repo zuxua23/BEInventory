@@ -92,7 +92,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card shadow-lg h-100">
+                            <div class="card shadow-lg">
                                 <div class="card-header bg-success text-white">
                                     <h6 class="mb-0">
                                         <i class="fas fa-print mr-2"></i>Print
@@ -140,6 +140,7 @@
                                                             <th class="text-center" width="60">#</th>
                                                             <th>Tag ID</th>
                                                             <th>Item Name</th>
+                                                            <th>Epc</th>
                                                             <th>Location</th>
                                                             <th>Status</th>
                                                         </tr>
@@ -158,8 +159,12 @@
 
   
     @Html.Partial("_BaseScript")
-
+    
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
     <script>
+
         let table;
         let rowCounter = 1;
 
@@ -170,43 +175,22 @@
         });
 
         async function loadTagTable() {
-            const res = await fetch("/api/tag", { credentials: "include" });
 
-            if (!res.ok) {
-                Swal.fire("Error", "Failed to load tag data", "error");
-                return;
-            }
+            const data = await Api.get("/api/tag");
+            if (!data) return;
 
-            const data = await res.json();
-
-            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-                $('#datatablesIndex').DataTable().clear().destroy();
-            }
-
-            table = $("#datatablesIndex").DataTable({
-                data: data || [],
-                responsive: true,
-                pageLength: 5,
-                autoWidth: false,
-                lengthMenu: [[5, 10, 25], [5, 10, 25]],
-
-                columnDefs: [
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
                     {
-                        targets: 0,
-                        data: null,
-                        render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1,
-                        className: "text-center",
-                        orderable: false
-                    },
-                    {
-                        targets: 1,
                         data: "tagId",
                         render: d => `<code>${d}</code>`
                     },
-                    { targets: 2, data: "itemName" },
-                    { targets: 3, data: "location" },
+                    { data: "itemName" },
+                    { data: "epc" },
+                    { data: "location" },
                     {
-                        targets: 4,
                         data: "status",
                         render: function (data) {
                             if (data === "IN") return `<span class="badge badge-success">IN</span>`;
@@ -214,54 +198,14 @@
                             return `<span class="badge badge-secondary">${data || "-"}</span>`;
                         }
                     }
-                ],
-
-                dom:
-                    "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                    "<'table-responsive card-body p-0't>" +
-                    "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
-
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: " Search tags...",
-                    lengthMenu: "Show _MENU_ Entries",
-                    emptyTable: "No tag data found",
-                    paginate: { previous: "Previous", next: "Next" }
-                },
-
-                drawCallback: function () {
-                    $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
-                    $('.dataTables_filter input').addClass('form-control form-control-sm rounded shadow-sm');
-
-                    if ($.fn.responsive) {
-                        table.responsive.recalc();
-                    }
-                }
+                ]
             });
         }
 
         async function loadItemsDropdown(selectElement) {
-            const response = await fetch("/api/item", {
-                method: "GET",
-                credentials: "include"
-            });
 
-            if (response.status === 401) {
-                window.location.href = "/login";
-                return;
-            }
-
-            if (response.status === 403) {
-                Swal.fire("Access denied", "", "warning");
-                return;
-            }
-
-            if (!response.ok) {
-                Swal.fire("Error", "Failed to load items", "error");
-                return;
-            }
-
-            const data = await response.json();
+            const data = await Api.get("/api/item");
+            if (!data) return Alert.error("Failed to load items");
 
             let options = `<option value="">-- Select Item --</option>`;
 
@@ -287,6 +231,7 @@
         });
 
         function addRow() {
+
             rowCounter++;
 
             const tbody = document.querySelector('#tagTable tbody');
@@ -295,7 +240,7 @@
             newRow.innerHTML = `
                 <td>${rowCounter}</td>
                 <td>
-                    <select class="form-control item-select"></select>
+                    <select class="form-control select2 item-select"></select>
                 </td>
                 <td>
                     <input type="number" class="form-control qty-input" min="1" max="1000" value="1">
@@ -315,8 +260,16 @@
             updateTotalTags();
         }
 
-        function removeRow(button) {
+        async function removeRow(button) {
+
+            const confirm = await Alert.confirm({
+                text: "Delete row?"
+            });
+
+            if (!confirm.isConfirmed) return;
+
             button.closest('tr').remove();
+
             updateRowNumbers();
             updateTotalTags();
         }
@@ -332,6 +285,7 @@
         }
 
         function updateTotalTags() {
+
             let total = 0;
 
             document.querySelectorAll('.qty-input').forEach(input => {
@@ -358,81 +312,90 @@
             let isValid = true;
 
             rows.forEach(row => {
+
                 const itemId = row.querySelector('.item-select').value;
                 const qty = row.querySelector('.qty-input').value;
 
-                if (!itemId) {
-                    isValid = false;
-                }
+                if (!itemId) isValid = false;
 
                 if (itemId && qty > 0) {
                     payload.push({
-                        itemId: itemId,
+                        itemId,
                         qty: parseInt(qty)
                     });
                 }
             });
 
             if (!isValid) {
-                Swal.fire("Warning", "Please select item in all rows", "warning");
+                Alert.error("Please select item in all rows");
                 btn.disabled = false;
                 return;
             }
 
             if (payload.length === 0) {
-                Swal.fire("Warning", "Please add at least one item", "warning");
+                Alert.error("Please add at least one item");
                 btn.disabled = false;
                 return;
             }
 
             Swal.fire({
                 title: "Printing...",
-                text: "Please wait",
                 allowOutsideClick: false,
                 didOpen: () => Swal.showLoading()
             });
 
             try {
-                const response = await fetch("/api/tag/print", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
 
-                if (response.ok) {
-                    Swal.fire("Success", "Tags printed successfully", "success");
+                const res = await Api.post("/api/tag/print", payload);
 
-                    const tbody = document.querySelector('#tagTable tbody');
-                    tbody.innerHTML = `
-                        <tr>
-                            <td>1</td>
-                            <td>
-                                <select class="form-control select2 item-select" id="firstItemSelect"></select>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control qty-input" value="1">
-                            </td>
-                            <td></td>
-                        </tr>
-                    `;
+                if (res && res.ok) {
 
-                    rowCounter = 1;
+                    await Alert.success("Tags printed successfully");
 
-                    loadItemsDropdown(document.getElementById("firstItemSelect"));
-                    updateTotalTags();
+                    resetForm();
                     loadTagTable();
 
-                } else {
-                    const err = await response.text();
-                    Swal.fire("Error", "Print failed: " + err, "error");
-                }
 
+                } else if (res && !res.ok) {
+                      if (res.errorData?.type === "warning")
+                      return;
+
+                    Alert.error("Failed to print tags");
+                }
             } catch (err) {
-                Swal.fire("Error", err.message, "error");
+
+                Alert.error(err.message);
+
             } finally {
+
                 btn.disabled = false;
+
             }
         }
+
+        function resetForm() {
+
+            const tbody = document.querySelector('#tagTable tbody');
+
+            tbody.innerHTML = `
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <select class="form-control select2 item-select" id="firstItemSelect"></select>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control qty-input" value="1">
+                    </td>
+                    <td></td>
+                </tr>
+            `;
+
+            rowCounter = 1;
+
+            loadItemsDropdown(document.getElementById("firstItemSelect"));
+            updateTotalTags();
+        }
+
     </script>
 
 </body>

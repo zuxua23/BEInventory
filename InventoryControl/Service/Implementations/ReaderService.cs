@@ -1,11 +1,11 @@
-﻿using InventoryControl.Database;
+﻿namespace InventoryControl.Service.Implementations;
+
+using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
-
-namespace InventoryControl.Service.Implementations;
 
 public class ReaderService : IReaderService
 {
@@ -20,7 +20,11 @@ public class ReaderService : IReaderService
     {
         try
         {
-             var reader = await _db.Readers
+            DailyFileLogger.Info(
+                "Retrieving all active readers."
+            );
+
+            var readers = await _db.Readers
                 .Include(r => r.LocationNavigation)
                 .Where(r => !r.IsDelete)
                 .Select(r => new ReaderResponseDto
@@ -33,21 +37,38 @@ public class ReaderService : IReaderService
                     IpAddress = r.IpAddress
                 })
                 .ToListAsync();
-            return reader;
-        } catch(Exception ex)
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved {readers.Count} reader(s)."
+            );
+
+            return readers;
+        }
+        catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di GetAllAsync.", ex);
+            DailyFileLogger.Error(
+                "An error occurred while retrieving readers.",
+                ex
+            );
+
             throw;
         }
-       
     }
-    public async Task<ReaderResponseDto> GetByIdAsync(string id)
+
+    public async Task<ReaderResponseDto?> GetByIdAsync(string id)
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Retrieving reader with ID '{id}'."
+            );
+
             var reader = await _db.Readers
                 .Include(r => r.LocationNavigation)
-                .Where(x => x.Id == id && x.IsDelete == false)
+                .Where(x =>
+                    x.Id == id &&
+                    !x.IsDelete
+                )
                 .Select(x => new ReaderResponseDto
                 {
                     Id = x.Id,
@@ -59,45 +80,102 @@ public class ReaderService : IReaderService
                 })
                 .FirstOrDefaultAsync();
 
-            if (reader != null)
-                DailyFileLogger.Info($"GetByIdAsync berhasil untuk ID {id}.");
-            else
-                DailyFileLogger.Warn($"GetByIdAsync: Reader dengan ID {id} tidak ditemukan.");
+            if (reader == null)
+            {
+                DailyFileLogger.Warn(
+                    $"Reader with ID '{id}' was not found."
+                );
+
+                return null;
+            }
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved reader with ID '{id}'."
+            );
 
             return reader;
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error($"Error di GetByIdAsync untuk ID {id}.", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while retrieving reader with ID '{id}'.",
+                ex
+            );
+
             throw;
         }
     }
-    public async Task CreateAsync(ReaderDto dto, string createdBy)
+
+    public async Task CreateAsync(
+        ReaderDto dto,
+        string createdBy
+    )
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Creating new reader with ReaderId '{dto.RdrId}'.",
+                createdBy
+            );
+
             if (string.IsNullOrWhiteSpace(dto.RdrId))
-                DailyFileLogger.Warn("Reader ID tidak boleh kosong");
+            {
+                DailyFileLogger.Warn(
+                    "Reader ID cannot be empty.",
+                    createdBy
+                );
+
+                throw new Exception(
+                    "Reader ID cannot be empty."
+                );
+            }
 
             if (string.IsNullOrWhiteSpace(dto.IpAddress))
-                DailyFileLogger.Warn("IP Address tidak boleh kosong");
+            {
+                DailyFileLogger.Warn(
+                    "IP Address cannot be empty.",
+                    createdBy
+                );
+
+                throw new Exception(
+                    "IP Address cannot be empty."
+                );
+            }
 
             var existingReader = await _db.Readers
-                .FirstOrDefaultAsync(x => x.RdrId == dto.RdrId && !x.IsDelete);
+                .FirstOrDefaultAsync(x =>
+                    x.RdrId == dto.RdrId &&
+                    !x.IsDelete
+                );
 
             if (existingReader != null)
             {
-                DailyFileLogger.Warn($"CreateAsync: Reader ID {dto.RdrId} sudah digunakan oleh Reader dengan ID {existingReader.Id}");
-                    throw new Exception("Reader ID sudah digunakan");
+                DailyFileLogger.Warn(
+                    $"Reader ID '{dto.RdrId}' is already in use.",
+                    createdBy
+                );
+
+                throw new Exception(
+                    "Reader ID already exists."
+                );
             }
 
             var location = await _db.Locations
-                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == dto.LocId &&
+                    !x.IsDelete
+                );
 
             if (location == null)
             {
-                DailyFileLogger.Warn($"CreateAsync: Location dengan ID {dto.LocId} tidak ditemukan");
-                throw new Exception("Location tidak ditemukan");
+                DailyFileLogger.Warn(
+                    $"Location with ID '{dto.LocId}' was not found.",
+                    createdBy
+                );
+
+                throw new Exception(
+                    "Location not found."
+                );
             }
 
             var reader = new Reader
@@ -110,56 +188,133 @@ public class ReaderService : IReaderService
                 Status = "READY",
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow,
+                IsDelete = false
             };
 
             _db.Readers.Add(reader);
-            await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"CreateAsync berhasil untuk Reader ID {dto.RdrId}.");
-        }
-        catch(Exception ex)
-        {
-            DailyFileLogger.Error($"Error di CreateAsync untuk Reader ID {dto.RdrId}.", ex);
-            throw;
 
+            await _db.SaveChangesAsync();
+
+            DailyFileLogger.Info(
+                $"Reader successfully created with ReaderId '{dto.RdrId}'.",
+                createdBy
+            );
+
+            DailyFileLogger.Audit(
+                action: "CREATE",
+                entity: "READER",
+                entityId: reader.RdrId,
+                performedBy: createdBy,
+                description:
+                    $"Created reader '{dto.RdrName}' with IP '{dto.IpAddress}'."
+            );
         }
-        
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                $"An error occurred while creating reader '{dto.RdrId}'.",
+                ex,
+                createdBy
+            );
+
+            throw;
+        }
     }
-    public async Task UpdateAsync(string id, ReaderDto dto, string updatedBy)
+
+    public async Task UpdateAsync(
+        string id,
+        ReaderDto dto,
+        string updatedBy
+    )
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Updating reader with ID '{id}'.",
+                updatedBy
+            );
+
             var reader = await _db.Readers
-                .FirstOrDefaultAsync(r => r.Id == id && !r.IsDelete);
+                .FirstOrDefaultAsync(r =>
+                    r.Id == id &&
+                    !r.IsDelete
+                );
 
             if (reader == null)
             {
-                DailyFileLogger.Warn($"UpdateAsync: Reader dengan ID {id} tidak ditemukan");
-                throw new Exception("Reader tidak ditemukan");
+                DailyFileLogger.Warn(
+                    $"Reader with ID '{id}' was not found.",
+                    updatedBy
+                );
+
+                throw new Exception(
+                    "Reader not found."
+                );
             }
 
             if (string.IsNullOrWhiteSpace(dto.RdrId))
-                DailyFileLogger.Warn("Reader ID tidak boleh kosong");
+            {
+                DailyFileLogger.Warn(
+                    "Reader ID cannot be empty.",
+                    updatedBy
+                );
+
+                throw new Exception(
+                    "Reader ID cannot be empty."
+                );
+            }
 
             if (string.IsNullOrWhiteSpace(dto.IpAddress))
-                DailyFileLogger.Warn("IP Address tidak boleh kosong");
+            {
+                DailyFileLogger.Warn(
+                    "IP Address cannot be empty.",
+                    updatedBy
+                );
+
+                throw new Exception(
+                    "IP Address cannot be empty."
+                );
+            }
 
             var location = await _db.Locations
-                .FirstOrDefaultAsync(x => x.Id == dto.LocId);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == dto.LocId &&
+                    !x.IsDelete
+                );
 
             if (location == null)
             {
-                DailyFileLogger.Warn($"UpdateAsync: Location dengan ID {dto.LocId} tidak ditemukan");
-                throw new Exception("Location tidak ditemukan");
+                DailyFileLogger.Warn(
+                    $"Location with ID '{dto.LocId}' was not found.",
+                    updatedBy
+                );
+
+                throw new Exception(
+                    "Location not found."
+                );
             }
 
             var duplicateReader = await _db.Readers
-                .FirstOrDefaultAsync(x => x.RdrId == dto.RdrId && x.Id != id && !x.IsDelete);
+                .FirstOrDefaultAsync(x =>
+                    x.RdrId == dto.RdrId &&
+                    x.Id != id &&
+                    !x.IsDelete
+                );
 
             if (duplicateReader != null)
             {
-                DailyFileLogger.Warn($"UpdateAsync: Reader ID {dto.RdrId} sudah digunakan oleh Reader dengan ID {duplicateReader.Id}");
-                throw new Exception("Reader ID sudah digunakan");
+                DailyFileLogger.Warn(
+                    $"Reader ID '{dto.RdrId}' is already in use.",
+                    updatedBy
+                );
+
+                throw new Exception(
+                    "Reader ID already exists."
+                );
             }
+
+            var oldReaderId = reader.RdrId;
+            var oldIpAddress = reader.IpAddress;
 
             reader.RdrId = dto.RdrId;
             reader.Name = dto.RdrName;
@@ -169,35 +324,85 @@ public class ReaderService : IReaderService
             reader.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"UpdateAsync berhasil untuk ID {id}.");
-        } catch(Exception ex)
+
+            DailyFileLogger.Info(
+                $"Reader successfully updated. ID='{id}'.",
+                updatedBy
+            );
+
+            DailyFileLogger.Audit(
+                action: "UPDATE",
+                entity: "READER",
+                entityId: reader.RdrId,
+                performedBy: updatedBy,
+                description:
+                    $"Updated reader from ReaderId='{oldReaderId}', IP='{oldIpAddress}' " +
+                    $"to ReaderId='{dto.RdrId}', IP='{dto.IpAddress}'."
+            );
+        }
+        catch (Exception ex)
         {
-            DailyFileLogger.Error($"Error di UpdateAsync untuk ID {id}.", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while updating reader with ID '{id}'.",
+                ex,
+                updatedBy
+            );
+
             throw;
         }
-        
     }
 
     public async Task DeleteAsync(string id)
     {
         try
         {
+            DailyFileLogger.Info(
+                $"Deleting reader with ID '{id}'."
+            );
+
             var reader = await _db.Readers
-                .FirstOrDefaultAsync(r => r.Id == id && !r.IsDelete);
+                .FirstOrDefaultAsync(r =>
+                    r.Id == id &&
+                    !r.IsDelete
+                );
 
             if (reader == null)
-                DailyFileLogger.Warn("Reader tidak ditemukan");
+            {
+                DailyFileLogger.Warn(
+                    $"Reader with ID '{id}' was not found."
+                );
+
+                throw new Exception(
+                    "Reader not found."
+                );
+            }
 
             reader.IsDelete = true;
             reader.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
-            DailyFileLogger.Info($"DeleteAsync berhasil untuk ID {id}.");
-        } catch(Exception ex)
+
+            DailyFileLogger.Info(
+                $"Reader successfully soft deleted. ID='{id}'."
+            );
+
+            DailyFileLogger.Audit(
+                action: "DELETE",
+                entity: "READER",
+                entityId: reader.RdrId,
+                performedBy: reader.UpdatedBy ?? "SYSTEM",
+                description:
+                    $"Soft deleted reader '{reader.Name}'."
+            );
+        }
+        catch (Exception ex)
         {
-            DailyFileLogger.Error($"Error di DeleteAsync untuk ID {id}.", ex);
+            DailyFileLogger.Error(
+                $"An error occurred while deleting reader with ID '{id}'.",
+                ex
+            );
+
             throw;
         }
-      
     }
 }

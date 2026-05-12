@@ -28,3 +28,7 @@ public class UpdateUserRoleDto
     public string UserId { get; set; }
     public List<string> Roles { get; set; } 
 }
+public class UpdatePasswordDto
+{
+    public string Password { get; set; }
+}

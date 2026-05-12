@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using static InventoryControl.Service.Implementations.StockOutService;
 
 namespace InventoryControl.Controllers;
+
+[InventoryLock]
 [ApiController]
 [Route("stockout")]
 public class StockOutController : ControllerBase
@@ -30,7 +32,7 @@ public class StockOutController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Finalize(StockOutDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
         await _service.StockOutAsync(dto, user);
 
         return Ok("Stock Out finalized");
@@ -40,7 +42,7 @@ public class StockOutController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Scan(StockOutResponseDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
         await _service.ScanStockOutAsync(dto, user);
 
         return Ok("Scanned");
@@ -91,5 +93,23 @@ public class StockOutController : ControllerBase
     {
         var data = await _service.GetTagsAsync(doId);
         return Ok(data);
+    }
+
+    [HttpGet("invalid-scan")]
+    public IActionResult GetInvalidScan()
+    {
+        if (StockOutService.LastInvalidTag == null)
+        {
+            return Ok(null);
+        }
+
+        var result = new
+        {
+            tagId = StockOutService.LastInvalidTag
+        };
+
+        StockOutService.LastInvalidTag = null;
+
+        return Ok(result);
     }
 }

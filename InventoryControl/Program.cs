@@ -24,9 +24,9 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 builder.Services.AddApplicationServices();
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
-// Mendaftarkan IHttpContextAccessor agar bisa akses Session
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<JwtTokenHelper>();
+builder.Services.AddScoped<InventoryLockFilter>();
 builder.Services.AddSingleton<ImpinjReaderService>();
 builder.Services.AddSingleton<ConfigService>();
 builder.Services.AddSingleton<AppRestartService>();

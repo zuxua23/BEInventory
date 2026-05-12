@@ -49,8 +49,8 @@ public class PermissionApiController : ControllerBase
     [AuthorizePermissionHybrid("PERMISSION_CREATE")]
     public async Task<IActionResult> Create([FromBody] RoleRequestDto dto)
         {
-            var user = "system"; // ambil dari login nanti
-            await _service.Create(dto, user);
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.Create(dto, user);
             return Ok();
         }
 
@@ -60,7 +60,8 @@ public class PermissionApiController : ControllerBase
 
     public async Task<IActionResult> Update(string id, [FromBody] RoleRequestDto dto)
         {
-            var user = "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+
             await _service.Update(id, dto, user);
             return Ok();
         }

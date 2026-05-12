@@ -47,19 +47,20 @@ public class UserApiController : ControllerBase
     public async Task<IActionResult> Update(string id, UpdateUserDto dto)
     {
         var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
         await _service.UpdateAsync(id, dto, updatedBy);
         return Ok(new { message = "User berhasil diperbarui" });
     }
 
     [HttpPost("update-roles")]
-    [AuthorizePermissionHybrid("USER_UPDATE")]
+    [AuthorizePermissionHybrid("USER_UPDATEROLE")]
     public async Task<IActionResult> UpdateRoles([FromBody] UpdateUserRoleDto dto)
     {
         try
         {
-            var user = HttpContext.User.Identity?.Name ?? "system";
+            var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
 
-            await _service.UpdateUserRolesAsync(dto, user);
+            await _service.UpdateUserRolesAsync(dto, updatedBy);
 
             return Ok(new { message = "Role berhasil diupdate" });
         }
@@ -67,6 +68,16 @@ public class UserApiController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+    [HttpPut("{id}/password")]
+    [AuthorizePermissionHybrid("USER_UPDATEPASSWORD")]
+    public async Task<IActionResult> UpdatePassword(string id, UpdatePasswordDto dto)
+    {
+        var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        await _service.UpdatePasswordAsync(id, dto, updatedBy);
+
+        return Ok(new { message = "Password updated successfully" });
     }
 
     [HttpDelete("{id}")]

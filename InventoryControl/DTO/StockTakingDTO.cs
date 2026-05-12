@@ -36,3 +36,24 @@ public class BulkItemDto
 {
     public string Epc { get; set; } = null!;
 }
+
+public class StockTakingExportDto
+{
+    public string ItemId { get; set; }
+    public int Qty { get; set; }
+    public string Location { get; set; }
+    public string Status { get; set; }
+}
+
+public class StockTakingCompareExportDto
+{
+    public string ItemId { get; set; }
+    public string Location { get; set; }
+
+    public int QtySystem { get; set; }
+    public int QtyScan { get; set; }
+
+    public int Selisih { get; set; }
+
+    public string Status { get; set; }
+}

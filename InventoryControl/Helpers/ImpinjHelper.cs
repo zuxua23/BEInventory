@@ -1,167 +1,372 @@
 ﻿using Impinj.OctaneSdk;
 using InventoryControl.DTO;
-using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
+using InventoryControl.Utility;
 using System.Collections.Concurrent;
+
 using static InventoryControl.Service.Implementations.StockOutService;
 
 public class ImpinjReaderService
 {
     private readonly IServiceScopeFactory _scopeFactory;
 
-    // Thread-safe dictionary
-    private readonly ConcurrentDictionary<string, ImpinjReader> _readers = new();
+    private readonly ConcurrentDictionary<string, ImpinjReader>
+        _readers = new();
 
-    // Cache EPC untuk anti double scan
-    private readonly ConcurrentDictionary<string, DateTime> _tagCache = new();
+    private readonly ConcurrentDictionary<string, DateTime>
+        _tagCache = new();
 
     private const double RSSI_THRESHOLD = -60;
+
     private const int CACHE_TTL_SECONDS = 10;
 
-    public ImpinjReaderService(IServiceScopeFactory scopeFactory)
+    public ImpinjReaderService(
+        IServiceScopeFactory scopeFactory
+    )
     {
         _scopeFactory = scopeFactory;
     }
 
-
-
-    public async Task StartReader(string readerId, string ip)
+    public async Task StartReader(
+        string readerId,
+        string ip
+    )
     {
-        if (_readers.ContainsKey(readerId))
-            return;
-
-        var reader = new ImpinjReader();
-
-        // Retry connect
-        int retry = 3;
-        while (retry-- > 0)
+        try
         {
-            try
+            SystemLogger.Info(
+                $"Starting RFID reader connection. ReaderId='{readerId}', IP='{ip}'."
+            );
+
+            if (_readers.ContainsKey(readerId))
             {
-                reader.Connect(ip);
-                break;
+                SystemLogger.Warn(
+                    $"RFID reader '{readerId}' is already running."
+                );
+
+                return;
             }
-            catch
+
+            var reader = new ImpinjReader();
+
+            int retry = 3;
+
+            while (retry-- > 0)
             {
-                if (retry == 0) throw;
-                await Task.Delay(1000);
+                try
+                {
+                    SystemLogger.Info(
+                        $"Attempting RFID reader connection. ReaderId='{readerId}', RemainingRetry='{retry}'."
+                    );
+
+                    reader.Connect(ip);
+
+                    SystemLogger.Info(
+                        $"RFID reader connected successfully. ReaderId='{readerId}'."
+                    );
+
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    SystemLogger.Warn(
+                        $"RFID reader connection failed. ReaderId='{readerId}', RemainingRetry='{retry}'."
+                    );
+
+                    if (retry == 0)
+                    {
+                        SystemLogger.Error(
+                            $"Failed to connect RFID reader '{readerId}'.",
+                            ex
+                        );
+
+                        throw;
+                    }
+
+                    await Task.Delay(1000);
+                }
             }
+
+            var settings =
+                reader.QueryDefaultSettings();
+
+            settings.Report.Mode =
+                ReportMode.Individual;
+
+            settings.Report
+                .IncludeAntennaPortNumber =
+                    true;
+
+            settings.Report
+                .IncludeFirstSeenTime =
+                    true;
+
+            settings.ReaderMode =
+                ReaderMode.AutoSetDenseReader;
+
+            reader.ApplySettings(settings);
+
+            SystemLogger.Info(
+                $"RFID reader settings applied successfully. ReaderId='{readerId}'."
+            );
+
+            reader.TagsReported +=
+                HandleTagsWrapper;
+
+            reader.Start();
+
+            _readers.TryAdd(
+                readerId,
+                reader
+            );
+
+            SystemLogger.Info(
+                $"RFID reader started successfully. ReaderId='{readerId}'."
+            );
         }
+        catch (Exception ex)
+        {
+            SystemLogger.Error(
+                $"An error occurred while starting RFID reader '{readerId}'.",
+                ex
+            );
 
-        var settings = reader.QueryDefaultSettings();
-
-        settings.Report.Mode = ReportMode.Individual;
-        settings.Report.IncludeAntennaPortNumber = true;
-        settings.Report.IncludeFirstSeenTime = true;
-
-        settings.ReaderMode = ReaderMode.AutoSetDenseReader;
-
-        reader.ApplySettings(settings);
-
-        // Register event handler (NO anonymous function!)
-        reader.TagsReported += HandleTagsWrapper;
-
-        reader.Start();
-
-        // Atomic add
-        _readers.TryAdd(readerId, reader);
-
-        Console.WriteLine($"Reader {readerId} connected ({ip})");
+            throw;
+        }
     }
-
-
 
     public void StopReader(string readerId)
     {
-        if (!_readers.TryGetValue(readerId, out var reader))
-            return;
-
         try
         {
+            SystemLogger.Info(
+                $"Stopping RFID reader '{readerId}'."
+            );
+
+            if (
+                !_readers.TryGetValue(
+                    readerId,
+                    out var reader
+                )
+            )
+            {
+                SystemLogger.Warn(
+                    $"RFID reader '{readerId}' was not found."
+                );
+
+                return;
+            }
+
             reader.Stop();
 
-            reader.TagsReported -= HandleTagsWrapper;
+            reader.TagsReported -=
+                HandleTagsWrapper;
 
             reader.Disconnect();
 
-            Console.WriteLine($"Reader {readerId} stopped");
+            SystemLogger.Info(
+                $"RFID reader stopped successfully. ReaderId='{readerId}'."
+            );
+
+            _readers.TryRemove(
+                readerId,
+                out _
+            );
+
+            RfidSession.Remove(readerId);
+
+            SystemLogger.Info(
+                $"RFID session removed successfully. ReaderId='{readerId}'."
+            );
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error stopping reader {readerId}: {ex.Message}");
+            SystemLogger.Error(
+                $"An error occurred while stopping RFID reader '{readerId}'.",
+                ex
+            );
         }
-
-        _readers.TryRemove(readerId, out _);
-
-        // Remove session
-        RfidSession.Remove(readerId);
     }
 
-
-    private async void HandleTagsWrapper(object sender, TagReport report)
+    private async void HandleTagsWrapper(
+        object sender,
+        TagReport report
+    )
     {
         try
         {
-            Console.WriteLine($"Tags reported: {report.Tags.Count} from reader event");
-            var reader = sender as ImpinjReader;
+            var reader =
+                sender as ImpinjReader;
 
             var readerId = _readers
-                .FirstOrDefault(x => x.Value == reader).Key;
+                .FirstOrDefault(x =>
+                    x.Value == reader
+                )
+                .Key;
 
-            if (readerId != null)
-                await HandleTags(readerId, report);
+            if (readerId == null)
+            {
+                SystemLogger.Warn(
+                    "RFID tag event received without valid reader session."
+                );
+
+                return;
+            }
+
+            SystemLogger.Info(
+                $"RFID tag batch received. ReaderId='{readerId}', TotalTags='{report.Tags.Count}'."
+            );
+
+            await HandleTags(
+                readerId,
+                report
+            );
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error HandleTagsWrapper: " + ex.Message);
+            SystemLogger.Error(
+                "An error occurred while processing RFID tag wrapper event.",
+                ex
+            );
         }
     }
 
-
-    private async Task HandleTags(string readerId, TagReport report)
+    private async Task HandleTags(
+        string readerId,
+        TagReport report
+    )
     {
-        var doId = RfidSession.Get(readerId);
-        if (doId == null) return;
-        Console.WriteLine($"SESSION DO: {doId}");
-
-        using var scope = _scopeFactory.CreateScope();
-        var service = scope.ServiceProvider.GetRequiredService<IStockOutService>();
-
-        CleanupCache();
-
-        foreach (var tag in report.Tags)
+        try
         {
-            var epc = tag.Epc.ToString().Replace(" ", "").Trim().ToUpper();
-            Console.WriteLine($"Tag detected: {epc}, RSSI: {tag.PeakRssiInDbm} dBm");
-            // Filter RSSI
-            if (tag.PeakRssiInDbm < RSSI_THRESHOLD)
-                continue;
+            var doId =
+                RfidSession.Get(readerId);
 
-            // Anti duplicate scan (within 2 seconds)
-            if (_tagCache.ContainsKey(epc) &&
-                (DateTime.UtcNow - _tagCache[epc]).TotalSeconds < 2)
-                continue;
-
-            _tagCache[epc] = DateTime.UtcNow;
-
-            await service.ScanStockOutAsync(new StockOutResponseDto
+            if (doId == null)
             {
-                Epc = epc,
-                ReaderId = readerId,
-                DoId = doId
-            }, "RFID_SYSTEM");
+                SystemLogger.Warn(
+                    $"RFID session not found for ReaderId '{readerId}'."
+                );
+
+                return;
+            }
+
+            SystemLogger.Info(
+                $"RFID processing session found. ReaderId='{readerId}', DO='{doId}'."
+            );
+
+            using var scope =
+                _scopeFactory.CreateScope();
+
+            var service =
+                scope.ServiceProvider
+                    .GetRequiredService<IStockOutService>();
+
+            CleanupCache();
+
+            int processedCount = 0;
+            int skippedCount = 0;
+
+            foreach (var tag in report.Tags)
+            {
+                var epc = tag.Epc
+                    .ToString()
+                    .Replace(" ", "")
+                    .Trim()
+                    .ToUpper();
+
+                if (
+                    tag.PeakRssiInDbm <
+                    RSSI_THRESHOLD
+                )
+                {
+                    skippedCount++;
+
+                    continue;
+                }
+
+                if (
+                    _tagCache.ContainsKey(epc) &&
+                    (
+                        DateTime.UtcNow -
+                        _tagCache[epc]
+                    ).TotalSeconds < 2
+                )
+                {
+                    skippedCount++;
+
+                    continue;
+                }
+
+                _tagCache[epc] =
+                    DateTime.UtcNow;
+
+                processedCount++;
+
+                await service.ScanStockOutAsync(
+                    new StockOutResponseDto
+                    {
+                        Epc = epc,
+                        ReaderId = readerId,
+                        DoId = doId
+                    },
+                    "RFID_SYSTEM"
+                );
+            }
+
+            SystemLogger.Info(
+                $"RFID tag processing completed. ReaderId='{readerId}', Processed='{processedCount}', Skipped='{skippedCount}'."
+            );
+        }
+        catch (Exception ex)
+        {
+            SystemLogger.Error(
+                $"An error occurred while processing RFID tags for ReaderId '{readerId}'.",
+                ex
+            );
         }
     }
 
- 
     private void CleanupCache()
     {
-        foreach (var key in _tagCache.Keys)
+        try
         {
-            if ((DateTime.UtcNow - _tagCache[key]).TotalSeconds > CACHE_TTL_SECONDS)
+            int removedCount = 0;
+
+            foreach (var key in _tagCache.Keys)
             {
-                _tagCache.TryRemove(key, out _);
+                if (
+                    (
+                        DateTime.UtcNow -
+                        _tagCache[key]
+                    ).TotalSeconds >
+                    CACHE_TTL_SECONDS
+                )
+                {
+                    if (
+                        _tagCache.TryRemove(
+                            key,
+                            out _
+                        )
+                    )
+                    {
+                        removedCount++;
+                    }
+                }
             }
+
+            if (removedCount > 0)
+            {
+                SystemLogger.Info(
+                    $"RFID cache cleanup completed. Removed='{removedCount}'."
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            SystemLogger.Error(
+                "An error occurred during RFID cache cleanup.",
+                ex
+            );
         }
     }
 }

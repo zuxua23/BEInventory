@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
-
+[InventoryLock]
 //[ApiController]
 //[Route("stockin")]    
 public class StockInController : ControllerBase
@@ -18,19 +18,9 @@ public class StockInController : ControllerBase
         _service = service;
     }
 
-    //[HttpPost]
-    //public async Task<IActionResult> StockIn(StockInDto dto)
-    //{
-    //    var user = User.Identity?.Name ?? "system";
-
-    //    await _service.StockInAsync(dto, user);
-
-    //    return Ok(new { message = "Stock In berhasil" });
-    //}
-
     [HttpPost]
     [AuthorizePermissionHybrid("STOCK_IN")]
-    public async Task<IActionResult> StockIn([FromBody] StockInDto dto) // Tambahkan [FromBody]
+    public async Task<IActionResult> StockIn([FromBody] StockInDto dto) 
     {
         try
         {

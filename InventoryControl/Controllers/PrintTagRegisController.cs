@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
+
+[InventoryLock]
 [ApiController]
 [Route("api/tag")]
 public class PrintTagRegisController: ControllerBase

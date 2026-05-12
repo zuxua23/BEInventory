@@ -10,10 +10,6 @@ public class Permission
     [Column("id")]
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    [Required]
-    [Column("per_id")]
-    public string PerId { get; set; }
-
     [Column("module_id")]
     public string? ModuleId { get; set; }
 
@@ -27,9 +23,6 @@ public class Permission
     [Required]
     [Column("per_name")]
     public string Name { get; set; }
-
-    [Column("per_desc")]
-    public string? Desc { get; set; }
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }

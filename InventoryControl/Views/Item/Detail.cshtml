@@ -79,6 +79,14 @@
                                             <input id="itemName" name="itemName" class="form-control" @(canUpdate ? "" : "disabled")>
                                         </div>
 
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-tag text-muted mr-2"></i>
+                                                Description 
+                                            </label>
+                                            <input id="itemDesc" name="itemDesc" class="form-control" @(canUpdate ? "" : "disabled")>
+                                        </div>
+
                                     </form>
 
                                     <div class="d-flex justify-content-end pt-3 border-top">
@@ -108,6 +116,7 @@
     @Html.Partial("_BaseScript")
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         let id = "@ViewData["id"]";
@@ -127,6 +136,7 @@
 
             $("#itemId").val(item.itemId);
             $("#itemName").val(item.itemName);
+            $("#itemDesc").val(item.itemDesc);
         }
 
 
@@ -141,23 +151,21 @@
                 itemName: $("#itemName").val()
             };
 
-            const res = await Api.request(`/api/item/${id}`, {
-                method: "PUT",
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.put(`/api/item/${id}`, payload);
 
-            if (res && res.ok) {
+                if (res && res.ok) {
 
-                await Alert.success("Item updated successfully");
+                    await Alert.success("Item updated successfully");
 
-                window.location.href = "/item";
+                    window.location.href = "/item";
 
-            } else {
+                } else if (res && !res.ok) {
+                      if (res.errorData?.type === "warning")
+                      return;
 
-                Alert.error("Failed to update item");
-
+                    Alert.error("Failed to update item");
+                }        
             }
-        }
 
 
         $(document).keydown(function (e) {

@@ -113,22 +113,22 @@
                     <div class="modal-body">
 
                         <div class="form-group">
-                            <label><i class="fas fa-hashtag mr-2"></i>Reader ID</label>
+                            <label><i class="fas fa-hashtag mr-2"></i>Reader ID <span class="text-danger">*</span></label>
                             <input type="text" name="rdrId" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label><i class="fas fa-tag mr-2"></i>Name</label>
+                            <label><i class="fas fa-tag mr-2"></i>Name <span class="text-danger">*</span></label>
                             <input type="text" name="rdrName" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label><i class="fas fa-map-marker-alt mr-2"></i>Location</label>
+                            <label><i class="fas fa-map-marker-alt mr-2"></i>Location <span class="text-danger">*</span></label>
                             <select name="locId" id="locIdSelect" class="form-control" required></select> 
                         </div>
 
                         <div class="form-group">
-                            <label><i class="fas fa-network-wired mr-2"></i>IP Address</label>
+                            <label><i class="fas fa-network-wired mr-2"></i>IP Address <span class="text-danger">*</span></label>
                             <input type="text" name="ipAddress" pattern="^(\d{1,3}\.){3}\d{1,3}$" class="form-control" required>
                         </div>
 
@@ -146,24 +146,30 @@
 
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         const canDelete = @canDelete.ToString().ToLower();
 
+        let table;
+
+        $(document).ready(function () {
+            loadReaders();
+        });
 
         async function loadLocationDropdown() {
 
-            const response = await fetch("/api/location", {
-                method: "GET",
-                credentials: "include"
-            });
+            const data = await Api.get("/api/location");
 
-            const data = await response.json();
-                    if (!response.ok) {
-            Swal.fire("Error", "Failed to load locations", "error");
-            return;
-        }
-        let options = `<option></option>`;
+            if (!data) {
+                Alert.error("Failed to load locations");
+                return;
+            }
+
+            let options = `<option></option>`;
 
             data.forEach(loc => {
                 options += `<option value="${loc.id}">${loc.name}</option>`;
@@ -182,124 +188,53 @@
                 dropdownParent: $('#createReader')
             });
         }
-                $(document).on('select2:open', () => {
+
+        $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
-        let table;
 
-        $(document).ready(function () {
-            loadReaders();
-        });
 
         async function loadReaders() {
-            const response = await fetch("/api/reader", {
-                method: "GET",
-                credentials: "include"
+
+            const data = await Api.get("/api/reader");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "rdrId" },
+                    { data: "rdrName" },
+                    { data: "locationName", defaultContent: "-" },
+                    { data: "ipAddress" },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
             });
-
-            if (response.status === 401) {
-                window.location.href = "/login";
-                return;
-            }
-                    if (response.status === 403) {
-            Swal.fire("Access denied", "", "warning");
-            return;
         }
-            const data = await response.json();
 
-            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-                $('#datatablesIndex').DataTable().clear().destroy();
+        function renderAction(data) {
+
+            let buttons = `<div class="btn-group btn-group-sm">`;
+
+            if (canUpdate) {
+                buttons += `
+                    <a href="/reader/detail?id=${data.id}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                `;
             }
 
-                table = $("#datatablesIndex").DataTable({
-                    data: data,
-                    responsive: true,
-                    pageLength: 5,
-                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
+            if (canDelete) {
+                buttons += `
+                    <button class="btn btn-danger"
+                            onclick="deleteReader('${data.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
 
-                    autoWidth: false, 
-                    columnDefs: [
-                        {
-                            targets: 0,
-                            data: null,
-                            render: (d,t,r,m)=>m.row + m.settings._iDisplayStart + 1,
-                            className: "text-center",
-                            orderable: false,
-                            width: "5%" 
-                        },
-                        {
-                            targets: 1,
-                            data: "rdrId",
-                            className: "text-nowrap",
-                            width: "15%" 
-                        },
-                        {
-                            targets: 2,
-                            data: "rdrName",
-                            width: "25%", 
-                            responsivePriority: 1 
-                        },
-                        {
-                            targets: 3,
-                            data: "locationName",
-                            defaultContent:"-",
-                            width: "20%" 
-                        },
-                        {
-                            targets: 4,
-                            data: "ipAddress",
-                            width: "15%" 
-                        },
-                        {
-                            targets: 5,
-                            data: null,
-                            visible:canUpdate|| canDelete,
-                            render: data => {
-                                let buttons = `<div class="btn-group btn-group-sm">`;
-                                if (canUpdate) {
-                                    buttons += `
-                                    <a href="/reader/detail?id=${data.id}" class="btn btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    `;
-                                }
-                                if(canDelete){
-                                    buttons += `
-                                    <button class="btn btn-danger"
-                                            onclick="deleteReader('${data.id}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    `;
-                                }
-                                buttons += `</div>`;
-                                return buttons;
-                                },
-
-                            className: "text-center",
-                            orderable: false,
-                            width: "20%", 
-                            responsivePriority: 2 
-                        }
-                    ],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: " Search reader...",
-                        lengthMenu: "Show _MENU_ Data",
-                        paginate: { first: "«", last: "»", next: "›", previous: "‹" }
-                    },
-                    dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                         "<'table-responsive card-body p-0't>" +
-                         "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
-
-                    drawCallback: function() {
-                        $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
-                        $('.dataTables_filter input').addClass('form-control rounded shadow-sm');
-
-                        if($.fn.responsive){
-                            table.responsive.recalc();
-                        }
-                    }
-                });
+            buttons += `</div>`;
+            return buttons;
         }
 
         $("#createReaderForm").submit(async function (e) {
@@ -308,7 +243,7 @@
             const form = e.target;
 
             if (!form.locId.value) {
-                Swal.fire({ icon:"warning", title:"Location is required" });
+                Alert.error("Location is required");
                 return;
             }
 
@@ -319,61 +254,43 @@
                 ipAddress: form.ipAddress.value
             };
 
-            const response = await fetch("/api/reader", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.post("/api/reader", payload);
 
-            if (response.ok) {
-                Swal.fire({
-                    icon:"success",
-                    title:"Success",
-                    timer:1500,
-                    showConfirmButton:false
-                }).then(()=>{
-                    $("#createReader").modal("hide");
-                    form.reset();
-                    $("#locIdSelect").val(null).trigger("change");
-                    loadReaders();
-                });
-            } else {
-                Swal.fire({ icon:"error",title:"Failed to create reader" });
+            if (res && res.ok) {
+
+                await Alert.success("Reader created successfully");
+
+                $("#createReader").modal("hide");
+                form.reset();
+                $("#locIdSelect").val(null).trigger("change");
+                loadReaders();
+
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create reader");
             }
         });
 
         async function deleteReader(id) {
 
-            const result = await Swal.fire({
-        title:"Are you sure?",
-        text:"This Reader will be deleted",
-                icon:"warning",
-                showCancelButton:true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
-            });
+            const confirm = await Alert.deleteConfirm("Reader", "This Reader will be permanently deleted!");
+            if (!confirm.isConfirmed) return;
 
-            if (!result.isConfirmed) return;
+            const res = await Api.delete(`/api/reader/${id}`);
 
-            const response = await fetch(`/api/reader/${id}`, {
-                method: "DELETE",
-                credentials: "include"
-            });
+            if (res && res.ok) {
 
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Reader deleted successfully',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(()=>loadReaders());
-            } else {
-                Swal.fire({ icon:"error",title:'Failed' ,text: "Failed to delete reader"});
-            }
+                await Alert.success("Reader deleted successfully");
+                loadReaders();
+            } else if (res && !res.ok) {
+                    if (res.errorData?.type === "warning")
+                    return;
+    
+                    Alert.error("Failed to delete reader");
+                }
         }
 
         $('#createReader').on('shown.bs.modal', function () {

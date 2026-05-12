@@ -71,8 +71,7 @@
                                         <div class="form-group">
                                             <label>
                                                 <i class="fas fa-hashtag text-muted mr-2"></i>
-                                                Location ID
-                                                <span class="badge badge-secondary ml-2">Auto-generated</span>
+                                                Location ID <span class="text-danger">*</span>
                                             </label>
                                             <input id="locId" class="form-control" readonly>
                                         </div>
@@ -124,11 +123,11 @@
     </div>
 
     @Html.Partial("_BaseScript")
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
 
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
-
-
         let id = "@ViewData["id"]";
 
         $(document).ready(function () {
@@ -136,36 +135,42 @@
         });
 
         async function loadLocation() {
-            const response = await fetch(`/api/location/${id}`, {
-                method: "GET",
-                credentials: "include"
-            });
 
-            if (!response.ok) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed",
-                    text: "Failed to load location"
-                });
+            const loc = await Api.get(`/api/location/${id}`);
+
+            if (!loc) {
+                Alert.error("Failed to load location");
                 return;
             }
-
-            const loc = await response.json();
 
             $("#locId").val(loc.locId);
             $("#name").val(loc.name);
             $("#description").val(loc.description);
+
+            if (loc.isSystem) {
+
+                $("#locId").prop("disabled", true);
+                $("#name").prop("disabled", true);
+                $("#description").prop("disabled", true);
+
+                $("#btnUpdate").hide();
+
+                $("#systemBadge").removeClass("d-none");
+            }
         }
 
+
         async function updateLocation() {
-          if (!canUpdate) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Access Denied',
-                text: 'You do not have permission to update'
-            });
-            return;
-        }
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            if(isSystem) {
+                Alert.error("System location cannot be modified");
+                return;
+            }
 
             const payload = {
                 locId: $("#locId").val(),
@@ -173,37 +178,23 @@
                 description: $("#description").val()
             };
 
-            const response = await fetch(`/api/location/${id}`, {
-                method: "PUT",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+        const res = await Api.put(`/api/location/${id}`, payload);
 
-            if (response.ok) {
+            if (res && res.ok) {
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: "Location updated successfully",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/location";
-                });
+                await Alert.success("Location updated successfully");
 
-            } else {
+                window.location.href = "/location";
 
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed",
-                    text: "Failed to update location"
-                });
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
 
+                Alert.error("Failed to update location");
             }
         }
 
-        $(document).keydown(function(e) {
+        $(document).keydown(function (e) {
             if (e.ctrlKey && e.key === 'Enter') updateLocation();
             if (e.key === 'Escape') window.location.href = "/location";
         });

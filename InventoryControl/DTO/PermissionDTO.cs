@@ -31,3 +31,9 @@ public class RoleResponseDto
     public string RoleName { get; set; }
     public Dictionary<string, List<string>> Permissions { get; set; }
 }
+public class PermissionSeed
+{
+    public string Module { get; set; }
+    public string Operation { get; set; }
+    public string Name { get; set; }
+}

@@ -1,10 +1,9 @@
 using InventoryControl.Entity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace InventoryControl.Database.Seeder;
 
-public class SeedAccess
+public static class SeedAccess
 {
     public static async Task Initialize(IServiceProvider serviceProvider)
     {
@@ -13,106 +12,134 @@ public class SeedAccess
 
         await context.Database.MigrateAsync();
 
-        var permissionSeeds = new List<(string Code, string Name, string PerId)>
-{
-            ("ITEM_GET", "View Master Item", "PER001"),
-            ("ITEM_CREATE", "Create Master Item", "PER002"),
-            ("ITEM_UPDATE", "Update Master Item", "PER003"),
-            ("ITEM_DELETE", "Delete Master Item", "PER004"),
-            ("TAG_PRINT", "Print Tag", "PER005"),
-            ("TAG_REGISTER", "Reprint Tag", "PER006"),
-            ("TAG_GET", "View Master Tag", "PER037"),
-            ("TAG_GET_DETAIL", "View Master Tag Detail", "PER039"),
-            ("STOCK_IN", "Stock In", "PER007"),
-            ("STOCK_PREPARATION", "Stock Preparation", "PER008"),
-            ("STOCK_OUT", "Stock Out", "PER009"),
-            ("PICKINGLIST_GET", "View Picking List", "PER010"),
-            ("PICKINGLIST_CREATE", "Create Picking List", "PER011"),
-            ("PICKINGLIST_UPDATE", "Update Picking List", "PER012"),
-            ("PICKINGLIST_UPDATE_STATUS", "Update Picking List Status", "PER030"),
-            ("PICKINGLIST_DELETE", "Delete Picking List", "PER031"),
-            ("LOCATION_GET", "View Location", "PER013"),
-            ("LOCATION_CREATE", "Create Location", "PER014"),
-            ("LOCATION_UPDATE", "Update Location", "PER015"),
-            ("LOCATION_DELETE", "Delete Location", "PER016"),
-            ("READER_GET", "View Reader", "PER017"),
-            ("READER_CREATE", "Create Reader", "PER018"),
-            ("READER_DELETE", "Delete Reader", "PER019"),
-            ("READER_UPDATE", "Update Reader", "PER020"),
-            ("STOCK_TAKING_CREATE", "Create Stock Taking", "PER021"),
-            ("STOCK_TAKING_SCAN", "Scan Stock Taking", "PER022"),
-            ("STOCK_TAKING_REMOVE", "Remove Stock Taking", "PER023"),
-            ("STOCK_TAKING_MANUAL", "Manual Stock Taking", "PER024"),
-            ("STOCK_TAKING_FINALIZE", "Finalize Stock Taking", "PER025"),
-            ("STOCK_TAKING_GET", "View Stock Taking", "PER038"),
-            ("USER_GET", "View Master User", "PER026"),
-            ("USER_CREATE", "Create Master User", "PER027"),
-            ("USER_UPDATE", "Update Master User", "PER028"),
-            ("USER_DELETE", "Delete Master User", "PER029"),
-            ("PERMISSION_GET", "View Master Permission", "PER034"),
-            ("PERMISSION_CREATE", "Create Master Permission", "PER035"),
-            ("PERMISSION_UPDATE", "Update Master Permission", "PER032"),
-            ("PERMISSION_DELETE", "Delete Master Permission", "PER033"),
-            ("PERMISSION_DETAIL", "Detail Search Permission", "PER040"),
-            ("TRANSACTION_GET", "View Master Transaction", "PER036")
-        };
-        foreach (var (code, name, perid) in permissionSeeds)
+        #region MODULES
+
+        var moduleSeeds = new List<Module>
         {
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "ITEM", ModuleName = "Item" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "LOCATION", ModuleName = "Location" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "TAG", ModuleName = "Tag" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "READER", ModuleName = "Reader" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "PICKINGLIST", ModuleName = "Picking List" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "STOCK", ModuleName = "Stock" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "STOCK_TAKING", ModuleName = "Stock Taking" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "USER", ModuleName = "User" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "PERMISSION", ModuleName = "Permission" },
+            new() { Id = Guid.NewGuid().ToString(), ModuleKey = "TRANSACTION", ModuleName = "Transaction" }
+        };
+
+        foreach (var module in moduleSeeds)
+        {
+            bool exists = await context.Modules
+                .AnyAsync(x => x.ModuleKey == module.ModuleKey);
+
+            if (!exists)
+            {
+                context.Modules.Add(module);
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        #endregion
+
+        #region PERMISSIONS
+
+        var permissionSeeds = new List<(string Module, string Operation, string Name)>
+        {
+            // ITEM
+            ("ITEM", "GET", "View Item"),
+            ("ITEM", "CREATE", "Create Item"),
+            ("ITEM", "UPDATE", "Update Item"),
+            ("ITEM", "DELETE", "Delete Item"),
+
+            // LOCATION
+            ("LOCATION", "GET", "View Location"),
+            ("LOCATION", "CREATE", "Create Location"),
+            ("LOCATION", "UPDATE", "Update Location"),
+            ("LOCATION", "DELETE", "Delete Location"),
+
+            // TAG
+            ("TAG", "GET", "View Tag"),
+            ("TAG", "PRINT", "Print Tag"),
+            ("TAG", "REGISTER", "Register Tag"),
+
+            // READER
+            ("READER", "GET", "View Reader"),
+            ("READER", "CREATE", "Create Reader"),
+            ("READER", "UPDATE", "Update Reader"),
+            ("READER", "DELETE", "Delete Reader"),
+
+            // PICKINGLIST
+            ("PICKINGLIST", "GET", "View Picking List"),
+            ("PICKINGLIST", "CREATE", "Create Picking List"),
+            ("PICKINGLIST", "UPDATE", "Update Picking List"),
+            ("PICKINGLIST", "DELETE", "Delete Picking List"),
+
+            // STOCK
+            ("STOCK", "IN", "Stock In"),
+            ("STOCK", "OUT", "Stock Out"),
+            ("STOCK", "PREPARATION", "Stock Preparation"),
+
+            // STOCK TAKING
+            ("STOCK_TAKING", "GET", "View Stock Taking"),
+            ("STOCK_TAKING", "CREATE", "Create Stock Taking"),
+            ("STOCK_TAKING", "SCAN", "Scan Stock Taking"),
+            ("STOCK_TAKING", "REMOVE", "Remove Stock Taking"),
+            ("STOCK_TAKING", "MANUAL", "Manual Add Stock Taking"),
+            ("STOCK_TAKING", "FINALIZE", "Finalize Stock Taking"),
+
+            // USER
+            ("USER", "GET", "View User"),
+            ("USER", "CREATE", "Create User"),
+            ("USER", "UPDATE", "Update User"),
+            ("USER", "DELETE", "Delete User"),
+            ("USER", "UPDATE_PASSWORD", "Update Password"),
+            ("USER", "UPDATE_ROLE", "Update User Role"),
+
+            // PERMISSION
+            ("PERMISSION", "GET", "View Permission"),
+            ("PERMISSION", "CREATE", "Create Permission"),
+            ("PERMISSION", "UPDATE", "Update Permission"),
+            ("PERMISSION", "DELETE", "Delete Permission"),
+
+            // TRANSACTION
+            ("TRANSACTION", "GET", "View Transaction")
+        };
+
+        foreach (var item in permissionSeeds)
+        {
+            var module = await context.Modules
+                .FirstAsync(x => x.ModuleKey == item.Module);
+
+            var code = $"{item.Module}_{item.Operation}";
+
             bool exists = await context.Permissions
-                .AnyAsync(p => p.Code == code);
+                .AnyAsync(x => x.Code == code);
 
             if (!exists)
             {
                 context.Permissions.Add(new Permission
                 {
                     Id = Guid.NewGuid().ToString(),
+                    ModuleId = module.Id,
+                    Operation = item.Operation,
                     Code = code,
-                    Name = name,
-                    PerId = perid,
+                    Name = item.Name,
                     CreatedBy = "SYSTEM",
                     CreatedAt = DateTime.UtcNow
                 });
             }
         }
-        var permissions = await context.Permissions.ToListAsync();
-
-        foreach (var perm in permissions)
-        {
-            var parts = perm.Code.Split('_');
-
-            if (parts.Length < 2) continue;
-
-            var moduleKey = string.Join("_", parts.Take(parts.Length - 1));
-
-            perm.Operation = parts.Last();
-            var moduleName = moduleKey;
-
-            var module = await context.Modules
-                .FirstOrDefaultAsync(m => m.ModuleKey == moduleKey);
-
-            if (module == null)
-            {
-                module = new Module
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    ModuleKey = moduleKey,
-                    ModuleName = moduleName
-                };
-
-                context.Modules.Add(module);
-                await context.SaveChangesAsync();
-            }
-
-            perm.ModuleId = module.Id;
-        }
-
-        //await _context.SaveChangesAsync();
 
         await context.SaveChangesAsync();
 
+        #endregion
+
+        #region ROLES
 
         var adminRole = await context.Roles
-            .FirstOrDefaultAsync(r => r.Code == "ADMIN");
+            .FirstOrDefaultAsync(x => x.Code == "ADMIN");
 
         if (adminRole == null)
         {
@@ -127,7 +154,7 @@ public class SeedAccess
         }
 
         var operatorRole = await context.Roles
-            .FirstOrDefaultAsync(r => r.Code == "OPERATOR");
+            .FirstOrDefaultAsync(x => x.Code == "OPERATOR");
 
         if (operatorRole == null)
         {
@@ -143,14 +170,50 @@ public class SeedAccess
 
         await context.SaveChangesAsync();
 
+        #endregion
+
+        #region DEFAULT LOCATIONS
+
+        var defaultLocations = new List<Location>
+{
+            new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                LocId = "STAGING",
+                Name = "Shipping Area",
+                Description = "Area barang sebelum keluar dari gudang",
+                IsSystem = true,
+                CreatedBy = "SYSTEM",
+                CreatedAt = DateTime.UtcNow,
+                IsDelete = false
+            }
+        };
+
+        foreach (var location in defaultLocations)
+        {
+            bool exists = await context.Locations
+                .AnyAsync(x => x.LocId == location.LocId);
+
+            if (!exists)
+            {
+                context.Locations.Add(location);
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        #endregion
+
+        #region ROLE PERMISSIONS
 
         var allPermissions = await context.Permissions.ToListAsync();
-        var index = 2;
+
+        // ADMIN => ALL ACCESS
         foreach (var permission in allPermissions)
         {
-            bool exists = await context.RolePermissions.AnyAsync(rp =>
-                rp.RoleId == adminRole.Id &&
-                rp.PermissionId == permission.Id);
+            bool exists = await context.RolePermissions.AnyAsync(x =>
+                x.RoleId == adminRole.Id &&
+                x.PermissionId == permission.Id);
 
             if (!exists)
             {
@@ -164,14 +227,26 @@ public class SeedAccess
             }
         }
 
-        var stockInPermission = allPermissions
-            .FirstOrDefault(p => p.Code == "STOCK_IN");
-
-        if (stockInPermission != null)
+        // OPERATOR => LIMITED ACCESS
+        var operatorPermissions = new List<string>
         {
-            bool exists = await context.RolePermissions.AnyAsync(rp =>
-                rp.RoleId == operatorRole.Id &&
-                rp.PermissionId == stockInPermission.Id);
+            "STOCK_IN",
+            "STOCK_PREPARATION",
+            "TAG_GET",
+            "PICKINGLIST_GET"
+        };
+
+        foreach (var code in operatorPermissions)
+        {
+            var permission = allPermissions
+                .FirstOrDefault(x => x.Code == code);
+
+            if (permission == null)
+                continue;
+
+            bool exists = await context.RolePermissions.AnyAsync(x =>
+                x.RoleId == operatorRole.Id &&
+                x.PermissionId == permission.Id);
 
             if (!exists)
             {
@@ -179,7 +254,7 @@ public class SeedAccess
                 {
                     Id = Guid.NewGuid().ToString(),
                     RoleId = operatorRole.Id,
-                    PermissionId = stockInPermission.Id,
+                    PermissionId = permission.Id,
                     CreatedAt = DateTime.UtcNow
                 });
             }
@@ -187,16 +262,19 @@ public class SeedAccess
 
         await context.SaveChangesAsync();
 
+        #endregion
+
+        #region USERS
 
         var adminUser = await context.Users
-            .FirstOrDefaultAsync(u => u.Username == "admin");
+            .FirstOrDefaultAsync(x => x.Username == "admin");
 
         if (adminUser == null)
         {
             adminUser = new User
             {
                 Id = Guid.NewGuid().ToString(),
-                UserId = "USR001",
+                UserId = "USR00001",
                 Fullname = "Administrator",
                 Username = "admin",
                 Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
@@ -205,13 +283,17 @@ public class SeedAccess
             };
 
             context.Users.Add(adminUser);
+
             await context.SaveChangesAsync();
         }
 
+        #endregion
 
-        bool hasAdminRole = await context.UserRoles.AnyAsync(ur =>
-            ur.UserId == adminUser.Id &&
-            ur.RoleId == adminRole.Id);
+        #region USER ROLE
+
+        bool hasAdminRole = await context.UserRoles.AnyAsync(x =>
+            x.UserId == adminUser.Id &&
+            x.RoleId == adminRole.Id);
 
         if (!hasAdminRole)
         {
@@ -225,46 +307,7 @@ public class SeedAccess
 
             await context.SaveChangesAsync();
         }
-    }
-    public async Task SeedModuleFromPermission(IServiceProvider serviceProvider)
-    {
-        using var _context = new AppDBContext(
-    serviceProvider.GetRequiredService<DbContextOptions<AppDBContext>>());
 
-        await _context.Database.MigrateAsync();
-
-        var permissions = await _context.Permissions.ToListAsync();
-
-        foreach (var perm in permissions)
-        {
-            var parts = perm.Code.Split('_');
-
-            if (parts.Length < 2) continue;
-
-            var moduleKey = string.Join("_", parts.Take(parts.Length - 1));
-
-            var operation = parts.Last();
-            var moduleName = moduleKey; 
-
-            var module = await _context.Modules
-                .FirstOrDefaultAsync(m => m.ModuleKey == moduleKey);
-
-            if (module == null)
-            {
-                module = new Module
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    ModuleKey = moduleKey,
-                    ModuleName = moduleName
-                };
-
-                _context.Modules.Add(module);
-                await _context.SaveChangesAsync();
-            }
-
-            perm.ModuleId = module.Id;
-        }
-
-        await _context.SaveChangesAsync();
+        #endregion
     }
 }

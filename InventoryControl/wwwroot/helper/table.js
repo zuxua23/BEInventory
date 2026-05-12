@@ -1,41 +1,71 @@
 ﻿    window.Table = {
-
-        init(selector, { data, columns }) {
+        init(selector, options = {}) {
 
             if ($.fn.DataTable.isDataTable(selector)) {
                 $(selector).DataTable().clear().destroy();
             }
 
             return $(selector).DataTable({
-                data: data,
+
                 responsive: true,
-                pageLength: 5,
+                pageLength: options.pageLength || 5,
                 lengthMenu: [[5, 10, 25], [5, 10, 25]],
 
-                columns: columns,
+                data: options.data || null,
+                columns: options.columns || null,
 
                 language: {
+                    emptyTable: "No data available in table",
+                    zeroRecords: "No matching records found",
                     search: "_INPUT_",
                     searchPlaceholder: " Search...",
                     lengthMenu: "Show _MENU_",
-                    paginate: { first: "«", last: "»", next: "›", previous: "‹" },
+                    paginate: {
+                        first: "«",
+                        last: "»",
+                        next: "›",
+                        previous: "‹"
+                    },
                     info: "Showing _START_ to _END_ of _TOTAL_ data"
                 },
 
-                dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                    "<'table-responsive card-body p-0't>" +
+                dom:
+                    "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
+                    "<'table-responsive't>" +
                     "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
 
                 autoWidth: false,
                 deferRender: true,
-
+         
                 drawCallback: function () {
-                    $('.dataTables_filter input').addClass('form-control');
-                    $('.dataTables_length select').addClass('custom-select custom-select-sm');
 
-                    if ($.fn.responsive) {
-                        this.api().responsive.recalc();
+                    const api = this.api();
+                    const info = api.page.info();
+
+                    const current = info.page;
+                    const total = info.pages;
+
+                    let start = Math.max(current - 1, 0);
+                    let end = Math.min(start + 3, total);
+
+                    if (end - start < 3) {
+                        start = Math.max(end - 3, 0);
                     }
+
+                    const pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate ul');
+                    pagination.find("li").hide();
+
+                    pagination.find('.previous').show();
+                    pagination.find('.next').show();
+
+                    pagination.find('li:first').show();
+                    pagination.find('li:last').show();
+
+                    pagination.find('li').each(function (index) {
+                        if (index - 1 >= start && index - 1 < end) {
+                            $(this).show();
+                        }
+                    });
                 }
             });
         },

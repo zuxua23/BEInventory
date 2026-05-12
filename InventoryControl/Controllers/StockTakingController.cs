@@ -1,9 +1,12 @@
 namespace InventoryControl.Controllers;
 
+using DocumentFormat.OpenXml.Packaging;
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text;
 
 [ApiController]
 [Route("api/stock-taking")]
@@ -17,6 +20,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost]
+    [AuthorizePermissionHybrid("STOCK_TAKING_CREATE")]
     public async Task<IActionResult> Create(StockTakingCreateDto dto)
     {
         try
@@ -54,6 +58,14 @@ public class StockTakingController : ControllerBase
         }
     }
 
+    [HttpGet("loc")]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetLocData()
+    {
+        var data = await _service.GetLocAsync();
+        return Ok(data);
+    }
+
     [HttpGet]
     [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetStockData()
@@ -63,21 +75,15 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("scan")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
+
     public async Task<IActionResult> Scan(StockTakingScanDto dto)
     {
-        try
-        {
-            await _service.ScanAsync(dto);
-            return Ok(new { message = "Tag discan" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = ex.Message });
-        }
+        await _service.ScanAsync(dto);
+        return Ok(new { message = "Tag discan" });
     }
-
     [HttpPost("scan/bulk")]
-    public async Task<IActionResult> BulkScan(StockTakingBulkScanDto dto)
+    public async Task<IActionResult> Bulk(StockTakingBulkScanDto dto)
     {
         try
         {
@@ -112,6 +118,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("remove")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_REMOVE")]
     public async Task<IActionResult> Remove(StockTakingRemoveDto dto)
     {
         try
@@ -126,6 +133,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("manual-add")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_MANUAL")]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
         try
@@ -140,6 +148,7 @@ public class StockTakingController : ControllerBase
     }
 
     [HttpPost("finalize")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_FINALIZE")]
     public async Task<IActionResult> Finalize(StockTakingFinalizeDto dto)
     {
         try
@@ -169,4 +178,5 @@ public class StockTakingController : ControllerBase
             return StatusCode(500, new { message = ex.Message });
         }
     }
+
 }

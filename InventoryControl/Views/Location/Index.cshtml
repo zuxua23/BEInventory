@@ -124,7 +124,7 @@
                         <div class="form-group">
                             <label>
                                 <i class="fas fa-hashtag text-muted mr-2"></i>
-                                Location ID
+                                Location ID <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="locId" class="form-control" required>
                         </div>
@@ -161,10 +161,14 @@
 
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         const canDelete = @canDelete.ToString().ToLower();
-
 
         let table;
 
@@ -174,189 +178,101 @@
 
         async function loadLocations() {
 
-            const response = await fetch("/api/location", {
-                method: "GET",
-                credentials: "include"
+            const data = await Api.get("/api/location");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "locId" },
+                    { data: "name" },
+                    { data: "description" },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
             });
+        }
 
-            if (response.status === 401) {
-                window.location.href = "/login";
-                return;
+        function renderAction(data) {
+
+            let buttons = `<div class="btn-group btn-group-sm">`;
+
+            if (canUpdate && !data.isSystem) {
+                buttons += `
+                    <a href="/location/detail?id=${data.id}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                `;
             }
 
-            if (response.status === 403) {
-                Swal.fire("Access denied", "", "warning");
-                return;
+            if (canDelete && !data.isSystem) {
+                buttons += `
+                    <button class="btn btn-danger"
+                            onclick="deleteLocation('${data.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
             }
 
-            const data = await response.json();
-                        let showAction = canUpdate || canDelete;
+            buttons += `</div>`;
 
-            if ($.fn.DataTable.isDataTable('#datatablesIndex')) {
-                $('#datatablesIndex').DataTable().clear().destroy();
+            if (data.isSystem) {
+                buttons += `
+                    <span class="badge bg-danger ms-1">
+                        SYSTEM
+                    </span>
+                `;
             }
 
-                table = $("#datatablesIndex").DataTable({
-                    data: data,
-                    responsive: true,
-                    pageLength: 5,
-                    lengthMenu: [[5, 10, 25], [5, 10, 25]],
+            return buttons;
+        }
 
-                    autoWidth: false, 
-                    columnDefs: [
-                        {
-                            targets: 0,
-                            data: null,
-                            render: (data, type, row, meta) =>
-                            meta.row + meta.settings._iDisplayStart + 1,
-                            className: "text-center",
-                            orderable: false,
-                        },
-                        {
-                            targets: 1,
-                            data: "locId"
-                        },
-                        {
-                            targets: 2,
-                            data: "name"
-                        },
-                        {
-                            targets: 3,
-                            data: "description"
-                        },
-                        {
-                            targets: 4,
-                            visible: showAction,
-                            data: null,
-                            render: data => {
-                                let buttons = `<div class="btn-group btn-group-sm">`;
-                            
-                            if (canUpdate) {
-                                buttons += `
-                                    <a href="/location/detail?id=${data.id}" class="btn btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                `;
-                            }
-                            if (canDelete) {
-                                buttons += `
-                                    <button class="btn btn-danger"
-                                            onclick="deleteLocation('${data.id}')" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                            `;
-                            } 
-                            buttons += `</div>`;
-                                return buttons;
-                            },
-                            className: "text-center",
-                            orderable: false
-                        }
-                    ],
-
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: " Search location...",
-                        lengthMenu: "Show _MENU_ Data",
-                        paginate: { first: "«", last: "»", next: "›", previous: "‹" }
-                    },
-
-                    dom: "<'row mb-3'<'col-md-6'l><'col-md-6'f>>" +
-                         "<'table-responsive card-body p-0't>" +
-                         "<'row mt-3'<'col-md-5'i><'col-md-7'p>>",
-
-                    drawCallback: function() {
-                        $('.dataTables_length select').addClass('custom-select custom-select-sm rounded');
-                        $('.dataTables_filter input').addClass('form-control rounded shadow-sm');
-
-                        if($.fn.responsive){
-                            table.responsive.recalc();
-                        }
-                    }
-                });
-            }
 
         $("#createLocationForm").submit(async function (e) {
             e.preventDefault();
 
-            const form = e.target;
-
             const payload = {
-                locId: form.locId.value,
-                name: form.name.value,
-                description: form.description.value
+                locId: e.target.locId.value,
+                name: e.target.name.value,
+                description: e.target.description.value
             };
 
-            const response = await fetch("/api/location", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.post("/api/location", payload);
 
-            if (response.ok) {
+            if (res && res.ok) {
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: "Location created successfully",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    $("#createLocation").modal("hide");
-                    form.reset();
-                    loadLocations();
-                });
+                await Alert.success("Location created successfully");
 
-            } else {
+                $("#createLocation").modal("hide");
+                e.target.reset();
+                loadLocations();
 
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed",
-                    text: "Create location failed"
-                });
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
 
+                Alert.error("Failed to create location");
             }
         });
 
+
         async function deleteLocation(id) {
 
-            const result = await Swal.fire({
-                title: "Are you sure?",
-                text: "Location will be deleted!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#6c757d",
-                confirmButtonText: "Yes, delete!",
-                cancelButtonText: "Cancel"
-            });
+                    const confirm = await Alert.deleteConfirm("Location", "This location will be permanently deleted!");
 
-            if (!result.isConfirmed) return;
+            if (!confirm.isConfirmed) return;
 
-            const response = await fetch(`/api/location/${id}`, {
-                method: "DELETE",
-                credentials: "include"
-            });
+            const res = await Api.delete(`/api/location/${id}`);
 
-            if (response.ok) {
+            if (res && res.ok) {
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: "Location deleted successfully",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => loadLocations());
+                await Alert.success("Location deleted successfully");
+                loadLocations();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
 
-            } else {
-
-                Swal.fire({
-                    icon: "error",
-                    title: "Failed",
-                    text: "Delete location failed"
-                });
-
+                Alert.error("Failed to delete location");
             }
         }
 

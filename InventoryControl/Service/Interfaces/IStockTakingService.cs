@@ -5,6 +5,7 @@ namespace InventoryControl.Service.Interfaces;
 
 public interface IStockTakingService
 {
+    Task<List<Location>> GetLocAsync();
     Task<string> CreateAsync(StockTakingCreateDto dto, string user);
     Task<object?> GetActiveAsync();
     Task<List<object>> GetSystemDataAsync(string sttId);
@@ -17,5 +18,11 @@ public interface IStockTakingService
     Task ApplyAdjustmentAsync(string sttId, string user);
     Task FinalizeAsync(StockTakingFinalizeDto dto, string user);
     Task<object> GetCompareAsync(string sttId);
-    Task<object> GetProgressAsync(string sttId);
+    Task<List<object>> GetSystemDataAsync(string sttId);
+    Task<object?> GetActiveAsync();
+    Task<byte[]> ExportSystemExcelAsync(string sttId);
+    Task<string> ExportSystemCsvAsync(string sttId);
+    Task<byte[]> ExportCompareExcelAsync(string sttId);
+    Task<string> ExportCompareCsvAsync(string sttId);
+
 }

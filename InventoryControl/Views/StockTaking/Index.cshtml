@@ -41,7 +41,7 @@
 
                                 <div class="col-md-5">
                                     <label class="small font-weight-bold">Remark</label>
-                                    <input type="text" class="form-control form-control-sm">
+                                    <input id="remarkInput" type="text" class="form-control">
                                 </div>
 
                                 <div class="col-md-5">
@@ -50,12 +50,12 @@
 
                                 </div>
 
-                                <div class="col-md-2 d-flex">
-                                    <button id="startBtn" class="btn btn-success btn-sm w-100">
+                                <div class="col-md-2 d-flex gap-2">
+                                    <button id="startBtn" class="btn btn-success w-100">
                                         <i class="fas fa-play mr-1"></i> Start
                                     </button>
-                                    <button id="endBtn" class="btn btn-danger btn-sm w-100">
-                                        <i class="fas fa-play mr-1"></i> End
+                                    <button id="endBtn" class="btn btn-danger w-100">
+                                        <i class="fas fa-stop mr-1"></i> End
                                     </button>
                                 </div>
 
@@ -80,19 +80,19 @@
                                             </div>
 
                                             <small class="text-primary font-weight-bold">
-                                                Total Items: <span id="totalItems">24</span> |
-                                                Total Stock: <span id="totalStock">1245</span> pcs
+                                                Total Items: <span id="totalItems">0</span> |
+                                                Total Stock: <span id="totalStock">0</span> pcs
                                             </small>
                                         </div>
                                         <div class="d-flex">
 
                                             <div class="d-flex align-items-center gap-2">
 
-                                                <button id="exportOriginalExcel" class="btn btn-sm btn-success mr-1">
+                                                <button id="exportOriginalExcel" class="btn export-btn export-excel mr-1" title="Export to Excel">
                                                     <i class="fas fa-file-excel mr-1"></i> Excel
                                                 </button>
 
-                                                <button id="exportOriginalCsv" class="btn btn-sm btn-info">
+                                                <button id="exportOriginalCsv" class="btn export-btn export-csv" title="Export to CSV">
                                                     <i class="fas fa-file-csv mr-1"></i> CSV
                                                 </button>
 
@@ -129,8 +129,8 @@
                                                 <h5 class="mb-0">Data Scanning</h5>
                                             </div>
                                             <small class="text-success font-weight-bold">
-                                                Scanned: <span id="scannedCount">1</span>/<span id="totalData">24</span> |
-                                                Progress: <span id="progressPercent">4%</span>
+                                                Scanned: <span id="scannedCount">0</span>/<span id="totalData">0</span> |
+                                                Progress: <span id="progressPercent">0%</span>
                                             </small>
                                         </div>
 
@@ -146,11 +146,11 @@
 
                                             </div>
 
-                                            <button id="exportCollectExcel" class="btn btn-sm btn-success mr-1">
+                                            <button id="exportCollectExcel" class="btn export-btn export-excel mr-1" title="Export to Excel">
                                                 <i class="fas fa-file-excel mr-1"></i> Excel
                                             </button>
 
-                                            <button id="exportCollectCsv" class="btn btn-sm btn-info">
+                                            <button id="exportCollectCsv" class="btn export-btn export-csv" title="Export to CSV">
                                                 <i class="fas fa-file-csv mr-1"></i> CSV
                                             </button>
 
@@ -187,37 +187,112 @@
 
     </div>
 
-    @Html.Partial("_BaseScript")y
+    @Html.Partial("_BaseScript")
 
-
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+    <script src="~/helper/export.js"></script>
 
     <script>
-            let currentSttId = null;
-            let refreshInterval = null;
-            let isSessionActive = false;
-                    let tableOriginal = null;
-            let tableCollect = null;
+
+        let currentSttId = null;
+        let refreshInterval = null;
+        let isSessionActive = false;
+
+        let tableOriginal = null;
+        let tableCollect = null;
+
+        $(document).ready(async function () {
+            $("#filterStatus").change(loadScanData);
+
+            tableOriginal = Table.init("#originalTable", { pageLength: 5 });
+            tableCollect = Table.init("#collectTable", { pageLength: 5 });
+
+            resetSummary();
+
+            await loadLocationDropdown();
+
+            await checkActiveSession();
 
 
-            async function loadLocationDropdown() {
+            Export.bind("#exportOriginalExcel", {
+                url: () => `/api/stock-taking/export/system/excel?sttId=${currentSttId}`,
+                beforeExport: async () => {
 
-                const response = await fetch("/api/location", {
-                    method: "GET",
-                    credentials: "include"
-                });
+                    if (tableOriginal.rows().count() === 0) {
 
-                if (!response.ok) {
-                    Swal.fire("Error", "Failed to load locations", "error");
-                    return;
+                        Alert.error("No system data to export");
+                        return false;
+                    }
+
+                    return true;
                 }
+            });
 
-                const data = await response.json();
+            Export.bind("#exportOriginalCsv", {
+                url: () => `/api/stock-taking/export/system/csv?sttId=${currentSttId}`,
+                beforeExport: async () => {
 
-                let options = '<option value=""></option>';
+                    if (tableOriginal.rows().count() === 0) {
 
-                options += data.map(r => {
-                    return `<option value="${String(r.id)}">${String(r.name)}</option>`;
-                }).join("");
+                        Alert.error("No system data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+            Export.bind("#exportCollectExcel", {
+                url: () => `/api/stock-taking/export/scan/excel?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableCollect.rows().count() === 0) {
+
+                        Alert.error("No scan data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+            Export.bind("#exportCollectCsv", {
+                url: () => `/api/stock-taking/export/scan/csv?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableCollect.rows().count() === 0) {
+
+                        Alert.error("No scan data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+        });
+
+        function resetSummary() {
+            $("#totalItems").text("0");
+            $("#totalStock").text("0");
+
+            $("#scannedCount").text("0");
+            $("#totalData").text("0");
+            $("#progressPercent").text("0%");
+        }
+
+        async function loadLocationDropdown() {
+
+            const data = await Api.get("/api/stock-taking/loc");
+            if (!data) return Alert.error("Failed to load locations");
+
+            let options = `<option></option>`;
+
+            data.forEach(r => {
+                options += `<option value="${r.id}">${r.name}</option>`;
+            });
 
                 const select = $("#locIdSelect");
 
@@ -239,82 +314,75 @@
                 select.val([]).trigger('change');
             }
 
+        async function checkActiveSession() {
 
-            async function checkActiveSession() {
-                const res = await fetch("/api/stock-taking/active");
-
-                if (!res.ok) {
-                    console.error("API error:", res.status);
-                    return;
-                }
-
-                let data = null;
-
-                const text = await res.text();
-
-                if (text) {
-                    data = JSON.parse(text);
-                }
+            const data = await Api.get("/api/stock-taking/active");
 
             if (data && data.sttId) {
+
                 currentSttId = data.sttId;
                 isSessionActive = true;
 
+                 $("#remarkInput").val(data.remark);
+
+                 $("#locIdSelect")
+                .val(data.locationIds)
+                .trigger("change");
 
                 loadSystemData();
                 startAutoRefresh();
+
             } else {
+
                 isSessionActive = false;
-                }
-                updateButtonState();
+                resetSummary();
             }
+
+            updateButtonState();
+        }
 
             $("#startBtn").click(async function () {
 
-                if (isSessionActive) {
-                    alert("Active session still exists!");
-                    return;
-                }
+            if (isSessionActive)
+                return Alert.error("Active session still exists!");
 
-                const remark = $("input").val();
+            const remark = $("#remarkInput").val();
             const locations = $("#locIdSelect").val();
 
-                const res = await fetch("/api/stock-taking", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        remark: remark,
-            locationIds: locations && locations.length > 0 ? locations : null
-                        })
-                });
-
-            if (!res.ok) {
-                alert("Failed to start stock taking");
-                return;
-            }
-
-            const data = await res.json();
-                currentSttId = data.stockTakingId;
-                isSessionActive = true;
-            updateButtonState();
-            loadSystemData();
-                startAutoRefresh();
+            const res = await Api.post("/api/stock-taking", {
+                remark,
+                locationIds: locations?.length ? locations : null
             });
 
-                  async function loadSystemData() {
-                if (!currentSttId) return;
+             if (!res?.ok) return;
+            const data = await res.json();
 
-                const res = await fetch(`/api/stock-taking/system/${currentSttId}`);
-                const data = await res.json();
-                console.log("SYSTEM DATA:", data);
-                tableOriginal.clear();
+            currentSttId = data.stockTakingId;
+            isSessionActive = true;
+
+            resetSummary();
+
+            updateButtonState();
+            loadSystemData();
+            startAutoRefresh();
+        });
+
+        async function loadSystemData() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/system/${currentSttId}`);
+            if (!data) return;
+
+            tableOriginal.clear();
 
                 let totalItems = 0;
                 let totalStock = 0;
 
-                data.forEach(x => {
-                    totalItems++;
-                    totalStock += x.qty;
+            data.forEach(x => {
+
+                totalItems++;
+                totalStock += x.qty;
 
                     tableOriginal.row.add([
                         x.itemId,
@@ -325,100 +393,122 @@
 
                 tableOriginal.draw();
 
-                $("#totalItems").text(totalItems);
-                $("#totalStock").text(totalStock);
+            $("#totalItems").text(totalItems);
+            $("#totalStock").text(totalStock);
+        }
+
+        async function loadScanData() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/compare/${currentSttId}`);
+            if (!data) return;
+
+                   const filter = $("#filterStatus").val();
+
+            let filteredData = data;
+
+            if (filter === "scanned") {
+                filteredData = data.filter(x => x.qtyScan > 0);
             }
-                    async function loadScanData() {
-                if (!currentSttId) return;
 
-                const res = await fetch(`/api/stock-taking/compare/${currentSttId}`);
-                const data = await res.json();
+            if (filter === "pending") {
+                filteredData = data.filter(x => !x.qtyScan || x.qtyScan <= 0);
+            }
 
-                tableCollect.clear();
+            tableCollect.clear();
 
-                let scanned = 0;
-                let total = data.length;
+            let scanned = 0;
+            let total = filteredData.length;
 
-                data.forEach(x => {
+            filteredData.forEach(x => {
 
                     if (x.qtyScan > 0) scanned++;
 
-                    let row = tableCollect.row.add([
-                        x.itemId,
-                        x.qtyScan || "-",
-                        "-",
-                        x.status
-                    ]).node();
+                let row = tableCollect.row.add([
+                    x.itemId,
+                    x.qtyScan || "-",
+                    x.location || "-",
+                    x.status
+                ]).node();
 
-                    if (x.selisih < 0) {
-                        $(row).addClass("table-danger");
-                    } else if (x.selisih > 0) {
-                        $(row).addClass("table-success");
-                    }
-                });
+                if (x.selisih < 0) $(row).addClass("table-danger");
+                else if (x.selisih > 0) $(row).addClass("table-success");
+            });
 
                 tableCollect.draw();
 
                 $("#scannedCount").text(scanned);
                 $("#totalData").text(total);
 
-                let percent = total === 0 ? 0 : Math.round((scanned / total) * 100);
-                $("#progressPercent").text(percent + "%");
-            }
-                    function startAutoRefresh() {
-                if (refreshInterval) clearInterval(refreshInterval);
+            let percent = total === 0 ? 0 : Math.round((scanned / total) * 100);
+            $("#progressPercent").text(percent + "%");
+        }
 
-                refreshInterval = setInterval(() => {
-                    loadScanData();
-                }, 3000);
-            }
-            $("#endBtn").click(async function () {
-                if (!currentSttId) return;
 
-                if (!confirm("Finish the stock taking?")) return;
+        function startAutoRefresh() {
 
-                await fetch("/api/stock-taking/finalize", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        sttId: currentSttId
-                    })
+            if (refreshInterval) clearInterval(refreshInterval);
+
+            refreshInterval = setInterval(() => {
+                loadScanData();
+            }, 3000);
+        }
+
+
+        $("#endBtn").click(async function () {
+
+            if (!currentSttId) return;
+
+            const confirm = await Alert.confirm({
+                text: "Finish the stock taking?"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await Api.post(
+                "/api/stock-taking/finalize",
+                {
+                    sttId: currentSttId
                 });
 
-                alert("Finished");
+            if (!res?.ok) return;
 
-                clearInterval(refreshInterval);
-                currentSttId = null;
-                isSessionActive = false;
+            await Alert.success("Finished");
+
+            resetStockTakingUI();
+        });
+
+         function resetStockTakingUI() {
+
+            currentSttId = null;
+
+            isSessionActive = false;
+
+            clearInterval(refreshInterval);
+
+            $("#remarkInput").val("");
+
+            $("#locIdSelect")
+                .val([])
+                .trigger("change");
+
+            $("#filterStatus").val("");
+
+            tableOriginal.clear().draw();
+
+            tableCollect.clear().draw();
+
+            resetSummary();
+
             updateButtonState();
-            checkActiveSession();
-            });
+        }
 
-            $(document).ready(function () {
+        function updateButtonState() {
+            $("#startBtn").prop("disabled", isSessionActive);
+            $("#endBtn").prop("disabled", !isSessionActive);
+        }
 
-                // INIT TABLE DULU (WAJIB)
-                tableOriginal = $("#originalTable").DataTable({
-                    pageLength: 5
-                });
-
-                tableCollect = $("#collectTable").DataTable({
-                    pageLength: 5
-                });
-
-                // BARU LOAD DATA
-                checkActiveSession();
-                loadLocationDropdown();
-            });
-
-                    function updateButtonState() {
-                if (isSessionActive) {
-                    $("#startBtn").prop("disabled", true);
-                    $("#endBtn").prop("disabled", false);
-                } else {
-                    $("#startBtn").prop("disabled", false);
-                    $("#endBtn").prop("disabled", true);
-                }
-            }
     </script>
 
 </body>

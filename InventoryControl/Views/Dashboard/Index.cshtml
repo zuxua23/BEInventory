@@ -1,3 +1,4 @@
+
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
     <div class="wrapper">
         @Html.Partial("_Navbar")
@@ -26,11 +27,9 @@
                     </div>
                 </div>
             </section>
-            <hr>
             <section class="content">
                 <div class="container-fluid">
 
-                    <!-- Baris Atas: 4 KPI Cards -->
                     <div class="dash-kpi-grid">
                         <div class="dash-kpi-card dash-kpi-blue">
                             <div>
@@ -73,64 +72,134 @@
                         </div>
                     </div>
 
-                    <!-- Main Content: 7:3 Grid (Left: Tables, Right: Status + Chart) -->
                     <div class="dash-main-grid">
-                        <!-- Sisi Kiri (70%) - 2 Tables Vertikal -->
                         <div class="dash-left-col">
-                            <!-- Recent Picking Activity -->
-                            <div class="dash-card dash-card-full-height">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot"></span>
-                                    <span class="dash-card-title">5 Recent Picking Activity</span>
+
+                            <div class="dash-card dash-card-recent">
+
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                    <div class="dash-card-header-left">
+
+                                        <span class="dash-card-dot dash-card-dot-gray"></span>
+
+                                        <span class="dash-card-title">
+                                            Recent System Activity
+                                        </span>
+
+                                    </div>
+
+                                    <span class="dash-card-subtitle">
+                                        Live operational activity feed
+                                    </span>
+
                                 </div>
-                                <div class="dash-table-wrap">
-                                    <table class="dash-table">
+
+                                <div class="dash-table-wrap dash-table-fixed">
+
+                                    <table class="dash-table dash-table-sm">
+
                                         <thead>
                                             <tr>
-                                                <th>DO Number</th>
-                                                <th>Scanner</th>
-                                                <th>Status</th>
+                                                <th>Time</th>
+                                                <th>Activity</th>
+                                                <th class="dash-stock-col">User</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="recentPicking">
+
+                                        <tbody id="recentActivity">
+
                                             <tr>
-                                                <td colspan="3" class="dash-table-empty">Loading…</td>
+                                                <td colspan="3" class="dash-table-empty">
+                                                    Loading recent activity...
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                            <div class="dash-card mt-3">
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                    <div class="dash-card-header-left">
+
+                                            <span class="dash-card-dot dash-card-dot-orange"></span>
+                                            <span class="dash-card-title">
+                                                Critical Inventory Status
+                                            </span>
+                                    </div>
+
+                                        <span class="dash-card-subtitle">
+                                            Top inventory requiring attention
+                                        </span>
+                                </div>
+
+                                <div class="dash-table-wrap dash-table-fixed-small">
+                                    <table class="dash-table dash-table-sm">
+
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th class="dash-stock-col">Available</th>
+                                                <th class="dash-stock-col">Condition</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody id="itemStockBody">
+                                            <tr>
+                                                <td colspan="3" class="dash-table-empty">
+                                                    Loading inventory...
+                                                </td>
                                             </tr>
                                         </tbody>
+
                                     </table>
+
                                 </div>
                             </div>
+                        </div>
 
                         <div class="dash-right-col">
-
-                            <div class="dash-card">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-green"></span>
-                                    <span class="dash-card-title">System Status</span>
-                                </div>
-                                <div class="dash-status-row">
-                                    <span class="dash-status-label">API Status</span>
-                                    <span class="dash-status-online">
-                                        <span class="dash-online-dot"></span> Online
-                                    </span>
-                                </div>
-                                <div class="dash-status-row">
-                                    <span class="dash-status-label">Database</span>
-                                    <span class="dash-status-online">
-                                        <span class="dash-online-dot"></span> Connected
-                                    </span>
-                                </div>
-                                <div class="dash-status-row dash-status-row-last">
-                                    <span class="dash-status-label">Last Sync</span>
-                                    <span class="dash-status-time" id="lastSyncStatus">—</span>
-                                </div>
-                            </div>
-
-                                <!-- Active Users (KPI size - Kanan) -->
+                            <div class="dash-status-users-row">
                                 <div class="dash-card dash-status-height">
                                     <div class="dash-card-header">
+                                        <div class="dash-card-header-left">
+
+                                        <span class="dash-card-dot dash-card-dot-green"></span>
+                                        <span class="dash-card-title">System Status</span>
+                                    </div>
+                                    </div>
+                                    <div class="dash-status-content">
+                                        <div class="dash-status-row">
+                                            <span class="dash-status-label">API Status</span>
+                                            <span class="dash-status-online">
+                                                <span class="dash-online-dot"></span> Online
+                                            </span>
+                                        </div>
+                                        <div class="dash-status-row">
+                                            <span class="dash-status-label">Database</span>
+                                            <span class="dash-status-online">
+                                                <span class="dash-online-dot"></span> Connected
+                                            </span>
+                                        </div>
+                                        <div class="dash-status-row dash-status-row-last">
+                                            <span class="dash-status-label">Last Sync</span>
+                                            <span class="dash-status-time" id="lastSyncStatus">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dash-card dash-status-height">
+                                    <div class="dash-card-header">
+                                        <div class="dash-card-header-left">
                                         <span class="dash-card-dot dash-card-dot-violet"></span>
                                         <span class="dash-card-title">Active Users</span>
+                                    </div>
                                     </div>
                                     <div class="dash-users-body">
                                         <div class="dash-users-top">
@@ -140,52 +209,58 @@
 
                                             <div class="dash-users-num" id="totalUsers">—</div>
                                         </div>
-
                                         <div class="dash-users-label">Active Users</div>
                                     </div>
                                 </div>
                             </div>
 
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="dash-card">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-blue"></span>
-                                    <span class="dash-card-title">Stock Level</span>
-                                </div>
-                                <div class="dash-stock-chart">
-                                    <canvas id="stockLevelChart" height="200"></canvas>
-                                    <div class="dash-chart-placeholder" id="stockChartPlaceholder">
-                                        <i class="fas fa-chart-pie"></i>
-                                        <p>Loading stock data...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            <div class="dash-card dash-chart-card mt-3">
 
-                        <div class="col-md-6">
-                            <div class="dash-card">
-                                <div class="dash-card-header">
-                                    <span class="dash-card-dot dash-card-dot-orange"></span>
-                                    <span class="dash-card-title">Item Stock Detail</span>
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                    <div class="dash-card-header-left">
+
+                                            <span class="dash-card-dot dash-card-dot-blue"></span>
+
+                                            <span class="dash-card-title">
+                                                Inventory Health Overview
+                                            </span>
+                                    </div>
+
+                                        <span class="dash-card-subtitle">
+                                            Top stock distribution
+                                        </span>
+
                                 </div>
-                                <div class="dash-table-wrap">
-                                    <table class="dash-table dash-table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Item</th>
-                                                <th>Stock</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="itemStockBody">
-                                            <tr>
-                                                <td colspan="3" class="dash-table-empty">Loading items...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+
+                                <div class="dash-stock-chart">
+
+                                    <canvas id="stockLevelChart"></canvas>
+
+                                    <div class="dash-stock-total" id="stockTotalInfo">
+
+                                        <div class="dash-stock-total-label">
+                                            Total Inventory
+                                        </div>
+
+                                        <div class="dash-stock-total-value">
+                                            0
+                                        </div>
+
+                                        <div class="dash-stock-total-sub">
+                                            Across all monitored items
+                                        </div>
+
+                                    </div>
+
+                                    <div class="dash-chart-placeholder" id="stockChartPlaceholder">
+
+                                        <i class="fas fa-chart-bar"></i>
+
+                                        <p>Loading inventory analytics...</p>
+
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -206,52 +281,152 @@
         });
 
         async function loadDashboard() {
+
             try {
-                const [items, locations, readers, picking, users] = await Promise.all([
-                    fetch("/api/item",        { credentials: "include" }),
-                    fetch("/api/location",    { credentials: "include" }),
-                    fetch("/api/reader",      { credentials: "include" }),
-                    fetch("/api/pickinglist", { credentials: "include" }),
-                    fetch("/api/user",        { credentials: "include" })
+
+                const [
+                    items,
+                    locations,
+                    readers,
+                    picking,
+                    users,
+                    activities
+                ] = await Promise.all([
+
+                    fetch("/api/item", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/location", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/reader", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/pickinglist", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/user", {
+                        credentials: "include"
+                    }),
+
+                    fetch("/api/logs/recent-activity", {
+                        credentials: "include"
+                    })
                 ]);
 
-                const itemData = await items.json();
-                const locData  = await locations.json();
-                const rdrData  = await readers.json();
-                const pickData = await picking.json();
-                const userData = await users.json();
+                const itemData =
+                    await items.json();
 
-                $("#totalItems").text(itemData.length);
-                $("#totalLocations").text(locData.length);
-                $("#totalReaders").text(rdrData.length);
-                $("#totalPicking").text(pickData.length);
-                $("#totalUsers").text(userData.length);
+                const locData =
+                    await locations.json();
 
-                const syncTime = new Date().toLocaleString();
-                $("#lastSync").text(syncTime);
-                $("#lastSyncStatus").text(syncTime);
+                const rdrData =
+                    await readers.json();
 
-                let recentHtml = "";
-                if (pickData.length === 0) {
-                    recentHtml = `<tr><td colspan="3" class="dash-table-empty">No picking data found.</td></tr>`;
-                } else {
-                    pickData.slice(0, 5).forEach(p => {
-                        let badgeClass = "dash-badge-draft";
-                        if (p.status === "PREPARATION") badgeClass = "dash-badge-prep";
-                        if (p.status === "DONE")        badgeClass = "dash-badge-done";
+                const pickData =
+                    await picking.json();
 
-                        recentHtml += `
-                            <tr>
-                                <td><span class="dash-do-num">${p.doNumber}</span></td>
-                                <td><span class="dash-scanner-tag">${p.scannerType}</span></td>
-                                <td><span class="dash-badge ${badgeClass}">${p.status}</span></td>
-                            </tr>
-                        `;
-                    });
+                const userData =
+                    await users.json();
+
+                const activityData =
+                    await activities.json();
+
+                $("#totalItems")
+                    .text(itemData.length);
+
+                $("#totalLocations")
+                    .text(locData.length);
+
+                $("#totalReaders")
+                    .text(rdrData.length);
+
+                $("#totalPicking")
+                    .text(pickData.length);
+
+                $("#totalUsers")
+                    .text(userData.length);
+
+                const syncTime =
+                    new Date().toLocaleString();
+
+                $("#lastSync")
+                    .text(syncTime);
+
+                $("#lastSyncStatus")
+                    .text(syncTime);
+
+
+        let activityHtml = "";
+
+        if (activityData.length === 0) {
+
+            activityHtml = `
+                <tr>
+                    <td colspan="3"
+                        class="dash-table-empty">
+                        No recent activity found.
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            activityData.forEach(a => {
+
+                let badgeClass =
+                    "dash-badge-prep";
+
+                if (a.action.includes("DELETE")) {
+                    badgeClass =
+                        "dash-badge-draft";
                 }
-                $("#recentPicking").html(recentHtml);
+
+                if (a.action.includes("LOGIN")) {
+                    badgeClass =
+                        "dash-badge-done";
+                }
+
+                activityHtml += `
+                    <tr>
+                        <td>
+                            <div class="dash-activity-time">
+                                <span class="dash-do-num">
+                                    ${a.time}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dash-activity-cell">
+                                <div class="dash-activity-action">
+                                    ${a.action}
+                                </div>
+                                <div class="dash-activity-entity">
+                                    ${a.entity}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="dash-stock-col">
+                            <span class="dash-badge ${badgeClass}">
+                                ${a.user}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        $("#recentActivity")
+            .html(activityHtml);
 
             } catch (e) {
+
+                console.error(e);
+
                 Swal.fire({
                     icon: "error",
                     title: "Dashboard failed to load",
@@ -260,68 +435,343 @@
             }
         }
 
+
         async function loadStockData() {
-            const res = await fetch("/api/tag/stock", { credentials: "include" });
-            const data = await res.json();
 
-            let total = data.length;
-            let low = data.filter(x => x.totalStock < 10).length;
-            let normal = data.filter(x => x.totalStock >= 10).length;
+            try {
 
-            $("#stockLevelContainer").html(`
-                <div class="d-flex justify-content-between">
-                    <div>Total: <b>${total}</b></div>
-                    <div class="text-danger">Low: <b>${low}</b></div>
-                    <div class="text-success">Normal: <b>${normal}</b></div>
-                </div>
-            `);
+                const res = await fetch("/api/tag/stock", {
+                    credentials: "include"
+                });
 
-            let html = "";
-            data.slice(0,10).forEach(item => {
-                let status = item.totalStock < 10
-                    ? `<span class="badge badge-danger">Low</span>`
-                    : `<span class="badge badge-success">Safe</span>`;
+                const data = await res.json();
 
-                html += `
-                    <tr>
-                        <td>${item.itemName}</td>
-                        <td>${item.totalStock}</td>
-                        <td>${status}</td>
-                    </tr>
-                `;
-            });
+                const total =
+                    data.length;
 
-            $("#itemStockBody").html(html);
+                const critical =
+                    data.filter(x => x.totalStock <= 5).length;
+
+                const low =
+                    data.filter(x =>
+                        x.totalStock > 5 &&
+                        x.totalStock <= 10
+                    ).length;
+
+                const healthy =
+                    data.filter(x => x.totalStock > 10).length;
+
+                const sortedData =
+                    [...data]
+                    .sort((a, b) => a.totalStock - b.totalStock);
+
+                let html = "";
+
+                sortedData.slice(0, 10).forEach(item => {
+
+                    let status = "";
+                    let badgeClass = "";
+
+                    if (item.totalStock <= 5) {
+
+                        status = "Critical";
+                        badgeClass = "dash-stock-critical";
+
+                    }
+                    else if (item.totalStock <= 10) {
+
+                        status = "Low";
+                        badgeClass = "dash-stock-low";
+
+                    }
+                    else {
+
+                        status = "Healthy";
+                        badgeClass = "dash-stock-good";
+                    }
+
+                    html += `
+                        <tr>
+
+                            <td>
+                                <div class="dash-item-cell">
+
+                                    <div class="dash-item-name">
+                                        ${item.itemName}
+                                    </div>
+
+                                    <div class="dash-item-sub">
+                                        Inventory Item
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td class="dash-stock-col">
+                                <span class="dash-stock-number">
+                                    ${item.totalStock}
+                                </span>
+                            </td>
+
+                            <td class="dash-stock-col">
+                                <span class="${badgeClass}">
+                                    ${status}
+                                </span>
+                            </td>
+
+                        </tr>
+                    `;
+                });
+
+                $("#itemStockBody")
+                    .html(html);
+
+                 const chartSortedData =
+                    [...data]
+                    .sort((a, b) => b.totalStock - a.totalStock);
+
+                const topItems =
+                    chartSortedData.slice(0, 5);
+
+                const otherItems =
+                    chartSortedData.slice(5);
+
+                const othersTotal =
+                    otherItems.reduce(
+                        (sum, item) => sum + item.totalStock,
+                        0
+                    );
+
+                const chartData = [...topItems];
+
+                if (othersTotal > 0) {
+
+                    chartData.push({
+                        itemName: "Others",
+                        totalStock: othersTotal
+                    });
+                }
+
+                const labels =
+                    chartData.map(item => item.itemName);
+
+                const stockValues =
+                    chartData.map(item => item.totalStock);
+
+                const totalStock =
+                    stockValues.reduce((a, b) => a + b, 0);
+
+                $("#stockTotalInfo").html(`
+
+                    <div class="dash-stock-total-label">
+                        Total Inventory
+                    </div>
+
+                    <div class="dash-stock-total-value">
+                        ${totalStock}
+                    </div>
+
+                    <div class="dash-stock-total-sub">
+                        ${healthy} healthy ·
+                        ${low} low stock ·
+                        ${critical} critical - items
+                    </div>
+
+                `);
+
+                $("#stockChartPlaceholder").hide();
+
+                initStockChart(labels, stockValues);
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Inventory analytics failed",
+                    text: "Unable to load inventory data."
+                });
+            }
         }
 
-        function initStockChart() {
-            const ctx = document.getElementById('stockLevelChart');
+               let stockChart = null;
+
+        function initStockChart(labels, stockValues) {
+
+            const ctx =
+                document.getElementById("stockLevelChart");
+
             if (!ctx) return;
 
-            new Chart(ctx, {
-                type: 'doughnut',
+            if (stockChart) {
+                stockChart.destroy();
+            }
+
+            const total =
+                stockValues.reduce((a, b) => a + b, 0);
+
+            stockChart = new Chart(ctx, {
+
+                type: "bar",
+
                 data: {
-                    labels: ['Available', 'Low Stock', 'Critical'],
+
+                    labels: labels,
+
                     datasets: [{
-                        data: [Object.values(stockData).slice(0,3)],
-                        backgroundColor: [
-                            '#10b981',
-                            '#f59e0b',
-                            '#ef4444'
-                        ],
-                        borderWidth: 0,
-                        cutout: '65%'
+
+                        label: "Inventory",
+
+                        data: stockValues,
+
+                        borderRadius: 10,
+
+                        borderSkipped: false,
+
+                        barThickness: 18,
+
+                        backgroundColor: stockValues.map(v =>
+
+                            v <= 5
+                                ? "#ef4444"
+
+                                : v <= 10
+                                    ? "#f59e0b"
+
+                                    : "#3b82f6"
+                        ),
+
+                        hoverBackgroundColor: stockValues.map(v =>
+
+                            v <= 5
+                                ? "#dc2626"
+
+                                : v <= 10
+                                    ? "#d97706"
+
+                                    : "#2563eb"
+                        )
                     }]
                 },
+
                 options: {
+
                     responsive: true,
+
                     maintainAspectRatio: false,
+
+                    indexAxis: 'y',
+
+                    animation: {
+                        duration: 1000,
+                        easing: "easeOutQuart"
+                    },
+
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 50,
+                            left: 10,
+                            bottom: 10
+                        }
+                    },
+
                     plugins: {
+
                         legend: {
                             display: false
+                        },
+
+                        tooltip: {
+
+                            backgroundColor: "#111827",
+
+                            cornerRadius: 12,
+
+                            padding: 12,
+
+                            displayColors: false,
+
+                            callbacks: {
+
+                                label: function (context) {
+
+                                    const value =
+                                        context.raw;
+
+                                    const percentage =
+                                        ((value / total) * 100)
+                                        .toFixed(1);
+
+                                    return [
+                                        `Stock : ${value}`,
+                                        `Contribution : ${percentage}%`
+                                    ];
+                                }
+                            }
+                        },
+
+                        datalabels: {
+
+                            anchor: "end",
+
+                            align: "right",
+
+                            offset: 4,
+
+                            color: "#374151",
+
+                            font: {
+                                weight: "700",
+                                size: 11
+                            },
+
+                            formatter: (value) => {
+
+                                const percentage =
+                                    ((value / total) * 100)
+                                    .toFixed(0);
+
+                                return percentage + "%";
+                            }
+                        }
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            beginAtZero: true,
+
+                            grid: {
+                                color: "rgba(148,163,184,0.10)"
+                            },
+
+                            ticks: {
+                                color: "#94a3b8"
+                            }
+                        },
+
+                        y: {
+
+                            grid: {
+                                display: false
+                            },
+
+                            ticks: {
+
+                                color: "#475569",
+
+                                font: {
+                                    weight: "600"
+                                }
+                            }
                         }
                     }
-                }
+                },
+
+                plugins: [ChartDataLabels]
             });
         }
     </script>

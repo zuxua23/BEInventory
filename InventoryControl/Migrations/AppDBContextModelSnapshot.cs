@@ -52,6 +52,14 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("status");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.HasKey("DoId");
 
                     b.ToTable("tb_DO");
@@ -150,6 +158,11 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("itm_desc");
+
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
@@ -203,6 +216,10 @@ namespace InventoryControl.Migrations
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_system");
 
                     b.Property<string>("LocId")
                         .IsRequired()
@@ -271,10 +288,6 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("Desc")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("per_desc");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -296,17 +309,9 @@ namespace InventoryControl.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("operation");
 
-                    b.Property<string>("PerId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("per_id");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleId");
-
-                    b.HasIndex("PerId")
-                        .IsUnique();
 
                     b.ToTable("tb_Permission");
                 });

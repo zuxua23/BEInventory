@@ -200,135 +200,108 @@
 
     @Html.Partial("_BaseScript")
 
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
     <script>
-                const canUpdate = @canUpdate.ToString().ToLower();
-
-        function initSelect2(parent = document) {
-    $(parent).find('.select2').select2({
-        theme: 'bootstrap4',
-        placeholder: "Search role...",
-        width: '100%',
-        dropdownParent: $('#roleUpdate')
-    });
-}
-
-$(document).on('select2:open', () => {
-    document.querySelector('.select2-container--open .select2-search__field').focus();
-});
-
+        const canUpdate = @canUpdate.ToString().ToLower();
         let id = "@ViewData["id"]";
 
-        $(document).ready(function(){
+        $(document).ready(function () {
             loadUser();
         });
 
-        async function loadUser(){
-
-            const response = await fetch(`/api/user/${id}`, {
-                method:"GET",
-                credentials:"include"
+        function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search role...",
+                width: '100%',
+                dropdownParent: $('#roleUpdate')
             });
-
-            const user = await response.json();
-                    if (!response.ok) {
-            Swal.fire("Error", "Failed to load data", "error");
-            return;
         }
+
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
+
+        async function loadUser() {
+
+            const user = await Api.get(`/api/user/${id}`);
+
+            if (!user) {
+                Alert.error("Failed to load data");
+                return;
+            }
 
             $("#userId").val(user.userId);
             $("#username").val(user.username);
             $("#fullname").val(user.fullname);
-
             $("#RoleUpdate").val(user.roles?.join(", ") || "-");
         }
 
-        async function updateUser(){
-                                        if (!canUpdate) {
-                    Swal.fire({
-                        icon: 'error',
-        title: 'Access denied',
-        text: 'You do not have permission to update'
-                    });
-                    return;
-                }
-            const payload={
-                id:id,
-                userId:$("#userId").val(),
-                username:$("#username").val(),
-                fullname:$("#fullname").val()
+
+        async function updateUser() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const payload = {
+                id: id,
+                userId: $("#userId").val(),
+                username: $("#username").val(),
+                fullname: $("#fullname").val()
             };
 
-            const response=await fetch(`/api/user/${id}`,{
-                method:"PUT",
-                credentials:"include",
-                headers:{ "Content-Type":"application/json" },
-                body:JSON.stringify(payload)
-            });
+            const res = await Api.put(`/api/user/${id}`, payload);
 
-            if(response.ok){
-                Swal.fire({
-                    icon:"success",
-                    title:"Success",
-                    timer:1500,
-                    showConfirmButton:false
-                }).then(()=>{
-                            window.location.href="/user";
-                });
-            }else{
-                        Swal.fire({ icon:"error", title:"Failed to update user"});
+            if (res && res.ok) {
+                await Alert.success("User updated successfully");
+                window.location.href = "/user";
+            } else {
+                Alert.error("Failed to update user");
             }
         }
 
-        async function updatePassword(){
-                                        if (!canUpdate) {
-                    Swal.fire({
-                        icon: 'error',
-        title: 'Access denied',
-        text: 'You do not have permission to update'
-                    });
-                    return;
-                }
-            const payload={
-                password:$("#newPassword").val()
-            };
-                    if (!$("#newPassword").val()) {
-            Swal.fire("Error", "Password cannot be empty", "error");
-            return;
-        }
-            const response=await fetch(`/api/user/${id}`,{
-                method:"PUT",
-                credentials:"include",
-                headers:{ "Content-Type":"application/json" },
-                body:JSON.stringify(payload)
-            });
 
-            if(response.ok){
+        async function updatePassword() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const password = $("#newPassword").val();
+
+            if (!password) {
+                Alert.error("Password cannot be empty");
+                return;
+            }
+
+            const res = await Api.put(`/api/user/${id}/password`, { password });
+
+            if (res && res.ok) {
+
                 $("#updatePassword").modal("hide");
-                Swal.fire({
-                    icon:"success",
-                    title:"Password updated",
-                    timer:1500,
-                    showConfirmButton:false
-                }).then(()=>{
-                            window.location.href="/user";
-                });
-            }else{
-                        Swal.fire({ icon:"error", title:"Failed to update password" });
+
+                await Alert.success("Password updated");
+                $("#newPassword").val("");
+
+                loadUser();
+                $("#detailContainer").empty();
+            } else {
+
+                Alert.error("Failed to update password");
+
             }
         }
-
-        $(document).keydown(function(e){
-            if(e.ctrlKey && e.key==='Enter') updateUser();
-            if(e.key==='Escape') window.location.href="/user";
-        });
 
         async function addDetail() {
 
-            const res = await fetch("/api/permission", {
-                credentials: "include"
-            });
-
-            const roles = await res.json();
+            const roles = await Api.get("/api/permission");
+            if (!roles) return;
 
             const rowId = Date.now();
 
@@ -339,33 +312,32 @@ $(document).on('select2:open', () => {
             const html = `
                 <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
                     <div class="flex-grow-1 mr-2">
-                        <select class="form-control select2 role-select" style="width: 100%;">
-                                  ${options}
+                        <select class="form-control select2 role-select">
+                            ${options}
                         </select>
                     </div>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="$('#row_${rowId}').remove()">
+                    <button type="button" class="btn btn-danger btn-sm"
+                            onclick="$('#row_${rowId}').remove()">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             `;
 
             $("#detailContainer").append(html);
-
-                    initSelect2(`#row_${rowId}`);
+            initSelect2(`#row_${rowId}`);
         }
+
 
         $('#roleUpdate').on('shown.bs.modal', async function () {
 
             $("#modalUserId").val($("#userId").val());
             $("#modalCurrentRole").val($("#RoleUpdate").val());
-
             $("#detailContainer").empty();
 
-            const resUser = await fetch(`/api/user/${id}`, { credentials: "include" });
-            const user = await resUser.json();
+            const user = await Api.get(`/api/user/${id}`);
+            const roles = await Api.get("/api/permission");
 
-            const resRole = await fetch("/api/permission", { credentials: "include" });
-            const roles = await resRole.json();
+            if (!user || !roles) return;
 
             user.roles.forEach(roleName => {
 
@@ -381,27 +353,31 @@ $(document).on('select2:open', () => {
                 const html = `
                     <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
                         <div class="flex-grow-1 mr-2">
-                            <select class="form-control role-select" style="width:100%">
+                            <select class="form-control select2 role-select">
                                 ${options}
                             </select>
                         </div>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="$('#row_${rowId}').remove()">
+                        <button type="button" class="btn btn-danger btn-sm"
+                                onclick="$('#row_${rowId}').remove()">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 `;
 
                 $("#detailContainer").append(html);
-
-        initSelect2(`#row_${rowId}`);
+                initSelect2(`#row_${rowId}`);
             });
 
             if (user.roles.length === 0) addDetail();
         });
 
-
         $("#RoleUpdateForm").submit(async function (e) {
             e.preventDefault();
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
 
             let roleIds = [];
 
@@ -410,43 +386,31 @@ $(document).on('select2:open', () => {
                 if (val) roleIds.push(val);
             });
 
-            console.log("ROLE IDS:", roleIds);
-                                        if (!canUpdate) {
-                    Swal.fire({
-                        icon: 'error',
-        title: 'Access denied',
-        text: 'You do not have permission to update'
-                    });
-                    return;
-                }
-            const payload = {
+            const res = await Api.post("/api/user/update-roles", {
                 userId: id,
                 roles: roleIds
-            };
-
-            const response = await fetch("/api/user/update-roles", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                Swal.fire({
-                    icon: "success",
-                            title: "Role updated successfully",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    $("#roleUpdate").modal("hide");
-                    window.location.href = "/user";
-                });
+            if (res && res.ok) {
+
+
+                $("#roleUpdate").modal("hide");
+                await Alert.success("Role updated successfully");
+                loadUser();
+                $("#detailContainer").empty();
             } else {
-                Swal.fire({
-                    icon: "error",
-        title: "Failed to update role"                });
+
+                Alert.error("Failed to update role");
+
             }
         });
+
+
+        $(document).keydown(function (e) {
+            if (e.ctrlKey && e.key === 'Enter') updateUser();
+            if (e.key === 'Escape') window.location.href = "/user";
+        });
+
     </script>
 
 </body>

@@ -51,7 +51,6 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-12">
-                            <!-- CARD MODERN -->
                             <div class="card card-primary card-outline shadow-lg">
                                 <div class="card-header bg-white border-0 pb-0">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -72,7 +71,6 @@
                                 </div>
 
                                 <div class="card-body pt-3">
-                                    <!-- TABLE RESPONSIVE -->
                                     <div class="table-responsive">
                                         <table id="datatablesIndex" class="table table-hover ">
                                             <thead class="thead-light">
@@ -80,6 +78,7 @@
                                                     <th class="text-center" width="60">#</th>
                                                     <th class="text-nowrap">Item ID</th>
                                                     <th>Item Name</th>
+                                                    <th>Description</th>
                                                     @if (canUpdate || canDelete)
                                                     {
                                                         <th class="text-center" width="160">Actions</th>
@@ -114,13 +113,18 @@
                     <div class="modal-body">
 
                         <div class="form-group">
-                            <label>Item ID</label>
-                            <input type="text" id="itemId" name="itemId" class="form-control" readonly>
+                            <label>
+                                <i class="fas fa-tag text-muted mr-2"></i>
+                                Item Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="itemName" class="form-control" required>
                         </div>
 
                         <div class="form-group">
-                            <label>Item Name</label>
-                            <input type="text" name="itemName" class="form-control" required>
+                            <label>
+                                <i class="fas fa-align-left text-muted mr-2"></i>
+                                Description</label>
+                            <textarea name="description" class="form-control"></textarea>
                         </div>
 
                     </div>
@@ -139,6 +143,7 @@
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
     <script src="~/helper/table.js"></script>
+
     <script>
         const canUpdate = @canUpdate.ToString().ToLower();
         const canDelete = @canDelete.ToString().ToLower();
@@ -161,6 +166,7 @@
                     Table.rowNumber(),
                     { data: "itemId" },
                     { data: "itemName" },
+                    { data: "itemDesc" },
                     Table.action(renderAction, canUpdate || canDelete)
                 ]
             });
@@ -194,52 +200,48 @@
             e.preventDefault();
 
             const payload = {
-                itemName: e.target.itemName.value
+                itemName: e.target.itemName.value,
+                itemDesc: e.target.description.value
             };
 
             const res = await Api.post("/api/item", payload);
 
             if (res && res.ok) {
+
                 await Alert.success("Item created successfully");
+
                 $("#createItem").modal("hide");
                 loadItems();
                 e.target.reset();
-            } else {
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
                 Alert.error("Failed to create item");
             }
         });
 
         async function deleteItem(id) {
 
-            const confirm = await Alert.confirm("Item will be deleted!");
-            if (!confirm.isConfirmed) return;
+        const confirm = await Alert.deleteConfirm("Item", "This Item will be permanently deleted!");
+
+        if (!confirm.isConfirmed) return;
 
             const res = await Api.delete(`/api/item/${id}`);
 
             if (res && res.ok) {
+
                 await Alert.success("Item deleted successfully");
                 loadItems();
-            } else {
+
+            } else if (res && !res.ok) {
+                 if (res.errorData?.type === "warning")
+                  return;
                 Alert.error("Failed to delete item");
             }
-        }
 
-        function generateItemId() {
 
-            const data = table.rows().data().toArray();
-
-            let max = 0;
-
-            data.forEach(item => {
-                if (!item.itemId) return;
-
-                let number = parseInt(item.itemId.replace("ITM", ""));
-                if (number > max) max = number;
-            });
-
-            let formatted = "ITM" + String(max + 1).padStart(5, '0');
-
-            $("#itemId").val(formatted);
         }
 
         $('#createItem').on('shown.bs.modal', function () {

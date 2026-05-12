@@ -1,46 +1,84 @@
-﻿using InTheHand.Net;
-using InTheHand.Net.Bluetooth;
-using InTheHand.Net.Sockets;
+﻿using System.Diagnostics;
 using System.Net.Sockets;
-using System.Text;
+using InventoryControl.Utility;
 
 namespace InventoryControl.Helpers;
 
 public static class PW4NX_Helper
 {
-    public static bool SendToPrinter(string ipAddress, int port, byte[] data)
+    public static bool SendToPrinter(
+        string ipAddress,
+        int port,
+        byte[] data
+    )
     {
+        var stopwatch =
+            Stopwatch.StartNew();
+
         try
         {
-            Console.WriteLine("=== START PRINT DEBUG ===");
-            Console.WriteLine($"IP: {ipAddress}");
-            Console.WriteLine($"PORT: {port}");
-            Console.WriteLine($"BYTES LENGTH: {data.Length}");
+            SystemLogger.Info(
+                $"Starting printer communication. IP='{ipAddress}', Port='{port}', Bytes='{data.Length}'."
+            );
 
-            Console.WriteLine("DATA (ASCII):");
-            Console.WriteLine(Encoding.ASCII.GetString(data));
+            using var client =
+                new TcpClient();
 
-            using (TcpClient client = new TcpClient())
-            {
-                Console.WriteLine("Connecting to printer...");
-                client.Connect(ipAddress, port);
-                Console.WriteLine("Connected ✔");
+            SystemLogger.Info(
+                $"Connecting to printer '{ipAddress}:{port}'."
+            );
 
-                using (NetworkStream stream = client.GetStream())
-                {
-                    Console.WriteLine("Sending data...");
-                    stream.Write(data, 0, data.Length);
-                    stream.Flush();
-                    Console.WriteLine("Data sent ✔");
-                }
-            }
+            client.Connect(
+                ipAddress,
+                port
+            );
 
-            Console.WriteLine("=== END PRINT DEBUG ===");
+            SystemLogger.Info(
+                $"Printer connection established successfully. IP='{ipAddress}'."
+            );
+
+            using var stream =
+                client.GetStream();
+
+            stream.Write(
+                data,
+                0,
+                data.Length
+            );
+
+            stream.Flush();
+
+            stopwatch.Stop();
+
+            SystemLogger.Info(
+                $"Printer data sent successfully. " +
+                $"IP='{ipAddress}', " +
+                $"Bytes='{data.Length}', " +
+                $"Duration='{stopwatch.ElapsedMilliseconds}ms'."
+            );
+
             return true;
+        }
+        catch (SocketException ex)
+        {
+            stopwatch.Stop();
+
+            SystemLogger.Error(
+                $"Socket error while communicating with printer '{ipAddress}:{port}'.",
+                ex
+            );
+
+            return false;
         }
         catch (Exception ex)
         {
-            Console.WriteLine("❌ Printer Error: " + ex.Message);
+            stopwatch.Stop();
+
+            SystemLogger.Error(
+                $"Unexpected printer communication error. IP='{ipAddress}:{port}'.",
+                ex
+            );
+
             return false;
         }
     }

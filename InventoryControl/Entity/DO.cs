@@ -24,7 +24,15 @@ public class DO
 
     [Column("created_at")]
     public DateTime? CreatedAt { get; set; }
+
+    [Column("updated_by")]
+    public string? UpdatedBy { get; set; }
+
+    [Column("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
     [Column("isDelete")]
     public bool IsDelete { get; set; } = false;
+
     public ICollection<DODetail>? Details { get; set; }
 }

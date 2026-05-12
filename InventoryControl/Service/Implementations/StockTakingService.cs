@@ -6,6 +6,8 @@ using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
+using ClosedXML.Excel;
+using System.Text;
 
 public class StockTakingService : IStockTakingService
 {
@@ -14,6 +16,70 @@ public class StockTakingService : IStockTakingService
     public StockTakingService(AppDBContext db)
     {
         _db = db;
+    }
+    public async Task<List<Location>> GetLocAsync()
+    {
+        try
+        {
+            DailyFileLogger.Info(
+                "Retrieving active locations with IN_STOCK tags."
+            );
+
+            var result = await _db.Locations
+                .Where(location =>
+                    !location.IsDelete &&
+                    _db.Tags.Any(tag =>
+                        tag.LocationId == location.Id &&
+                        tag.Status == "IN_STOCK"
+                    )
+                )
+                .ToListAsync();
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved {result.Count} location(s) containing IN_STOCK tags."
+            );
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                "An error occurred while retrieving locations with IN_STOCK tags.",
+                ex
+            );
+
+            throw;
+        }
+    }
+
+    public async Task<object?> GetActiveAsync()
+    {
+        var session = await _db.StockTakings
+            .Where(x => x.Status == "OPEN")
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (session == null)
+            return null;
+
+        var locationIds = await _db.StockTakingDetails
+            .Where(x =>
+                x.SttId == session.SttId &&
+                x.Action == "SYSTEM")
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => tag.LocationId)
+            .Distinct()
+            .ToListAsync();
+
+        return new
+        {
+            session.SttId,
+            session.Remark,
+            session.Status,
+            LocationIds = locationIds
+        };
     }
 
     public async Task<List<object>> GetSystemDataAsync(string sttId)
@@ -402,6 +468,284 @@ public class StockTakingService : IStockTakingService
         }
     }
 
+    private async Task<List<StockTakingExportDto>> GetSystemExportData(string sttId)
+    {
+        return await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => new
+                {
+                    std.ItemId,
+                    tag.LocationId
+                })
+
+            .Join(_db.Locations,
+                x => x.LocationId,
+                loc => loc.Id,
+                (x, loc) => new
+                {
+                    x.ItemId,
+                    LocationName = loc.Name
+                })
+
+            .GroupBy(x => new
+            {
+                x.ItemId,
+                x.LocationName
+            })
+
+            .Select(g => new StockTakingExportDto
+            {
+                ItemId = g.Key.ItemId,
+                Location = g.Key.LocationName,
+                Qty = g.Count(),
+                Status = "SYSTEM"
+            })
+
+            .ToListAsync();
+    }
+
+    private byte[] GenerateExcel(List<StockTakingExportDto> data)
+    {
+        using var workbook = new XLWorkbook();
+
+        var ws = workbook.Worksheets.Add("StockTaking");
+
+        ws.Cell(1, 1).Value = "Item";
+        ws.Cell(1, 2).Value = "Qty";
+        ws.Cell(1, 3).Value = "Location";
+        ws.Cell(1, 4).Value = "Status";
+
+        var headerRange = ws.Range(1, 1, 1, 4);
+
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+        int row = 2;
+
+        foreach (var item in data)
+        {
+            ws.Cell(row, 1).Value = item.ItemId;
+            ws.Cell(row, 2).Value = item.Qty;
+            ws.Cell(row, 3).Value = item.Location;
+            ws.Cell(row, 4).Value = item.Status;
+
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        return stream.ToArray();
+    }
+
+    private string GenerateCsv(List<StockTakingExportDto> data)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("Item,Qty,Location,Status");
+
+        foreach (var item in data)
+        {
+            sb.AppendLine(
+                $"{item.ItemId}," +
+                $"{item.Qty}," +
+                $"{item.Location}," +
+                $"{item.Status}"
+            );
+        }
+
+        return sb.ToString();
+    }
+
+    private byte[] GenerateCompareExcel(List<StockTakingCompareExportDto> data)
+    {
+        using var workbook = new XLWorkbook();
+
+        var ws = workbook.Worksheets.Add("Compare");
+
+        ws.Cell(1, 1).Value = "Item";
+        ws.Cell(1, 2).Value = "System Qty";
+        ws.Cell(1, 3).Value = "Scan Qty";
+        ws.Cell(1, 4).Value = "Difference";
+        ws.Cell(1, 5).Value = "Status";
+
+        var header = ws.Range(1, 1, 1, 5);
+
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor =
+            XLColor.LightGray;
+
+        int row = 2;
+
+        foreach (var item in data)
+        {
+            ws.Cell(row, 1).Value = item.ItemId;
+            ws.Cell(row, 2).Value = item.QtySystem;
+            ws.Cell(row, 3).Value = item.QtyScan;
+            ws.Cell(row, 4).Value = item.Selisih;
+            ws.Cell(row, 5).Value = item.Status;
+
+            var range = ws.Range(row, 1, row, 5);
+
+            if (item.Status == "MATCH")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightGreen;
+            }
+            else if (item.Status == "MISSING")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightPink;
+            }
+            else if (item.Status == "OVER")
+            {
+                range.Style.Fill.BackgroundColor =
+                    XLColor.LightYellow;
+            }
+
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        return stream.ToArray();
+    }
+    private async Task<List<StockTakingCompareExportDto>>GetCompareExportData(string sttId)
+    {
+        var systemData = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .GroupBy(x => new
+            {
+                x.ItemId
+            })
+            .Select(g => new
+            {
+                g.Key.ItemId,
+                QtySystem = g.Count()
+            })
+            .ToListAsync();
+
+        var scanData = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == "FOUND")
+            .GroupBy(x => new
+            {
+                x.ItemId
+            })
+            .Select(g => new
+            {
+                g.Key.ItemId,
+                QtyScan = g.Count()
+            })
+            .ToListAsync();
+
+        var result = systemData
+            .GroupJoin(
+                scanData,
+                s => s.ItemId,
+                f => f.ItemId,
+                (s, f) => new { s, f }
+            )
+            .SelectMany(
+                x => x.f.DefaultIfEmpty(),
+                (x, f) =>
+                {
+                    int qtyScan = f?.QtyScan ?? 0;
+
+                    int selisih =
+                        qtyScan - x.s.QtySystem;
+
+                    string status =
+                        selisih == 0
+                            ? "MATCH"
+                            : selisih < 0
+                                ? "MISSING"
+                                : "OVER";
+
+                    return new StockTakingCompareExportDto
+                    {
+                        ItemId = x.s.ItemId,
+                        QtySystem = x.s.QtySystem,
+                        QtyScan = qtyScan,
+                        Selisih = selisih,
+                        Status = status
+                    };
+                })
+            .ToList();
+
+        return result;
+    }
+
+    private string GenerateCompareCsv(
+    List<StockTakingCompareExportDto> data)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine(
+            "Item,System Qty,Scan Qty,Difference,Status"
+        );
+
+        foreach (var item in data)
+        {
+            sb.AppendLine(
+                $"{item.ItemId}," +
+                $"{item.QtySystem}," +
+                $"{item.QtyScan}," +
+                $"{item.Selisih}," +
+                $"{item.Status}"
+            );
+        }
+
+        return sb.ToString();
+    }
+
+    public async Task<byte[]> ExportSystemExcelAsync(string sttId)
+    {
+        var data = await GetSystemExportData(sttId);
+        if (!data.Any())
+            throw new Exception("No system data available to export");
+
+        return GenerateExcel(data);
+    }
+
+
+    public async Task<string> ExportSystemCsvAsync(string sttId)
+    {
+        var data = await GetSystemExportData(sttId);
+        if (!data.Any())
+            throw new Exception("No system data available to export");
+
+        return GenerateCsv(data);
+    }
+
+    public async Task<byte[]> ExportCompareExcelAsync(string sttId)
+    {
+        var data = await GetCompareExportData(sttId);
+
+        if (!data.Any())
+            throw new Exception("No compare data to export");
+
+        return GenerateCompareExcel(data);
+    }
+    public async Task<string> ExportCompareCsvAsync(string sttId)
+    {
+        var data = await GetCompareExportData(sttId);
+
+        if (!data.Any())
+            throw new Exception("No compare data to export");
+
+        return GenerateCompareCsv(data);
+    }
     public async Task<object> GetProgressAsync(string sttId)
     {
         var total = await _db.StockTakingDetails
@@ -418,70 +762,4 @@ public class StockTakingService : IStockTakingService
         };
     }
 
-    public async Task<List<object>> GetSessionTagsAsync(string sttId)
-    {
-        try
-        {
-            var data = await _db.StockTakingDetails
-                .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
-                .Join(_db.Tags,
-                    std => std.TagId,
-                    tag => tag.Id,
-                    (std, tag) => new { std, tag })
-                .Join(_db.Items,
-                    x => x.tag.ItemId,
-                    item => item.Id,
-                    (x, item) => new { x.std, x.tag, item })
-                .Join(_db.Locations,
-                    x => x.tag.LocationId,
-                    loc => loc.Id,
-                    (x, loc) => (object)new
-                    {
-                        tagId = x.tag.TagId,
-                        epcTag = x.tag.EpcTag,
-                        itemId = x.tag.ItemId,
-                        itemName = x.item.Name,
-                        location = loc.Name
-                    })
-                .ToListAsync();
-
-            return data;
-        }
-        catch (Exception ex)
-        {
-            DailyFileLogger.Error("GetSessionTagsAsync error", ex);
-            throw;
-        }
-    }
-
-    public async Task<object?> GetActiveAsync()
-    {
-        var st = await _db.StockTakings
-            .Where(x => x.Status == "OPEN")
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        if (st == null) return null;
-
-        var locations = await _db.StockTakingDetails
-            .Where(x => x.SttId == st.SttId && x.Action == "SYSTEM" && x.TagId != null)
-            .Join(_db.Tags,
-                std => std.TagId,
-                tag => tag.Id,
-                (std, tag) => tag.LocationId)
-            .Distinct()
-            .Join(_db.Locations,
-                locId => locId,
-                loc => loc.Id,
-                (locId, loc) => loc.Name)
-            .ToListAsync();
-
-        return new
-        {
-            st.SttId,
-            st.Remark,
-            st.Status,
-            Location = locations.Any() ? string.Join(", ", locations) : "-"
-        };
-    }
 }

@@ -113,89 +113,78 @@
     </div>
 
     @Html.Partial("_BaseScript")
+    
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
 
     <script>
 
         const canUpdate = @canUpdate.ToString().ToLower();
-
         let id = "@ViewData["id"]";
 
         $(document).ready(load);
 
         async function load() {
 
-            const res = await fetch(`/api/pickinglist/${id}`, {
-                method: "GET",
-                credentials: "include"
-            });
+            const data = await Api.get(`/api/pickinglist/${id}`);
 
-            if (!res.ok) {
-            Swal.fire("Error", "Failed to load data", "error");
-
+            if (!data) {
+                Alert.error("Failed to load data");
                 return;
             }
 
-            const data = await res.json();
-
             $("#doNumber").val(data.doNumber);
-            $("#scannerType").val(data.scannerType);
+
+            $("#details").html("");
 
             data.details.forEach(d => {
                 addDetail(d.itemId, d.qtyRequired);
             });
         }
 
-        async function loadItemDropdown(selectedId = "") {
+        async function loadItemDropdown(selectElement, selectedId = "") {
 
-            const res = await fetch("/api/item", {
-                method: "GET",
-                credentials: "include"
-            });
-
-            const data = await res.json();
+            const data = await Api.get("/api/item");
+            if (!data) return;
 
             let options = `<option value="">-- Select Item --</option>`;
 
             data.forEach(item => {
-                options += `<option value="${item.id}">${item.itemName}</option>`;
+                options += `
+                    <option value="${item.id}">
+                        ${item.itemName}
+                    </option>
+                `;
             });
 
-            let lastSelect = $(".item-select").last();
-            lastSelect.html(options);
+            $(selectElement).html(options);
 
             if (selectedId) {
-                lastSelect.val(selectedId);
+                $(selectElement).val(selectedId);
             }
-            initSelect2();
-        }
 
-                function initSelect2(parent = document) {
-            $(parent).find('.select2').select2({
+            $(selectElement).select2({
                 theme: 'bootstrap4',
                 placeholder: "Search...",
                 width: '100%',
                 dropdownParent: $('body')
             });
         }
-                $(document).on('select2:open', () => {
+
+
+        $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
 
+        $(document).on("click", ".remove-item", async function () {
 
-        $(document).on("click", ".remove-item", function () {
-
-            let row = $(this).closest(".detail-item");
-
-            Swal.fire({
-                title: "Delete item?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, delete"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    row.remove();
-                }
+            const confirm = await Alert.confirm({
+                text: "Delete item?"
             });
+
+            if (!confirm.isConfirmed) return;
+
+            $(this).closest(".detail-item").remove();
         });
 
         function addDetail(selectedId = "", qty = "") {
@@ -206,7 +195,7 @@
                         <select class="form-control select2 item-select"></select>
                     </div>
                     <div class="col">
-                        <input class="form-control qty" value="${qty}" type="number">
+                     <input class="form-control qty"  value="${qty}" type="number" min="1" step="1" inputmode="numeric">
                     </div>
                     <div class="col-2 text-center">
                         <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -216,63 +205,59 @@
                 </div>
             `);
 
-            loadItemDropdown(selectedId);
-            initSelect2($("#detailContainer"));
+                const select = $("#details .item-select").last();
+
+                loadItemDropdown(select, selectedId);
         }
 
         async function updateDO() {
 
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
             let details = [];
 
             $("#details .detail-item").each(function () {
+                const itemId = $(this).find(".item-select").val();
+                const qty = parseInt($(this).find(".qty").val());
+
+                if (!itemId) return;
+
+                if (!qty || qty <= 0) {
+                    Alert.error("Qty must be greater than 0");
+                    throw new Error("Invalid qty");
+                }
                 details.push({
-                    itemId: $(this).find(".item-select").val(),
-                    qtyRequired: parseInt($(this).find(".qty").val())
+                    itemId,
+                    qtyRequired: qty
                 });
             });
-           if (!canUpdate) {
-                    Swal.fire({
-                        icon: 'error',
-        title: 'Access denied',
-        text: 'You do not have permission to update'
-                    });
-            return;
-        }
+
+            if (details.length === 0) {
+                return Alert.error("Please add at least one item");
+            }
+
             const payload = {
                 doNumber: $("#doNumber").val(),
-                scannerType: $("#scannerType").val(),
                 details
             };
 
-            const res = await fetch(`/api/pickinglist/${id}`, {
-                method: "PUT",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            const res = await Api.put(`/api/pickinglist/${id}`, payload);
 
-            if (res.ok) {
+            if (res && res.ok) {
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Success",
-                    text: "Picking List updated successfully",
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "/pickinglist";
-                });
+                await Alert.success("Picking List updated successfully");
+                window.location.href = "/pickinglist";
 
-            } else {
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
 
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Update failed"
-                });
-
+                Alert.error("Failed to update picking list");
+            }        
             }
-        }
 
         $(document).keydown(function(e) {
             if (e.ctrlKey && e.key === 'Enter') updateDO();
