@@ -352,12 +352,13 @@ public class ReaderService : IReaderService
         }
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(string id, string deletedBy)
     {
         try
         {
             DailyFileLogger.Info(
-                $"Deleting reader with ID '{id}'."
+                $"Deleting reader with ID '{id}'.",
+                deletedBy
             );
 
             var reader = await _db.Readers
@@ -379,6 +380,7 @@ public class ReaderService : IReaderService
 
             reader.IsDelete = true;
             reader.UpdatedAt = DateTime.UtcNow;
+            reader.UpdatedBy = deletedBy;
 
             await _db.SaveChangesAsync();
 
@@ -390,7 +392,7 @@ public class ReaderService : IReaderService
                 action: "DELETE",
                 entity: "READER",
                 entityId: reader.RdrId,
-                performedBy: reader.UpdatedBy ?? "SYSTEM",
+                performedBy: deletedBy,
                 description:
                     $"Soft deleted reader '{reader.Name}'."
             );

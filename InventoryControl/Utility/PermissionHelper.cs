@@ -2,7 +2,7 @@
 
 
 using System.Text.Json;
-
+//FOR FE
 public static class PermissionHelper
 {
     public static bool HasPermission(HttpContext context, string permission)

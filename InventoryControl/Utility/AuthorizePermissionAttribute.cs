@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 using System.Text.Json;
-
+//FOR BE
 public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilter
 {
     private readonly string? _permission;
@@ -34,7 +34,6 @@ public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilte
 
             userPermissions = JsonSerializer.Deserialize<List<string>>(permissionsJson);
 
-            Console.WriteLine("AUTH VIA SESSION");
         }
         else if (user.Identity != null && user.Identity.IsAuthenticated)
         {
@@ -43,7 +42,6 @@ public class AuthorizePermissionHybridAttribute : Attribute, IAuthorizationFilte
                 .Select(c => c.Value)
                 .ToList();
 
-            Console.WriteLine("AUTH VIA JWT");
         }
         else
         {

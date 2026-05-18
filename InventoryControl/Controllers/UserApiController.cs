@@ -84,7 +84,8 @@ public class UserApiController : ControllerBase
     [AuthorizePermissionHybrid("USER_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
-        await _service.DeleteAsync(id);
+        var deletedBy = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.DeleteAsync(id, deletedBy);
         return Ok(new { message = "User berhasil dihapus" });
     }
 }

@@ -1,5 +1,5 @@
 /* =========================================================
-   GLOBAL LAYOUT — MODERN INDUSTRIAL UI
+   GLOBAL Views LAYOUT — MODERN INDUSTRIAL UI
 ========================================================= */
 
 /* =========================================================
@@ -17,8 +17,6 @@ body {
 
 .wrapper {
     min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
 }
 
 /* =========================================================
@@ -27,29 +25,15 @@ body {
 :root {
     --sidebar-width: 270px;
 }
-
-/* Sidebar Width */
 .sidebar-light-industrial {
     width: var(--sidebar-width) !important;
 }
-
-/* Content & Footer Position */
-.layout-fixed .wrapper .content-wrapper,
-.layout-fixed .wrapper .main-footer {
-    margin-left: var(--sidebar-width) !important;
+.main-sidebar {
+    width: var(--sidebar-width) !important;
 }
-
-/* Hide Pushmenu Button */
-[data-widget="pushmenu"] {
-    display: none !important;
-}
-
 
 .content-wrapper {
-    flex: 1 !important;
     padding: 1rem !important;
-    display: flex !important;
-    flex-direction: column !important;
     min-height: calc(100vh - 200px) !important;
     background: #f8fafc !important;
 }
@@ -60,16 +44,11 @@ body {
 
 .content {
     flex: 1 !important;
-    min-height: 400px !important;
 }
 
 /* =========================================================
    FOOTER
 ========================================================= */
-
-.layout-fixed .wrapper .main-footer {
-    margin-left: 260px !important;
-}
 
 .main-footer {
     margin-top: auto !important;
@@ -156,7 +135,10 @@ body {
     color: #374151 !important;
     font-weight: 600 !important;
 }
-
+table.dataTable thead .sorting_disabled::before,
+table.dataTable thead .sorting_disabled::after {
+    display: none !important;
+}
 /* =========================================================
    MODAL
 ========================================================= */
@@ -608,16 +590,55 @@ table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before
     }
 
 /* =========================================================
+   RESPONSIVE SIDEBAR
+========================================================= */
+
+/* Desktop */
+@media (min-width: 992px) {
+
+    .main-sidebar,
+    .sidebar-light-industrial {
+        width: var(--sidebar-width) !important;
+        margin-left: 0 !important;
+    }
+
+    .layout-fixed .content-wrapper,
+    .layout-fixed .main-footer {
+        margin-left: var(--sidebar-width) !important;
+    }
+
+    [data-widget="pushmenu"] {
+        display: none !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 991.98px) {
+
+    .layout-fixed .content-wrapper,
+    .layout-fixed .main-footer {
+        margin-left: 0 !important;
+    }
+
+    .main-sidebar,
+    .sidebar-light-industrial {
+        margin-left: -270px !important;
+        transition: margin-left 0.3s ease !important;
+    }
+
+    body.sidebar-open .main-sidebar,
+    body.sidebar-open .sidebar-light-industrial {
+        margin-left: 0 !important;
+    }
+
+    [data-widget="pushmenu"] {
+        display: flex !important;
+    }
+}
+/* =========================================================
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 991.98px) {
-    .layout-fixed .wrapper .content-wrapper,
-    .layout-fixed .wrapper .main-footer,
-    .main-footer {
-        margin-left: 0 !important;
-    }
-}
 
 @media (max-width: 768px) {
     .d-flex.justify-content-between {

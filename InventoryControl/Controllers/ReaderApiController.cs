@@ -62,7 +62,8 @@ public class ReaderApiController : ControllerBase
     [AuthorizePermissionHybrid("READER_DELETE")]
     public async Task<IActionResult> Delete(string id)
     {
-        await _service.DeleteAsync(id);
+        var deletedBy = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.DeleteAsync(id, deletedBy);
         return Ok(new { message = "Reader berhasil dihapus" });
     }
 }

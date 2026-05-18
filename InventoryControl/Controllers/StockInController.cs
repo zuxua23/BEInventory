@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
 [InventoryLock]
-//[ApiController]
-//[Route("stockin")]    
+[ApiController]
+[Route("stockin")]
 public class StockInController : ControllerBase
 {
     private readonly IStockInService _service;

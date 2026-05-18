@@ -3,13 +3,14 @@
 @{
     var canUpdate = PermissionHelper.HasPermission(Context, "ITEM_UPDATE");
 }
-<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+<body class="hold-transition layout-fixed layout-navbar-fixed">
 
     <div class="wrapper">
 
         @Html.Partial("_Navbar")
         @Html.Partial("_Sidebar")
-        @Html.Partial("_Views")
+        @Html.Partial("Styles/_ViewsStyle")
+
 
         <div class="content-wrapper">
 
@@ -148,7 +149,8 @@
             }
 
             const payload = {
-                itemName: $("#itemName").val()
+                itemName: $("#itemName").val(),
+                itemDesc: $("#itemDesc").val()
             };
 
             const res = await Api.put(`/api/item/${id}`, payload);

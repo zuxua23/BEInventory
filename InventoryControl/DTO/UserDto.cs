@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace InventoryControl.DTO;
 
 public class UserDto

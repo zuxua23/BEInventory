@@ -226,12 +226,13 @@ public class LocationService : ILocationService
         }
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(string id, string deletedBy)
     {
         try
         {
             DailyFileLogger.Info(
-                $"Deleting location with ID '{id}'."
+                $"Deleting location with ID '{id}'.",
+                deletedBy
             );
 
             var location = await _db.Locations
@@ -252,6 +253,7 @@ public class LocationService : ILocationService
 
             location.IsDelete = true;
             location.UpdatedAt = DateTime.UtcNow;
+            location.UpdatedBy = deletedBy;
 
             await _db.SaveChangesAsync();
 
@@ -263,7 +265,7 @@ public class LocationService : ILocationService
                 action: "DELETE",
                 entity: "LOCATION",
                 entityId: location.LocId,
-                performedBy: location.UpdatedBy ?? "SYSTEM",
+                performedBy: deletedBy,
                 description:
                     $"Soft deleted location '{location.Name}'."
             );

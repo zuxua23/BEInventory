@@ -572,12 +572,13 @@ public class UserService : IUserService
         }
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(string id, string deletedBy)
     {
         try
         {
             DailyFileLogger.Info(
-                $"Deleting user with ID '{id}'."
+                $"Deleting user with ID '{id}'.",
+                deletedBy
             );
 
             var user = await _db.Users
@@ -596,6 +597,7 @@ public class UserService : IUserService
 
             user.IsDelete = true;
             user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = deletedBy;
 
             await _db.SaveChangesAsync();
 
@@ -607,7 +609,7 @@ public class UserService : IUserService
                 action: "DELETE",
                 entity: "USER",
                 entityId: user.UserId,
-                performedBy: user.UpdatedBy ?? "SYSTEM",
+                performedBy: deletedBy,
                 description:
                     $"Soft deleted user '{user.Username}'."
             );

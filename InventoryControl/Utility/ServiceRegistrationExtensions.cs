@@ -1,31 +1,28 @@
 ﻿namespace InventoryControl.Utility;
 
 using System.Reflection;
-
-
+// Extension method for registering all services automatically
 public static class ServiceRegistrationExtensions
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(
+        this IServiceCollection services)
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        var serviceTypes = assembly.GetTypes()
-            .Where(t =>
-                t.IsClass &&
-                !t.IsAbstract &&
-                !typeof(BackgroundService).IsAssignableFrom(t) &&
-                !typeof(IHostedService).IsAssignableFrom(t));
+        var implementations = assembly.GetTypes()
+            .Where(type =>
+                type.IsClass &&
+                !type.IsAbstract &&
+                !typeof(IHostedService).IsAssignableFrom(type));
 
-        foreach (var implementation in serviceTypes)
+        foreach (var implementation in implementations)
         {
-            var interfaces = implementation.GetInterfaces();
+            var interfaces = implementation.GetInterfaces()
+                .Where(i => i.Name.EndsWith("Service"));
 
-            foreach (var serviceInterface in interfaces)
+            foreach (var service in interfaces)
             {
-                if (serviceInterface.Name.EndsWith("Service"))
-                {
-                    services.AddScoped(serviceInterface, implementation);
-                }
+                services.AddScoped(service, implementation);
             }
         }
 

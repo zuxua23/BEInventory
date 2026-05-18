@@ -21,7 +21,7 @@ public class Role
     public bool IsActive { get; set; } = true;
     [Column("isDelete")]
     public bool IsDelete { get; set; } = false;
-
+        
     public ICollection<User_Role> UserRoles { get; set; }
     public ICollection<Role_Permission> RolePermissions { get; set; }
 }

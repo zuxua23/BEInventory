@@ -25,7 +25,7 @@ public class ItemService : IItemService
             );
 
             var result = await _db.Items
-                .Where(x => x.IsDelete == false)
+                .Where(x => !x.IsDelete)
                 .Select(x => new ItemResponseDto
                 {
                     Id = x.Id,
@@ -246,12 +246,13 @@ public class ItemService : IItemService
         }
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task DeleteAsync(string id, string deletedBy)
     {
         try
         {
             DailyFileLogger.Info(
-                $"Deleting item with ID '{id}'."
+                $"Deleting item with ID '{id}'.",
+                deletedBy
             );
 
             var item = await _db.Items.FindAsync(id);
@@ -259,28 +260,29 @@ public class ItemService : IItemService
             if (item == null || item.IsDelete)
             {
                 DailyFileLogger.Warn(
-                    $"Delete failed. Item with ID '{id}' was not found."
+                    $"Delete failed. Item with ID '{id}' was not found.",
+                    deletedBy
                 );
 
-                throw new Exception(
-                    "Item not found."
-                );
+                throw new Exception("Item not found.");
             }
 
             item.IsDelete = true;
+            item.UpdatedBy = deletedBy;
             item.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 
             DailyFileLogger.Info(
-                $"Item successfully soft deleted. ID='{id}'."
+                $"Item successfully soft deleted. ID='{id}'.",
+                deletedBy
             );
 
             DailyFileLogger.Audit(
                 action: "DELETE",
                 entity: "ITEM",
                 entityId: item.ItmId,
-                performedBy: item.UpdatedBy ?? "SYSTEM",
+                performedBy: deletedBy,
                 description:
                     $"Soft deleted item '{item.Name}'."
             );
@@ -289,7 +291,8 @@ public class ItemService : IItemService
         {
             DailyFileLogger.Error(
                 $"An error occurred while deleting item with ID '{id}'.",
-                ex
+                ex,
+                deletedBy
             );
 
             throw;

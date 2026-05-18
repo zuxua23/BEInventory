@@ -24,7 +24,7 @@ public class ConfigController : Controller
         {
             _configService.UpdateConnection(dto);
 
-            _restartService.Restart(); // 🔥 AUTO RESTART
+            _restartService.Restart();
 
             return Ok(new { message = "Connection updated. Restarting app..." });
         }

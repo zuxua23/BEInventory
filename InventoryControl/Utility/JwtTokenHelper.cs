@@ -20,7 +20,7 @@ public class JwtTokenHelper
         User user,
         List<string> permissions,
         List<string> roles,
-        int expireMinutes = 60
+        int expireMinutes = 720
     )
     {
         try

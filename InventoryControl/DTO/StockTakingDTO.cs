@@ -53,7 +53,7 @@ public class StockTakingCompareExportDto
     public int QtySystem { get; set; }
     public int QtyScan { get; set; }
 
-    public int Selisih { get; set; }
+    public int Difference { get; set; }
 
     public string Status { get; set; }
 }

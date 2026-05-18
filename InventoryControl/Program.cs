@@ -107,8 +107,6 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
 app.UseStaticFiles();
-//app.UseAuthorization();
-//app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
 #endregion

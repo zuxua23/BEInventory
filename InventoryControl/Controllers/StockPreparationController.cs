@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace InventoryControl.Controllers;
 
 [InventoryLock]
-//[ApiController]
-//[Route("stockpreparation")]
+[ApiController]
+[Route("stockpreparation")]
 public class StockPreparationController : ControllerBase
 {
     private readonly IStockPreparationService _service;

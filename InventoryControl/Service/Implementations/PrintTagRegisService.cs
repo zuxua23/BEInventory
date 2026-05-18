@@ -4,7 +4,6 @@ using System.Text;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
-using InventoryControl.Helpers;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -315,36 +314,9 @@ public class PrintTagRegisService : IPrintTagRegisService
             .Replace("{itemDesc}", itemDesc);
         }
 
-    //private byte[] SBPLStringToBytes(
-    //    string sbpl
-    //)
-    //{
-    //    var bytes = new List<byte>();
 
-    //    foreach (char c in sbpl)
-    //    {
-    //        switch (c)
-    //        {
-    //            case '\u0002':
-    //                bytes.Add(0x02);
-    //                break;
 
-    //            case '\u0003':
-    //                bytes.Add(0x03);
-    //                break;
 
-    //            case '\u001B':
-    //                bytes.Add(0x1B);
-    //                break;
-
-    //            default:
-    //                bytes.Add((byte)c);
-    //                break;
-    //        }
-    //    }
-
-    //    return bytes.ToArray();
-    //}
 
     public async Task RegisterAsync(
         TagRegistrationDto dto,

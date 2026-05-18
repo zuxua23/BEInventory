@@ -5,6 +5,7 @@ using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
@@ -28,7 +29,8 @@ public class PrintTagRegisController: ControllerBase
         if (dto == null || !dto.Any())
             return BadRequest("Data tidak boleh kosong");
 
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+
 
         var batch = await _service.PrintBulkAsync(dto, user);
 
@@ -43,7 +45,8 @@ public class PrintTagRegisController: ControllerBase
     [AuthorizePermissionHybrid("TAG_REGISTER")]
     public async Task<IActionResult> Register(TagRegistrationDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+
 
         await _service.RegisterAsync(dto, user);
 
@@ -72,27 +75,6 @@ public class PrintTagRegisController: ControllerBase
         return Ok(data);
     }
 
-    [HttpGet("test-print")]
-    public IActionResult TestPrint()
-    {
-        string sbpl =
-            "\u0002" +
-            "\u001BA" +
-            "\u001BH0100\n" +
-            "\u001BV0100\n" +
-            "HELLO SATO\n" +
-            "\u001BQ1\n" +
-            "\u001BZ\n" +
-            "\u0003";
-
-        bool result =
-            RawPrinterHelper.SendStringToPrinter(
-                "SATO CL4NX 305dpi",
-                sbpl
-            );
-
-        return Ok(result);
-    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()

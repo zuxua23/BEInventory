@@ -1,33 +1,10 @@
-﻿
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@ViewData["Title"] - Inventory Control</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-
-    <!-- External CSS FILE -->
-    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-
-<body>
-    <!-- Animated Background Particles -->
+﻿<body>
     <div class="particles" id="particles"></div>
+    @Html.Partial("Styles/_LoginStyle")
 
-    <!-- Main Login Container - Side-by-Side Layout -->
     <div class="login-container">
-        <!-- LEFT SIDE: Branding & Logo -->
         <div class="login-branding">
             <div class="logo-container">
-                <!-- YOUR LOGO -->
                 <img src="@Url.Content("~/img/sato_login.png")" class="login-logo" alt="Inventory Control Logo">
             </div>
 
@@ -36,17 +13,13 @@
             </div>
         </div>
 
-        <!-- RIGHT SIDE: Login Form -->
         <div class="login-form">
-            <!-- Form Header -->
             <div class="form-header">
                 <h2 class="form-title">Welcome Back</h2>
                 <p class="form-subtitle">Please sign in to continue</p>
             </div>
 
-            <!-- Login Form -->
             <form asp-route="auth-login" method="post">
-                <!-- Username Input -->
                 <div class="input-group">
                     <input type="text"
                            class="form-control"
@@ -58,7 +31,6 @@
                     <i class="fas fa-user input-icon"></i>
                 </div>
 
-                <!-- Password Input -->
                 <div class="input-group">
                     <input type="password"
                            class="form-control"
@@ -71,7 +43,6 @@
                     <i class="fas fa-eye-slash password-toggle" id="togglePassword"></i>
                 </div>
 
-                <!-- Sign In Button -->
                 <button type="submit" class="btn-login" id="loginBtn">
                     Sign In
                 </button>
@@ -94,107 +65,197 @@
                     </div>
                 </div>
             </div>
-            <!-- Error Message Display -->
             <div class="login-error" id="loginError"></div>
         </div>
     </div>
 
-    <!-- Your Existing Base Script -->
-    @* @Html.PartialAsync("_BaseScript") *@
+    @Html.Partial("_BaseScript")
 
-    <!-- JavaScript -->
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
     <script>
-        // 1. Create Animated Background Particles
-        function createParticles() {
-            const container = document.getElementById('particles');
+
+        $(document).ready(function () {
+            initialize();
+        });
+
+        function initialize() {
+
+            $("#username").focus();
+
+            initParticles();
+
+            bindEvents();
+        }
+
+        function bindEvents() {
+
+            $("#togglePassword").on(
+                "click",
+                togglePasswordVisibility
+            );
+
+            $("#openConfig").on(
+                "click",
+                openModal
+            );
+
+            $("#saveConnectionBtn").on(
+                "click",
+                saveConnection
+            );
+
+            $(document).on(
+                "keypress",
+                handleEnterKey
+            );
+
+            $(".form-control")
+                .on("focus", handleInputFocus)
+                .on("blur", handleInputBlur);
+        }
+
+        function initParticles() {
+
+            const container =
+                document.getElementById("particles");
+
+            if (!container)
+                return;
+
             for (let i = 0; i < 45; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = (Math.random() * 15).toFixed(1) + 's';
-                particle.style.animationDuration = (12 + Math.random() * 10).toFixed(1) + 's';
-                particle.style.width = (2 + Math.random() * 6) + 'px';
-                particle.style.height = particle.style.width;
+
+                const particle =
+                    document.createElement("div");
+
+                particle.className = "particle";
+
+                particle.style.left =
+                    Math.random() * 100 + "%";
+
+                particle.style.animationDelay =
+                    (Math.random() * 15).toFixed(1) + "s";
+
+                particle.style.animationDuration =
+                    (12 + Math.random() * 10).toFixed(1) + "s";
+
+                particle.style.width =
+                    (2 + Math.random() * 6) + "px";
+
+                particle.style.height =
+                    particle.style.width;
+
                 container.appendChild(particle);
             }
         }
 
-        // 2. Password Visibility Toggle
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordField = document.getElementById('password');
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
+        function togglePasswordVisibility() {
 
-            // Toggle eye icon
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
-       
+            const passwordInput =
+                $("#password");
 
-        // 4. UX Enhancements
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-focus username
-            document.getElementById('username').focus();
+            const toggleIcon =
+                $("#togglePassword");
 
-            // Enter key submits form
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !document.getElementById('loginBtn').disabled) {
-                    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-                }
-            });
+            const isPassword =
+                passwordInput.attr("type") === "password";
 
-            // Create particles
-            createParticles();
-        });
+            passwordInput.attr(
+                "type",
+                isPassword ? "text" : "password"
+            );
 
-        // 5. Input focus effects
-        document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-        });
+            toggleIcon
+                .toggleClass("fa-eye")
+                .toggleClass("fa-eye-slash");
+        }
 
+        function handleEnterKey(e) {
 
-        document.getElementById("openConfig").addEventListener("click", () => {
-            document.getElementById("configModal").style.display = "block";
-        });
+            if (
+                e.key === "Enter" &&
+                !$("#loginBtn").prop("disabled")
+            ) {
+                $("#loginForm").submit();
+            }
+        }
+
+        function handleInputFocus() {
+
+            $(this)
+                .parent()
+                .css("transform", "scale(1.02)");
+        }
+
+        function handleInputBlur() {
+
+            $(this)
+                .parent()
+                .css("transform", "scale(1)");
+        }
+
+        function openModal() {
+
+            $("#configModal").fadeIn(200);
+        }
 
         function closeModal() {
-            document.getElementById("configModal").style.display = "none";
+
+            $("#configModal").fadeOut(200);
         }
 
         async function saveConnection() {
-            const data = {
-                server: document.getElementById("server").value,
-                database: document.getElementById("database").value,
-                userId: document.getElementById("userId").value,
-                password: document.getElementById("passwordDb").value
+
+            const payload = {
+
+                server:
+                    $("#server").val(),
+
+                database:
+                    $("#database").val(),
+
+                userId:
+                    $("#userId").val(),
+
+                password:
+                    $("#passwordDb").val()
             };
 
-            try {
-                const res = await fetch("/update-connection", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+            const res = await Api.post(
+                "/update-connection",
+                payload
+            );
 
-                const result = await res.json();
+            if (res && res.ok) {
 
-                alert(result.message);
+                await Alert.success(
+                    "Connection updated successfully"
+                );
+
+                closeModal();
 
                 setTimeout(() => {
                     location.reload();
-                }, 3000);
+                }, 1500);
 
-            } catch (err) {
-                alert("Failed to update connection");
+            } else if (res && !res.ok) {
+
+                if (res.errorData?.type === "warning")
+                    return;
+
+                Alert.error(
+                    "Failed to update connection"
+                );
             }
         }
+
+        $(window).on("click", function (e) {
+
+            if ($(e.target).is("#configModal")) {
+                closeModal();
+            }
+        });
+
     </script>
 </body>
-</html>

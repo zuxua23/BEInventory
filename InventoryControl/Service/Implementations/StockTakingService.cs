@@ -1,12 +1,14 @@
 ﻿namespace InventoryControl.Service.Implementations;
 
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
+using Renci.SshNet;
 using System.Text;
 
 public class StockTakingService : IStockTakingService
@@ -124,7 +126,7 @@ public class StockTakingService : IStockTakingService
     .AnyAsync(x => x.Status == "OPEN");
 
             if (active)
-                throw new Exception("Masih ada stock taking aktif");
+                throw new Exception("There is still an active stock taking session");
             var sttId = Guid.NewGuid().ToString();
 
             var st = new StockTaking
@@ -181,13 +183,13 @@ public class StockTakingService : IStockTakingService
                 .Where(t => t.Status == "IN_STOCK")
                 .ToListAsync();
 
-            DailyFileLogger.Info($"GetStockDataAsync berhasil. Total tag IN_STOCK: {result.Count}");
+            DailyFileLogger.Info($"GetStockDataAsync completed successfully. Total IN_STOCK tags: {result.Count}");
 
             return result;
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di GetStockDataAsync", ex);
+            DailyFileLogger.Error("An error occurred in GetStockDataAsync", ex);
             throw;
         }
     }
@@ -200,16 +202,16 @@ public class StockTakingService : IStockTakingService
                 .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
 
             if (st == null)
-                throw new Exception("Stock taking tidak ditemukan");
+                throw new Exception("Stock taking session was not found");
 
             if (st.Status != "OPEN")
-                throw new Exception("Stock taking sudah selesai");
+                throw new Exception("Stock taking session has already been completed");
 
             var tag = await _db.Tags
                 .FirstOrDefaultAsync(t => t.EpcTag == dto.Epc);
 
             if (tag == null)
-                throw new Exception("Tag tidak ditemukan");
+                throw new Exception("Tag was not found");
 
             var existsInSystem = await _db.StockTakingDetails
                 .AnyAsync(x => x.SttId == dto.SttId
@@ -217,7 +219,7 @@ public class StockTakingService : IStockTakingService
                             && x.Action == "SYSTEM");
 
             if (!existsInSystem)
-                throw new Exception("Tag tidak termasuk dalam snapshot stock taking");
+                throw new Exception("Tag is not included in the stock taking snapshot");
 
             var alreadyScanned = await _db.StockTakingDetails
                 .AnyAsync(x => x.SttId == dto.SttId
@@ -256,10 +258,10 @@ public class StockTakingService : IStockTakingService
                 .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
 
             if (st == null)
-                throw new Exception("Stock taking tidak ditemukan");
+                throw new Exception("Stock taking session was not found");
 
             if (st.Status != "OPEN")
-                throw new Exception("Stock taking sudah selesai");
+                throw new Exception("Stock taking session has already been completed");
 
             var epcs = dto.Items.Select(x => x.Epc).Distinct().ToList();
 
@@ -323,8 +325,8 @@ public class StockTakingService : IStockTakingService
 
             if (tag == null)
             {
-                DailyFileLogger.Warn($"RemoveAsync gagal: Tag {dto.TagId} tidak ditemukan");
-                throw new Exception("Tag tidak ditemukan");
+                DailyFileLogger.Warn($"RemoveAsync failed: Tag {dto.TagId} was not found");
+                throw new Exception("Tag was not found");
             }
 
             _db.StockTakingDetails.Add(new StockTakingDetail
@@ -337,11 +339,11 @@ public class StockTakingService : IStockTakingService
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"StockTaking remove dicatat. SttId={dto.SttId}, Tag={dto.TagId}");
+            DailyFileLogger.Info($"StockTaking remove has been recorded. SttId={dto.SttId}, Tag={dto.TagId}");
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di RemoveAsync StockTaking", ex);
+            DailyFileLogger.Error("Error in RemoveAsync StockTaking", ex);
             throw;
         }
     }
@@ -365,7 +367,7 @@ public class StockTakingService : IStockTakingService
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("Error di ManualAddAsync StockTaking", ex);
+            DailyFileLogger.Error("An error occurred in ManualAddAsync StockTaking", ex);
             throw;
         }
     }
@@ -397,7 +399,7 @@ public class StockTakingService : IStockTakingService
             s.QtySystem,
             QtyScan = scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0,
             Status = scan.Any(x => x.ItemId == s.ItemId) ? "Scanned" : "Pending",
-            Selisih = (scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0) - s.QtySystem
+            Difference = (scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0) - s.QtySystem
         });
     }
     public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
@@ -410,10 +412,10 @@ public class StockTakingService : IStockTakingService
                 .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
 
             if (st == null)
-                throw new Exception("Session tidak ditemukan");
+                throw new Exception("Stock taking session was not found");
 
             if (st.Status != "OPEN")
-                throw new Exception("Session sudah ditutup");
+                throw new Exception("Stock taking session has already been completed");
 
             var details = await _db.StockTakingDetails
                 .Where(d => d.SttId == dto.SttId)
@@ -425,7 +427,7 @@ public class StockTakingService : IStockTakingService
             }
             catch (Exception ex)
             {
-                DailyFileLogger.Warn($"Adjustment gagal tapi finalize tetap lanjut. Session={dto.SttId} | {ex.Message}");
+                DailyFileLogger.Warn($"Adjustment failed, but finalize will continue. Stock taking session={dto.SttId} | {ex.Message}");
             }
 
             st.Status = "COMPLETED";
@@ -644,7 +646,7 @@ public class StockTakingService : IStockTakingService
             ws.Cell(row, 1).Value = item.ItemId;
             ws.Cell(row, 2).Value = item.QtySystem;
             ws.Cell(row, 3).Value = item.QtyScan;
-            ws.Cell(row, 4).Value = item.Selisih;
+            ws.Cell(row, 4).Value = item.Difference;
             ws.Cell(row, 5).Value = item.Status;
 
             var range = ws.Range(row, 1, row, 5);
@@ -717,13 +719,13 @@ public class StockTakingService : IStockTakingService
                 {
                     int qtyScan = f?.QtyScan ?? 0;
 
-                    int selisih =
+                    int difference =
                         qtyScan - x.s.QtySystem;
 
                     string status =
-                        selisih == 0
+                        difference == 0
                             ? "MATCH"
-                            : selisih < 0
+                            : difference < 0
                                 ? "MISSING"
                                 : "OVER";
 
@@ -732,7 +734,7 @@ public class StockTakingService : IStockTakingService
                         ItemId = x.s.ItemId,
                         QtySystem = x.s.QtySystem,
                         QtyScan = qtyScan,
-                        Selisih = selisih,
+                        Difference = difference,
                         Status = status
                     };
                 })
@@ -756,7 +758,7 @@ public class StockTakingService : IStockTakingService
                 $"{item.ItemId}," +
                 $"{item.QtySystem}," +
                 $"{item.QtyScan}," +
-                $"{item.Selisih}," +
+                $"{item.Difference}," +
                 $"{item.Status}"
             );
         }

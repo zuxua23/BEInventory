@@ -20,7 +20,6 @@ public class Item
     [Column("itm_name")]
     public string Name { get; set; }
 
-    [Required]
     [Column("itm_desc")]
     public string? Description { get; set; }
 
