@@ -16,12 +16,6 @@ public class Role_Permission
     [Column("role_id")]
     public string RoleId { get; set; }
 
-    [Column("created_by")]
-    public string? CreatedBy { get; set; }
-
-    [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
-
     [Column("is_override")]
     public int? Override { get; set; }
 

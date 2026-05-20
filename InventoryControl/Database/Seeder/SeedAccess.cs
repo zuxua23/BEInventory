@@ -222,7 +222,6 @@ public static class SeedAccess
                     Id = Guid.NewGuid().ToString(),
                     RoleId = adminRole.Id,
                     PermissionId = permission.Id,
-                    CreatedAt = DateTime.UtcNow
                 });
             }
         }
@@ -255,7 +254,6 @@ public static class SeedAccess
                     Id = Guid.NewGuid().ToString(),
                     RoleId = operatorRole.Id,
                     PermissionId = permission.Id,
-                    CreatedAt = DateTime.UtcNow
                 });
             }
         }

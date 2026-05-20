@@ -3,18 +3,46 @@ using System.Text;
 
 public static class RawPrinterHelper
 {
-    public static bool SendStringToPrinter(string printerName, string data)
+    private static readonly SemaphoreSlim _printerLock = new(1, 1);
+
+  public static async Task<bool>SendStringToPrinterAsync( string printerName,string data)
     {
-        var bytes = SBPLStringToBytes(data);
+        await _printerLock.WaitAsync();
 
-        IntPtr unmanagedBytes = Marshal.AllocCoTaskMem(bytes.Length);
-        Marshal.Copy(bytes, 0, unmanagedBytes, bytes.Length);
+        try
+        {
+            var bytes = SBPLStringToBytes(data);
 
-        bool success = SendBytesToPrinter(printerName, unmanagedBytes, bytes.Length);
+            IntPtr unmanagedBytes = Marshal.AllocCoTaskMem(bytes.Length);
 
-        Marshal.FreeCoTaskMem(unmanagedBytes);
-        return success;
+            try
+            {
+                Marshal.Copy(
+                    bytes,
+                    0,
+                    unmanagedBytes,
+                    bytes.Length
+                );
+
+                return SendBytesToPrinter(
+                    printerName,
+                    unmanagedBytes,
+                    bytes.Length
+                );
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(
+                    unmanagedBytes
+                );
+            }
+        }
+        finally
+        {
+            _printerLock.Release();
+        }
     }
+
     private static byte[] SBPLStringToBytes(string sbpl)
     {
         var bytes = new List<byte>();
@@ -36,7 +64,14 @@ public static class RawPrinterHelper
                     break;
 
                 default:
-                    bytes.Add((byte)c);
+
+                    bytes.AddRange(
+                        Encoding.ASCII
+                            .GetBytes(
+                                c.ToString()
+                            )
+                    );
+
                     break;
             }
         }
@@ -44,67 +79,122 @@ public static class RawPrinterHelper
         return bytes.ToArray();
     }
 
-    [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA")]
-    static extern bool OpenPrinter(string pPrinterName, out IntPtr phPrinter, IntPtr pDefault);
 
-    [DllImport("winspool.Drv")]
-    static extern bool ClosePrinter(IntPtr hPrinter);
+    [DllImport( "winspool.drv",CharSet = CharSet.Unicode,SetLastError = true )]
+    private static extern bool OpenPrinter(string pPrinterName,out IntPtr phPrinter,IntPtr pDefault);
 
-    [DllImport("winspool.Drv")]
-    static extern bool StartDocPrinter(IntPtr hPrinter, int level, [In] DOCINFO di);
+    [DllImport( "winspool.drv",SetLastError = true )]
+    private static extern bool   ClosePrinter( IntPtr hPrinter );
 
-    [DllImport("winspool.Drv")]
-    static extern bool EndDocPrinter(IntPtr hPrinter);
+    [DllImport( "winspool.drv",  SetLastError = true)]
+    private static extern bool StartDocPrinter(  IntPtr hPrinter, int level,  [In] DOCINFO di );
 
-    [DllImport("winspool.Drv")]
-    static extern bool StartPagePrinter(IntPtr hPrinter);
+    [DllImport( "winspool.drv",  SetLastError = true )]
+    private static extern bool   EndDocPrinter( IntPtr hPrinter  );
 
-    [DllImport("winspool.Drv")]
-    static extern bool EndPagePrinter(IntPtr hPrinter);
+    [DllImport(  "winspool.drv",  SetLastError = true  )]
+    private static extern bool StartPagePrinter(   IntPtr hPrinter  );
 
-    [DllImport("winspool.Drv")]
-    static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+    [DllImport( "winspool.drv", SetLastError = true)]
+    private static extern bool EndPagePrinter(IntPtr hPrinter );
 
-    public static bool SendBytesToPrinter(
-        string printerName,
-        IntPtr pBytes,
-        int dwCount
-    )
+    [DllImport(   "winspool.drv",  SetLastError = true   )]
+    private static extern bool  WritePrinter(  IntPtr hPrinter, IntPtr pBytes, int dwCount,  out int dwWritten  );
+
+
+
+    private static bool  SendBytesToPrinter( string printerName, IntPtr pBytes,   int dwCount  )
     {
-        bool success = false;
-
-        if (OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero))
+        if (
+            !OpenPrinter(  printerName, out IntPtr hPrinter, IntPtr.Zero )
+        )
         {
-            DOCINFO di = new DOCINFO
+            var error = Marshal.GetLastWin32Error();
+
+            throw new Exception(
+                $"Failed to open printer. Win32 Error: {error}"
+            );
+        }
+
+        try
+        {
+            DOCINFO di = new()
             {
                 pDocName = "SBPL Print",
                 pDataType = "RAW"
             };
 
-            if (StartDocPrinter(hPrinter, 1, di))
+            if (
+                !StartDocPrinter(  hPrinter, 1, di )
+            )
             {
-                if (StartPagePrinter(hPrinter))
-                {
-                    success = WritePrinter(
-                        hPrinter,
-                        pBytes,
-                        dwCount,
-                        out int written
-                    );
+                var error = Marshal.GetLastWin32Error();
 
-                    EndPagePrinter(hPrinter);
-                }
-
-                EndDocPrinter(hPrinter);
+                throw new Exception(
+                    $"Failed to start printer document. Win32 Error: {error}"
+                );
             }
 
+            try
+            {
+                if (  !StartPagePrinter( hPrinter )  )
+                {
+                    var error = Marshal.GetLastWin32Error();
+
+                    throw new Exception(
+                        $"Failed to start printer page. Win32 Error: {error}"
+                    );
+                }
+
+                try
+                {
+                    bool success = WritePrinter(
+                            hPrinter,
+                            pBytes,
+                            dwCount,
+                            out int written
+                        );
+
+                    if (!success)
+                    {
+                        var error =   Marshal.GetLastWin32Error();
+
+                        throw new Exception(
+                            $"Failed to write printer data. Win32 Error: {error}"
+                        );
+                    }
+
+                    if (written != dwCount)
+                    {
+                        throw new Exception(
+                            $"Incomplete printer write. Expected {dwCount} bytes but only {written} bytes written."
+                        );
+                    }
+
+                    return true;
+                }
+                finally
+                {
+                    EndPagePrinter(
+                        hPrinter
+                    );
+                }
+            }
+            finally
+            {
+                EndDocPrinter(
+                    hPrinter
+                );
+            }
+        }
+        finally
+        {
             ClosePrinter(hPrinter);
         }
-
-        return success;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public class DOCINFO
     {
         public string pDocName;

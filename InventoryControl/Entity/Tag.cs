@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using InventoryControl.Models;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,7 +27,7 @@ public class Tag
 
     [Required]
     [Column("status")]
-    public string? Status { get; set; } //PRINTED / IN_STOCK/ RESERVED /OUT /STANBY
+    public TagStatus Status { get; set; } //PRINTED / IN_STOCK/ RESERVED /OUT /STANBY
 
     [Required]
     [Column("loc_id")]
@@ -47,8 +48,7 @@ public class Tag
     public DateTime? UpdatedAt { get; set; }
 
     [Column("isDelete")]
-    public int? isDelete { get; set; } = 0;
-
+    public bool IsDelete { get; set; } = false;
 
     public Location Location { get; set; }
     public Item Item { get; set; }

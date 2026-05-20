@@ -3,7 +3,6 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
-using InventoryControl.Migrations;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;

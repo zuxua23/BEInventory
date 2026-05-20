@@ -33,7 +33,6 @@ public class HistoryPrint
 
     [Column("action")]
     public string Action { get; set; }
-    [Column("cycle_count")]
 
     public Item Item { get; set; }
     public Tag Tag { get; set; }

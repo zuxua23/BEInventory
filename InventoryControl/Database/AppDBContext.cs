@@ -48,7 +48,13 @@ public class AppDBContext : DbContext
             modelBuilder.Entity<Reader>()
         .HasQueryFilter(r => !r.IsDelete);
 
+        modelBuilder.Entity<Tag>()
+        .Property(x => x.Status)
+        .HasConversion<string>();
 
+        modelBuilder.Entity<Tag>()
+            .HasIndex(x => x.TagId)
+            .IsUnique();
 
         modelBuilder.Entity<User>()
         .HasIndex(u => u.UserId)
