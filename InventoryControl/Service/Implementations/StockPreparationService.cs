@@ -402,5 +402,27 @@ public class StockPreparationService : IStockPreparationService
             throw;
         }
     }
-
+    public async Task<DOResponseDto?> GetDoDetailAsync(string id)
+    {
+        return await _db.DOs
+            .Include(x => x.Details)
+            .ThenInclude(d => d.Item)
+            .Where(x => x.DoId == id && !x.IsDelete)
+            .Select(x => new DOResponseDto
+            {
+                DoId = x.DoId,
+                DoNumber = x.DoNumber,
+                ScannerType = x.ScannerType,
+                Status = x.Status,
+                CreatedAt = x.CreatedAt,
+                Details = x.Details.Select(d => new DODetailResponseDto
+                {
+                    DoDetailId = d.DoDetailId,
+                    ItemId = d.ItemId,
+                    ItemName = d.Item.Name,
+                    QtyRequired = d.QtyRequired
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+    }
 }

@@ -34,7 +34,7 @@ public class StockInController : ControllerBase
         }
     }
     [HttpGet]
-    [AuthorizePermissionHybrid("TAG_GET_DETAIL")]
+    [AuthorizePermissionHybrid("TAG_GET")]
     public async Task<IActionResult> GetTagByCode(string code, string scannerType)
     {
         try

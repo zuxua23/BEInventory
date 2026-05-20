@@ -21,7 +21,7 @@ public class SearchItemController : ControllerBase
     }
 
     [HttpGet("{code}")]
-    [AuthorizePermissionHybrid("PERMISSION_DETAIL")]
+    [AuthorizePermissionHybrid("PERMISSION_GET")]
     public async Task<IActionResult> GetDetail(string code)
     {
         var data = await _service.GetTagDetailAsync(code);
