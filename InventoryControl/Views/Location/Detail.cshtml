@@ -167,11 +167,6 @@
                 return;
             }
 
-            if(isSystem) {
-                Alert.error("System location cannot be modified");
-                return;
-            }
-
             const payload = {
                 locId: $("#locId").val(),
                 name: $("#name").val(),

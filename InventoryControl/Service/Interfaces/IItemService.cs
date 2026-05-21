@@ -9,4 +9,5 @@ public interface IItemService
     Task CreateAsync(ItemDto dto, string createdBy);
     Task UpdateAsync(string id, ItemDto dto, string updatedBy);
     Task DeleteAsync(string id, string deletedBy);
+    Task<int?> GetAvailableStockAsync(string itemId);
 }

@@ -330,23 +330,13 @@ public class UserService : IUserService
                 );
             }
 
-            var oldFullname =
-                user.Fullname;
+            var oldFullname = user.Fullname;
+            var oldUsername = user.Username;
 
-            var oldUsername =
-                user.Username;
-
-            user.Fullname =
-                dto.Fullname;
-
-            user.Username =
-                dto.Username;
-
-            user.UpdatedBy =
-                updatedBy;
-
-            user.UpdatedAt =
-                DateTime.UtcNow;
+            user.Fullname = dto.Fullname;
+            user.Username = dto.Username;
+            user.UpdatedBy = updatedBy;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 

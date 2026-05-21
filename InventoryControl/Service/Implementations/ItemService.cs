@@ -3,6 +3,7 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -293,6 +294,31 @@ public class ItemService : IItemService
                 $"An error occurred while deleting item with ID '{id}'.",
                 ex,
                 deletedBy
+            );
+
+            throw;
+        }
+    }
+
+
+    public async Task<int?> GetAvailableStockAsync(string itemId)
+    {
+        try
+        {
+            DailyFileLogger.Info(
+                $"Retrieving item stock for ID '{itemId}'."
+            );
+            return await _db.Tags
+            .CountAsync(x =>
+                x.ItemId == itemId &&
+                x.Status == TagStatus.IN_STOCK
+            );
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                $"An error occurred while retrieving item with ID '{itemId}'.",
+                ex
             );
 
             throw;

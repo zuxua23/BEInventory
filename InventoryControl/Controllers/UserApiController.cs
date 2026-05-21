@@ -53,7 +53,7 @@ public class UserApiController : ControllerBase
     }
 
     [HttpPost("update-roles")]
-    [AuthorizePermissionHybrid("USER_UPDATEROLE")]
+    [AuthorizePermissionHybrid("USER_UPDATE_ROLE")]
     public async Task<IActionResult> UpdateRoles([FromBody] UpdateUserRoleDto dto)
     {
         try
@@ -70,7 +70,7 @@ public class UserApiController : ControllerBase
         }
     }
     [HttpPut("{id}/password")]
-    [AuthorizePermissionHybrid("USER_UPDATEPASSWORD")]
+    [AuthorizePermissionHybrid("USER_UPDATE_PASSWORD")]
     public async Task<IActionResult> UpdatePassword(string id, UpdatePasswordDto dto)
     {
         var updatedBy = HttpContext.Session.GetString("UserId") ?? "system";

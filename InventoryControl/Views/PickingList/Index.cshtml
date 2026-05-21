@@ -120,7 +120,6 @@
                                 DO Number <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="doNumber" class="form-control" required>
-                            @* <select id="doIdSelect" name="doNumber" class="form-control select2" style="width:100%"></select> *@
                         </div>
 
                         <div id="detailContainer"></div>
@@ -268,25 +267,98 @@
                 `);
             }
 
-            $("#detailContainer").append(`
-                <div class="row mb-2 detail-item align-items-center">
-                    <div class="col">
-                        <select class="form-control select2 item-select" required></select>
+        $("#detailContainer").append(`
+            <div class="detail-item card border-0 shadow-sm mb-3 p-3">
+
+                <div class="row align-items-end">
+
+                    <div class="col-md-5">
+                        <select class="form-control select2 item-select" required>
+                        </select>
                     </div>
-                    <div class="col">
-                     <input class="form-control qty" type="number" placeholder="Qty" min="1" step="1" inputmode="numeric">
+
+                    <div class="col-md-5">
+                        <input class="form-control qty"
+                               type="number"
+                               placeholder="Enter qty"
+                               min="1"
+                               step="1">
+
                     </div>
-                    <div class="col-2 text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-item">
+
+                    <div class="col-md-2 text-center">
+
+                        <button type="button"
+                                class="btn btn-danger btn-sm remove-item px-3">
                             <i class="fas fa-trash"></i>
                         </button>
+
                     </div>
+
                 </div>
-            `);
+
+            </div>
+        `);
 
             loadItemDropdown();
             initSelect2($("#detailContainer"));
         }
+
+        $(document).on("change", ".item-select", async function () {
+
+            const row = $(this).closest(".detail-item");
+            const itemId = $(this).val();
+
+            if (!itemId) return;
+
+            const stock = await Api.get(`/api/item/${itemId}/available-stock`);
+
+            if (stock == null) {
+
+                row.find(".stock-info")
+                    .html(`
+                        <span class="text-danger">
+                            Failed to load stock
+                        </span>
+                    `);
+
+                return;
+            }
+
+            row.find(".stock-info")
+                .html(`
+                    Available Stock:
+                    <span class="font-weight-bold text-primary">
+                        ${stock}
+                    </span>
+                `);
+
+            row.find(".qty")
+                .attr("max", stock);
+        });
+
+        $(document).on("input", ".qty", function () {
+
+            const qty = parseInt($(this).val()) || 0;
+            const max = parseInt($(this).attr("max")) || 0;
+
+            $(this).siblings(".qty-error").remove();
+
+            if (qty > max) {
+
+                $(this).addClass("is-invalid");
+
+                $(this).after(`
+                    <small class="text-danger qty-error">
+                        Qty exceeds available stock (${max})
+                    </small>
+                `);
+
+            } else {
+
+                $(this).removeClass("is-invalid");
+            }
+        });
 
         $("#createPickingListForm").submit(async function (e) {
             e.preventDefault();
@@ -320,6 +392,21 @@
 
             if (!isValid) {
                 return Alert.error("Please fill all item and quantity correctly");
+            }
+
+            const duplicate = details.some(
+                (x, i) =>
+                    details.findIndex(y => y.itemId === x.itemId) !== i
+            );
+
+            if (duplicate) {
+                Alert.error("Duplicate item is not allowed");
+                return;
+            }
+
+            if ($(".is-invalid").length > 0) {
+                Alert.error("Please fix invalid qty");
+                return;
             }
 
             const payload = {

@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +57,7 @@ public class StockOutService : IStockOutService
                 .Include(td => td.Tag)
                 .Include(td => td.Transaction)
                 .Where(td =>
-                    td.Transaction.TrsType == "STOCK_PREPARATION" &&
+                    td.Transaction.TrsType == TransactionType.STOCK_PREPARATION &&
                     td.Transaction.ReferenceId == dto.DoId
                 )
                 .ToListAsync();
@@ -96,7 +97,7 @@ public class StockOutService : IStockOutService
             var trxHeader = new Transaction
             {
                 TrsId = Guid.NewGuid().ToString(),
-                TrsType = "STOCK_OUT",
+                TrsType = TransactionType.STOCK_OUT,
                 ReferenceId = dto.DoId,
                 ReaderId = dto.ReaderId,
                 CreatedBy = user,
@@ -109,7 +110,7 @@ public class StockOutService : IStockOutService
             {
                 var tag = detail.Tag;
 
-                if (tag.Status != "RESERVED")
+                if (tag.Status != TagStatus.RESERVED)
                 {
                     DailyFileLogger.Warn(
                         $"Tag '{tag.TagId}' is not in RESERVED status.",
@@ -121,7 +122,7 @@ public class StockOutService : IStockOutService
                     );
                 }
 
-                tag.Status = "OUT";
+                tag.Status = TagStatus.OUT;
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
 
@@ -141,7 +142,7 @@ public class StockOutService : IStockOutService
                         Id = Guid.NewGuid().ToString(),
                         TagId = detail.TagId,
                         ItemId = detail.ItemId,
-                        Type = "STOCK_OUT",
+                        Type = HistoryType.STOCK_OUT,
                         Reference = dto.DoId,
                         Action = "OUT",
                         CreatedBy = user,
@@ -155,7 +156,7 @@ public class StockOutService : IStockOutService
                 );
             }
 
-            doData.Status = "COMPLETED";
+            doData.Status = DoStatus.COMPLETED;
 
             await _db.SaveChangesAsync();
 
@@ -221,7 +222,7 @@ public class StockOutService : IStockOutService
                 return;
             }
 
-            if (tag.Status != "RESERVED")
+            if (tag.Status != TagStatus.RESERVED)
             {
                 DailyFileLogger.Warn(
                     $"Tag '{tag.TagId}' is not in RESERVED status.",
@@ -241,7 +242,7 @@ public class StockOutService : IStockOutService
                 .AnyAsync(x =>
                     x.TagId == tag.Id &&
                     x.Transaction.TrsType ==
-                        "STOCK_PREPARATION" &&
+                        TransactionType.STOCK_PREPARATION &&
                     x.Transaction.ReferenceId ==
                         dto.DoId
                 );
@@ -260,7 +261,7 @@ public class StockOutService : IStockOutService
 
             var trx = await _db.Transactions
                 .FirstOrDefaultAsync(x =>
-                    x.TrsType == "STOCK_OUT" &&
+                    x.TrsType == TransactionType.STOCK_OUT &&
                     x.ReferenceId == dto.DoId
                 );
 
@@ -269,7 +270,7 @@ public class StockOutService : IStockOutService
                 trx = new Transaction
                 {
                     TrsId = Guid.NewGuid().ToString(),
-                    TrsType = "STOCK_OUT",
+                    TrsType = TransactionType.STOCK_OUT,
                     ReferenceId = dto.DoId,
                     ReaderId = dto.ReaderId,
                     CreatedBy = user,
@@ -305,7 +306,7 @@ public class StockOutService : IStockOutService
             var tagUpdate = new Tag
             {
                 Id = tag.Id,
-                Status = "OUT",
+                Status = TagStatus.OUT,
                 UpdatedBy = user,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -339,7 +340,7 @@ public class StockOutService : IStockOutService
                         x.Transaction.ReferenceId ==
                             dto.DoId &&
                         x.Transaction.TrsType ==
-                            "STOCK_PREPARATION"
+                            TransactionType.STOCK_PREPARATION
                     );
 
             var totalScanned =
@@ -348,7 +349,7 @@ public class StockOutService : IStockOutService
                         x.Transaction.ReferenceId ==
                             dto.DoId &&
                         x.Transaction.TrsType ==
-                            "STOCK_OUT"
+                            TransactionType.STOCK_OUT
                     );
 
             if (
@@ -363,7 +364,7 @@ public class StockOutService : IStockOutService
 
                 if (doData != null)
                 {
-                    doData.Status = "COMPLETED";
+                    doData.Status = DoStatus.COMPLETED;
 
                     await _db.SaveChangesAsync();
 
@@ -423,7 +424,7 @@ public class StockOutService : IStockOutService
                             td.Transaction.ReferenceId ==
                                 doId &&
                             td.Transaction.TrsType ==
-                                "STOCK_PREPARATION"),
+                                TransactionType.STOCK_PREPARATION),
 
                     Scanned = _db.TransactionDetails
                         .Count(td =>
@@ -431,7 +432,7 @@ public class StockOutService : IStockOutService
                             td.Transaction.ReferenceId ==
                                 doId &&
                             td.Transaction.TrsType ==
-                                "STOCK_OUT")
+                                TransactionType.STOCK_OUT)
                 })
                 .ToListAsync();
 
@@ -473,7 +474,7 @@ public class StockOutService : IStockOutService
                     x.Transaction.ReferenceId ==
                         doId &&
                     x.Transaction.TrsType ==
-                        "STOCK_OUT"
+                        TransactionType.STOCK_OUT
                 );
 
             DailyFileLogger.Info(
@@ -512,7 +513,7 @@ public class StockOutService : IStockOutService
                     x.Transaction.ReferenceId ==
                         doId &&
                     x.Transaction.TrsType ==
-                        "STOCK_OUT"
+                        TransactionType.STOCK_OUT
                 )
                 .Select(x => new TagDto
                 {

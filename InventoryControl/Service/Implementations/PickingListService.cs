@@ -1,8 +1,10 @@
 ﻿namespace InventoryControl.Service.Implementations;
 
+using Azure.Core;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +36,7 @@ public class PickingListService : IPickingListService
                     DoId = x.DoId,
                     DoNumber = x.DoNumber,
                     ScannerType = x.ScannerType,
-                    Status = x.Status,
+                    Status = x.Status.ToString(),
                     CreatedAt = x.CreatedAt,
                     Details = x.Details.Select(d =>
                         new DODetailResponseDto
@@ -140,11 +142,41 @@ public class PickingListService : IPickingListService
             {
                 DoId = Guid.NewGuid().ToString(),
                 DoNumber = request.DoNumber,
-                Status = "DRAFT",
+                Status = DoStatus.DRAFT,
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow,
                 IsDelete = false
             };
+
+            var groupedDetails = request.Details
+                .GroupBy(x => x.ItemId)
+                .Select(g => new
+                {
+                    ItemId = g.Key,
+                    Qty = g.Sum(x => x.QtyRequired)
+                })
+                .ToList();
+
+            foreach (var detail in groupedDetails)
+            {
+                var availableStock = await _db.Tags
+                    .CountAsync(x =>
+                        x.ItemId == detail.ItemId &&
+                        x.Status == TagStatus.IN_STOCK
+                    );
+
+                if (detail.Qty > availableStock)
+                {
+                    var itemName = await _db.Items
+                        .Where(x => x.Id == detail.ItemId)
+                        .Select(x => x.Name)
+                        .FirstOrDefaultAsync();
+
+                    throw new Exception(
+                        $"Item '{itemName}' only has {availableStock} available stock(s). Requested: {detail.Qty}."
+                    );
+                }
+            }
 
             var details = request.Details
                 .Select(d => new DODetail
@@ -218,7 +250,7 @@ public class PickingListService : IPickingListService
                 );
             }
 
-            if (doEntity.Status != "DRAFT")
+            if (doEntity.Status != DoStatus.DRAFT)
             {
                 DailyFileLogger.Warn(
                     $"Update denied. Delivery order with ID '{id}' is not in DRAFT status."
@@ -239,6 +271,34 @@ public class PickingListService : IPickingListService
                 doEntity.Details
             );
 
+            var groupedDetails = dto.Details
+                .GroupBy(x => x.ItemId)
+                .Select(g => new
+                {
+                    ItemId = g.Key,
+                    Qty = g.Sum(x => x.QtyRequired)
+                })
+                .ToList();
+            foreach (var detail in groupedDetails)
+            {
+                var availableStock = await _db.Tags
+                    .CountAsync(x =>
+                        x.ItemId == detail.ItemId &&
+                        x.Status == TagStatus.IN_STOCK
+                    );
+
+                if (detail.Qty > availableStock)
+                {
+                    var itemName = await _db.Items
+                        .Where(x => x.Id == detail.ItemId)
+                        .Select(x => x.Name)
+                        .FirstOrDefaultAsync();
+
+                    throw new Exception(
+                        $"Item '{itemName}' only has {availableStock} available stock(s). Requested: {detail.Qty}."
+                    );
+                }
+            }
             var newDetails = dto.Details
                 .Select(d => new DODetail
                 {

@@ -5,7 +5,7 @@ public static class RawPrinterHelper
 {
     private static readonly SemaphoreSlim _printerLock = new(1, 1);
 
-  public static async Task<bool>SendStringToPrinterAsync( string printerName,string data)
+  public static async Task SendStringToPrinterAsync( string printerName,string data)
     {
         await _printerLock.WaitAsync();
 
@@ -24,7 +24,7 @@ public static class RawPrinterHelper
                     bytes.Length
                 );
 
-                return SendBytesToPrinter(
+                 SendBytesToPrinter(
                     printerName,
                     unmanagedBytes,
                     bytes.Length
@@ -80,7 +80,8 @@ public static class RawPrinterHelper
     }
 
 
-    [DllImport( "winspool.drv",CharSet = CharSet.Unicode,SetLastError = true )]
+    [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA", SetLastError = true)]
+
     private static extern bool OpenPrinter(string pPrinterName,out IntPtr phPrinter,IntPtr pDefault);
 
     [DllImport( "winspool.drv",SetLastError = true )]
@@ -194,7 +195,7 @@ public static class RawPrinterHelper
     }
 
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Sequential)]
     public class DOCINFO
     {
         public string pDocName;

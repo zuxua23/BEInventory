@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryControl.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryControl.Entity;
@@ -19,7 +20,7 @@ public class HistoryPrint
     public string TagId { get; set; }
 
     [Column("trs_type")]
-    public string Type { get; set; }
+    public HistoryType Type { get; set; }
 
     [Column("ref_no")]
     public string Reference { get; set; }

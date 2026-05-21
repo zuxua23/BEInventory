@@ -1,4 +1,5 @@
 ﻿using InventoryControl.Database;
+using InventoryControl.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +39,7 @@ public class InventoryLockFilter
             var active =
                 await _db.StockTakings
                     .AnyAsync(x =>
-                        x.Status == "OPEN"
+                        x.Status == TakingStatus.OPEN
                     );
 
             if (active)

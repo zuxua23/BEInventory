@@ -314,7 +314,9 @@ public class ReaderService : IReaderService
             }
 
             var oldReaderId = reader.RdrId;
+            var oldName = reader.Name;
             var oldIpAddress = reader.IpAddress;
+            var oldLocationName = reader.LocationNavigation.Name;
 
             reader.RdrId = dto.RdrId;
             reader.Name = dto.RdrName;
@@ -336,8 +338,8 @@ public class ReaderService : IReaderService
                 entityId: reader.RdrId,
                 performedBy: updatedBy,
                 description:
-                    $"Updated reader from ReaderId='{oldReaderId}', IP='{oldIpAddress}' " +
-                    $"to ReaderId='{dto.RdrId}', IP='{dto.IpAddress}'."
+                    $"Updated reader from ReaderId='{oldReaderId}', Name='{oldName}', IP='{oldIpAddress}', Location='{oldLocationName}' " +
+                    $"to ReaderId='{dto.RdrId}', Name='{dto.RdrName}', IP='{dto.IpAddress}', Location='{location.Name}'."
             );
         }
         catch (Exception ex)

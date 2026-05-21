@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Drawing;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ public class StockTakingService : IStockTakingService
                     !location.IsDelete &&
                     _db.Tags.Any(tag =>
                         tag.LocationId == location.Id &&
-                        tag.Status == "IN_STOCK"
+                        tag.Status == TagStatus.IN_STOCK
                     )
                 )
                 .ToListAsync();
@@ -57,7 +58,7 @@ public class StockTakingService : IStockTakingService
     public async Task<object?> GetActiveAsync()
     {
         var session = await _db.StockTakings
-            .Where(x => x.Status == "OPEN")
+            .Where(x => x.Status == TakingStatus.OPEN)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync();
 
@@ -67,7 +68,7 @@ public class StockTakingService : IStockTakingService
         var locationIds = await _db.StockTakingDetails
             .Where(x =>
                 x.SttId == session.SttId &&
-                x.Action == "SYSTEM")
+                x.Action == TakingAction.SYSTEM)
             .Join(_db.Tags,
                 std => std.TagId,
                 tag => tag.Id,
@@ -87,7 +88,7 @@ public class StockTakingService : IStockTakingService
     public async Task<List<object>> GetSystemDataAsync(string sttId)
     {
         var data = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
             .Join(_db.Tags,
                 std => std.TagId,
                 tag => tag.Id,
@@ -123,7 +124,7 @@ public class StockTakingService : IStockTakingService
         try
         {
             var active = await _db.StockTakings
-    .AnyAsync(x => x.Status == "OPEN");
+    .AnyAsync(x => x.Status == TakingStatus.OPEN);
 
             if (active)
                 throw new Exception("There is still an active stock taking session");
@@ -133,14 +134,14 @@ public class StockTakingService : IStockTakingService
             {
                 SttId = sttId,
                 Remark = dto.Remark,
-                Status = "OPEN",
+                Status = TakingStatus.OPEN,
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             };
 
             _db.StockTakings.Add(st);
 
-            var query = _db.Tags.Where(t => t.Status == "IN_STOCK");
+            var query = _db.Tags.Where(t => t.Status == TagStatus.IN_STOCK);
 
             if (dto.LocationIds != null && dto.LocationIds.Any())
             {
@@ -155,7 +156,7 @@ public class StockTakingService : IStockTakingService
                 SttId = sttId,
                 TagId = t.Id,
                 ItemId = t.ItemId,
-                Action = "SYSTEM" 
+                Action = TakingAction.SYSTEM
             });
 
             await _db.StockTakingDetails.AddRangeAsync(snapshot);
@@ -180,7 +181,7 @@ public class StockTakingService : IStockTakingService
         try
         {
             var result = await _db.Tags
-                .Where(t => t.Status == "IN_STOCK")
+                .Where(t => t.Status == TagStatus.IN_STOCK)
                 .ToListAsync();
 
             DailyFileLogger.Info($"GetStockDataAsync completed successfully. Total IN_STOCK tags: {result.Count}");
@@ -204,7 +205,7 @@ public class StockTakingService : IStockTakingService
             if (st == null)
                 throw new Exception("Stock taking session was not found");
 
-            if (st.Status != "OPEN")
+            if (st.Status != TakingStatus.OPEN)
                 throw new Exception("Stock taking session has already been completed");
 
             var tag = await _db.Tags
@@ -216,7 +217,7 @@ public class StockTakingService : IStockTakingService
             var existsInSystem = await _db.StockTakingDetails
                 .AnyAsync(x => x.SttId == dto.SttId
                             && x.TagId == tag.Id
-                            && x.Action == "SYSTEM");
+                            && x.Action == TakingAction.SYSTEM);
 
             if (!existsInSystem)
                 throw new Exception("Tag is not included in the stock taking snapshot");
@@ -224,7 +225,7 @@ public class StockTakingService : IStockTakingService
             var alreadyScanned = await _db.StockTakingDetails
                 .AnyAsync(x => x.SttId == dto.SttId
                             && x.TagId == tag.Id
-                            && x.Action == "FOUND");
+                            && x.Action == TakingAction.FOUND);
 
             if (alreadyScanned)
                 return; 
@@ -235,7 +236,7 @@ public class StockTakingService : IStockTakingService
                 SttId = dto.SttId,
                 TagId = tag.Id,
                 ItemId = tag.ItemId,
-                Action = "FOUND"
+                Action = TakingAction.FOUND
             });
 
             await _db.SaveChangesAsync();
@@ -260,7 +261,7 @@ public class StockTakingService : IStockTakingService
             if (st == null)
                 throw new Exception("Stock taking session was not found");
 
-            if (st.Status != "OPEN")
+            if (st.Status != TakingStatus.OPEN)
                 throw new Exception("Stock taking session has already been completed");
 
             var epcs = dto.Items.Select(x => x.Epc).Distinct().ToList();
@@ -273,12 +274,12 @@ public class StockTakingService : IStockTakingService
                 return;
 
             var systemTagIds = await _db.StockTakingDetails
-                .Where(x => x.SttId == dto.SttId && x.Action == "SYSTEM")
+                .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.SYSTEM)
                 .Select(x => x.TagId)
                 .ToListAsync();
 
             var existingFound = await _db.StockTakingDetails
-                .Where(x => x.SttId == dto.SttId && x.Action == "FOUND")
+                .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.FOUND)
                 .Select(x => x.TagId)
                 .ToListAsync();
 
@@ -298,7 +299,7 @@ public class StockTakingService : IStockTakingService
                 SttId = dto.SttId,
                 TagId = t.Id,
                 ItemId = t.ItemId,
-                Action = "FOUND"
+                Action = TakingAction.FOUND
             });
 
             await _db.StockTakingDetails.AddRangeAsync(newData);
@@ -334,7 +335,7 @@ public class StockTakingService : IStockTakingService
                 StdId = Guid.NewGuid().ToString(),
                 SttId = dto.SttId,
                 TagId = tag.Id,
-                Action = "REMOVE"
+                Action = TakingAction.REMOVE
             });
 
             await _db.SaveChangesAsync();
@@ -358,7 +359,7 @@ public class StockTakingService : IStockTakingService
                 SttId = dto.SttId,
                 ItemId = dto.ItemId,
                 Remark = dto.Remark,
-                Action = "ADD_MANUAL"
+                Action = TakingAction.ADD_MANUAL
             });
 
             await _db.SaveChangesAsync();
@@ -374,7 +375,7 @@ public class StockTakingService : IStockTakingService
     public async Task<object> GetCompareAsync(string sttId)
     {
         var system = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
             .GroupBy(x => x.ItemId)
             .Select(g => new
             {
@@ -384,7 +385,7 @@ public class StockTakingService : IStockTakingService
             .ToListAsync();
 
         var scan = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "FOUND")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.FOUND)
             .GroupBy(x => x.ItemId)
             .Select(g => new
             {
@@ -414,7 +415,7 @@ public class StockTakingService : IStockTakingService
             if (st == null)
                 throw new Exception("Stock taking session was not found");
 
-            if (st.Status != "OPEN")
+            if (st.Status != TakingStatus.OPEN)
                 throw new Exception("Stock taking session has already been completed");
 
             var details = await _db.StockTakingDetails
@@ -430,12 +431,12 @@ public class StockTakingService : IStockTakingService
                 DailyFileLogger.Warn($"Adjustment failed, but finalize will continue. Stock taking session={dto.SttId} | {ex.Message}");
             }
 
-            st.Status = "COMPLETED";
+            st.Status = TakingStatus.COMPLETED;
 
             _db.Transactions.Add(new Transaction
             {
                 TrsId = Guid.NewGuid().ToString(),
-                TrsType = "STOCK_TAKING_FINALIZE",
+                TrsType = TransactionType.STOCK_TAKING_FINALIZE,
                 ReferenceId = dto.SttId,
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
@@ -457,7 +458,7 @@ public class StockTakingService : IStockTakingService
     private async Task ApplyAdjustments(List<StockTakingDetail> details, string sttId, string user)
     {
         var removeTagIds = details
-            .Where(d => d.Action == "REMOVE" && d.TagId != null)
+            .Where(d => d.Action == TakingAction.REMOVE && d.TagId != null)
             .Select(d => d.TagId)
             .Distinct()
             .ToList();
@@ -468,9 +469,9 @@ public class StockTakingService : IStockTakingService
 
         foreach (var tag in removeTags)
         {
-            if (tag.Status == "IN_STOCK")
+            if (tag.Status == TagStatus.IN_STOCK)
             {
-                tag.Status = "OUT";
+                tag.Status = TagStatus.OUT;
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
 
@@ -479,7 +480,7 @@ public class StockTakingService : IStockTakingService
                     Id = Guid.NewGuid().ToString(),
                     TagId = tag.Id,
                     ItemId = tag.ItemId,
-                    Type = "STOCK_ADJUSTMENT",
+                    Type = HistoryType.STOCK_ADJUSTMENT,
                     Reference = sttId,
                     Action = "REMOVE",
                     CreatedBy = user,
@@ -489,7 +490,7 @@ public class StockTakingService : IStockTakingService
         }
 
         var addManuals = details
-            .Where(d => d.Action == "ADD_MANUAL" && d.TagId != null)
+            .Where(d => d.Action == TakingAction.ADD_MANUAL && d.TagId != null)
             .ToList();
 
         var addTagIds = addManuals.Select(x => x.TagId).Distinct().ToList();
@@ -504,9 +505,9 @@ public class StockTakingService : IStockTakingService
 
             if (tag == null) continue; 
 
-            if (tag.Status != "STANDBY") continue; 
+            if (tag.Status != TagStatus.STANDBY) continue; 
 
-            tag.Status = "IN_STOCK";
+            tag.Status = TagStatus.IN_STOCK;
             tag.ItemId = add.ItemId;
             tag.UpdatedBy = user;
             tag.UpdatedAt = DateTime.UtcNow;
@@ -516,7 +517,7 @@ public class StockTakingService : IStockTakingService
                 Id = Guid.NewGuid().ToString(),
                 TagId = tag.Id,
                 ItemId = add.ItemId,
-                Type = "STOCK_ADJUSTMENT",
+                Type = HistoryType.STOCK_ADJUSTMENT,
                 Reference = sttId,
                 Action = "ADD_MANUAL",
                 CreatedBy = user,
@@ -528,7 +529,7 @@ public class StockTakingService : IStockTakingService
     private async Task<List<StockTakingExportDto>> GetSystemExportData(string sttId)
     {
         return await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
 
             .Join(_db.Tags,
                 std => std.TagId,
@@ -681,7 +682,7 @@ public class StockTakingService : IStockTakingService
     private async Task<List<StockTakingCompareExportDto>>GetCompareExportData(string sttId)
     {
         var systemData = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "SYSTEM")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
             .GroupBy(x => new
             {
                 x.ItemId
@@ -694,7 +695,7 @@ public class StockTakingService : IStockTakingService
             .ToListAsync();
 
         var scanData = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == "FOUND")
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.FOUND)
             .GroupBy(x => new
             {
                 x.ItemId
@@ -806,10 +807,10 @@ public class StockTakingService : IStockTakingService
     public async Task<object> GetProgressAsync(string sttId)
     {
         var total = await _db.StockTakingDetails
-            .CountAsync(x => x.SttId == sttId && x.Action == "SYSTEM");
+            .CountAsync(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM);
 
         var scanned = await _db.StockTakingDetails
-            .CountAsync(x => x.SttId == sttId && x.Action == "FOUND");
+            .CountAsync(x => x.SttId == sttId && x.Action == TakingAction.FOUND);
 
         return new
         {

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryControl.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryControl.Entity;
@@ -15,7 +16,7 @@ public class StockTaking
 
 
     [Column("status")]
-    public string? Status { get; set; }
+    public TakingStatus Status { get; set; }
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }

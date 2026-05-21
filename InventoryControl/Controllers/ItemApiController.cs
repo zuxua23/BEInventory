@@ -37,6 +37,16 @@ public class ItemApiController : ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("{id}/available-stock")]
+    public async Task<IActionResult> GetStockById(string id)
+    {
+        var data = await _service.GetAvailableStockAsync(id);
+        if (data == null)
+            return NotFound();
+
+        return Ok(data);
+    }
+
     [HttpPost]
     [AuthorizePermissionHybrid("ITEM_CREATE")]
     public async Task<IActionResult> Create(ItemDto dto)

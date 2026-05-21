@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryControl.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryControl.Entity;
@@ -17,7 +18,7 @@ public class DO
     public string? ScannerType { get; set; }
 
     [Column("status")]
-    public string? Status { get; set; }  //DRAFT → PREPARATION → COMPLETED
+    public DoStatus Status { get; set; }  //DRAFT → PREPARATION → COMPLETED
 
     [Column("created_by")]
     public string? CreatedBy { get; set; }

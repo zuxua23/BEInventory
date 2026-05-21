@@ -313,20 +313,7 @@ public class PrintTagRegisService : IPrintTagRegisService
     {
         var printerName = _config["PrinterSettings:PrinterName"];
 
-        var printed = await RawPrinterHelper.SendStringToPrinterAsync( printerName,sbpl);
-
-        if (!printed)
-        {
-            DailyFileLogger.Error(
-                "Failed to print to printer.",
-                null,
-                user
-            );
-
-            throw new Exception(
-                "Failed to print tag."
-            );
-        }
+        await RawPrinterHelper.SendStringToPrinterAsync( printerName,sbpl);
 
         await Task.CompletedTask;
     }
@@ -362,7 +349,7 @@ public class PrintTagRegisService : IPrintTagRegisService
             Id = Guid.NewGuid().ToString(),
             TagId = tag.Id,
             ItemId = tag.ItemId,
-            Type = "PRINT",
+            Type = HistoryType.PRINT,
             Reference = batchNo,
             Action = "CREATE",
             CreatedBy = user,
@@ -381,7 +368,7 @@ public class PrintTagRegisService : IPrintTagRegisService
             Id = Guid.NewGuid().ToString(),
             TagId = tag.Id,
             ItemId = tag.ItemId,
-            Type = "REGISTER_TAG",
+            Type = HistoryType.REGISTER_TAG,
             Reference = reference,
             Action = "STANDBY",
             CreatedBy = user,
@@ -400,27 +387,27 @@ public class PrintTagRegisService : IPrintTagRegisService
         }
     }
 
-        private const string SBPL_TEMPLATE = @"
-    A
-    A3V+00000H+0000CS6#F5A1V00384H0913
-    ZAPSWKpercobaan1
-    %0H0425V00303P02
-    RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
-    %0H0656V001162D30,L,07,1,0
-    DN0009,{qrTag}
-    %0H0083V00303P02
-    RH0,SATO0.ttf,0,034,030,{printDate}
-    %0H0684V00053P02
-    RH0,SATO0.ttf,0,040,042,1 UNIT
-    %0H0083V00275P02
-    RH0,SATO0.ttf,0,022,025,Made in Indonesia
-    %0H0083V00053P02
-    RH0,SATO0.ttf,0,040,042,{itemName}
-    %0H0083V00107P02
-    RH0,SATO0.ttf,0,041,034,{itemId}
-    %0H0083V00150P02
-    RH0,SATO0.ttf,0,040,030,{itemDesc}
-    Q1Z";
+    private const string SBPL_TEMPLATE = @"
+A
+A3V+00000H+0000CS6#F5A1V00384H0913
+ZAPSWKpercobaan1
+%0H0425V00303P02
+RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
+%0H0656V001162D30,L,07,1,0
+DN0009,{qrTag}
+%0H0083V00303P02
+RH0,SATO0.ttf,0,034,030,{printDate}    
+%0H0684V00053P02
+RH0,SATO0.ttf,0,040,042,1 UNIT
+%0H0083V00275P02
+RH0,SATO0.ttf,0,022,025,Made in Indonesia
+%0H0083V00053P02
+RH0,SATO0.ttf,0,040,042,{itemName}
+%0H0083V00107P02
+RH0,SATO0.ttf,0,041,034,{itemId}
+%0H0083V00150P02
+RH0,SATO0.ttf,0,040,030,{itemDesc}
+Q1Z";
 
     private string BuildSBPL(
         string qrTag,
@@ -478,7 +465,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                             _db.Histories
                                 .Where(h =>
                                     h.TagId == t.Id &&
-                                    h.Type == "PRINT"
+                                    h.Type == HistoryType.PRINT
                                 )
                                 .Select(h =>
                                     h.Reference
@@ -489,7 +476,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                             _db.Histories
                                 .Where(h =>
                                     h.TagId == t.Id &&
-                                    h.Type == "PRINT"
+                                    h.Type == HistoryType.PRINT
                                 )
                                 .Select(h =>
                                     h.CreatedAt

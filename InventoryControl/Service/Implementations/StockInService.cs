@@ -3,6 +3,7 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -108,8 +109,8 @@ public class StockInService : IStockInService
             foreach (var tag in tags)
             {
                 if (
-                    tag.Status != "STANDBY" &&
-                    tag.Status != "PRINTED"
+                    tag.Status != TagStatus.STANDBY &&
+                    tag.Status != TagStatus.PRINTED
                 )
                 {
                     DailyFileLogger.Warn(
@@ -122,7 +123,7 @@ public class StockInService : IStockInService
                     );
                 }
 
-                tag.Status = "IN_STOCK";
+                tag.Status = TagStatus.IN_STOCK;
                 tag.LocationId = location.Id;
                 tag.UpdatedBy = user;
                 tag.UpdatedAt = DateTime.UtcNow;
@@ -136,7 +137,7 @@ public class StockInService : IStockInService
             var trxHeader = new Transaction
             {
                 TrsId = Guid.NewGuid().ToString(),
-                TrsType = "STOCK_IN",
+                TrsType = TransactionType.STOCK_IN,
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             };
@@ -161,7 +162,7 @@ public class StockInService : IStockInService
                         Id = Guid.NewGuid().ToString(),
                         TagId = tag.Id,
                         ItemId = tag.ItemId,
-                        Type = "STOCK_IN",
+                        Type = HistoryType.STOCK_IN,
                         Reference = trxHeader.TrsId,
                         Action =
                             "MOVE_TO_" +
@@ -243,7 +244,7 @@ public class StockInService : IStockInService
             {
                 TagId = tag.TagId,
                 ItemName = tag.Item?.Name,
-                Status = tag.Status,
+                Status = tag.Status.ToString(),
                 Location = tag.Location?.Name
             };
         }

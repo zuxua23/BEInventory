@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryControl.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryControl.Entity;
@@ -11,7 +12,7 @@ public class Transaction
     public string TrsId { get; set; }
 
     [Column("trs_type")]
-    public string? TrsType { get; set; }
+    public TransactionType TrsType { get; set; }
 
     [Column("reference_id")]
     public string? ReferenceId { get; set; }

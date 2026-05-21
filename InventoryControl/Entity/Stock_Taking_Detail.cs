@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using InventoryControl.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InventoryControl.Entity;
@@ -23,7 +24,7 @@ public class StockTakingDetail
     public string? Remark { get; set; }
 
     [Column("action")]
-    public string? Action { get; set; }
+    public TakingAction Action { get; set; }
 
     public StockTaking? StockTaking { get; set; }
 

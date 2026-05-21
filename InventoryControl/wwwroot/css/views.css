@@ -17,6 +17,8 @@ body {
 
 .wrapper {
     min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 /* =========================================================
@@ -33,10 +35,10 @@ body {
 }
 
 .content-wrapper {
+    flex: 1 !important;
     padding: 1rem !important;
-    min-height: calc(100vh - 200px) !important;
     background: #f8fafc !important;
-}
+}   
 
 /* =========================================================
    MAIN CONTENT
@@ -51,7 +53,6 @@ body {
 ========================================================= */
 
 .main-footer {
-    margin-top: auto !important;
     margin-right: 0 !important;
     flex-shrink: 0 !important;
     padding: 1.25rem 2rem !important;

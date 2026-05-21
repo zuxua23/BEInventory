@@ -109,7 +109,7 @@
                                         </div>
                                     </div>
 
-                                    <button class="btn btn-primary btn-block mt-auto" style="font-size: 1.5rem;" onclick="printTags()">
+                                    <button id="btnPrintTags" class="btn btn-primary btn-block mt-auto" style="font-size: 1.5rem;" onclick="printTags()">
                                         <i class="fas fa-print mr-2"></i>Print Tags
                                     </button>
                                 </div>
@@ -117,40 +117,41 @@
                         </div>
                     </div>
 
-                            <div class="row">
-                                <div class="col-12">
+                    <div class="row">
+                        <div class="col-12">
 
-                                    <div class="card card-primary card-outline shadow-lg">
+                            <div class="card card-primary card-outline shadow-lg">
 
-                                        <div class="card-header bg-white border-0 pb-0">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <h3 class="card-title font-weight-bold mb-0">
-                                                    <i class="fas fa-list mr-2 text-primary"></i>
-                                                    Tag Data List
-                                                </h3>
-                                            </div>
-                                        </div>
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Tag Data List
+                                        </h3>
+                                    </div>
+                                </div>
 
-                                        <div class="card-body pt-3">
+                                <div class="card-body pt-3">
 
-                                            <div class="table-responsive">
-                                                <table id="datatablesIndex" class="table table-hover">
-                                                    <thead class="thead-light">
-                                                        <tr>
-                                                            <th class="text-center" width="60">#</th>
-                                                            <th>Tag ID</th>
-                                                            <th>Item Name</th>
-                                                            <th>Epc</th>
-                                                            <th>Location</th>
-                                                            <th>Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th>Tag ID</th>
+                                                    <th>Item Name</th>
+                                                    <th>Epc</th>
+                                                    <th>Location</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+               </div>
             </section>                
         </div>
         @Html.Partial("_Footer")
@@ -167,235 +168,497 @@
 
         let table;
         let rowCounter = 1;
+        let itemsCache = [];
 
-        $(document).ready(function () {
-            loadItemsDropdown(document.getElementById("firstItemSelect"));
-            loadTagTable();
-            updateTotalTags();
+
+        $(document).ready(async function () {
+
+            await initializePage();
+
         });
+
+
+
+        async function initializePage() {
+
+            await loadItems();
+            initializeFirstDropdown();
+            await loadTagTable();
+            initializeEvents();
+            updateTotalTags();
+        }
+
+
+
+
+        function initializeFirstDropdown() {
+
+            const firstDropdown =
+                document.getElementById(
+                    "firstItemSelect"
+                );
+
+            renderDropdownOptions(
+                firstDropdown
+            );
+
+            initSelect2();
+        }
+
+
+
+
+        function initializeEvents() {
+
+            $(document).on(
+                "click",
+                ".btn-remove-row",
+                async function () {
+
+                    const confirm =
+                        await Alert.confirm({
+                            text: "Delete row?"
+                        });
+
+                    if (!confirm.isConfirmed)
+                        return;
+
+                    $(this)
+                        .closest("tr")
+                        .remove();
+
+                    updateRowNumbers();
+
+                    updateTotalTags();
+                }
+            );
+
+            $(document).on(
+                "input",
+                ".qty-input",
+                function () {
+
+                    updateTotalTags();
+
+                }
+            );
+
+            $(document).on(
+                "select2:open",
+                function () {
+
+                    document
+                        .querySelector(
+                            '.select2-container--open .select2-search__field'
+                        )
+                        ?.focus();
+
+                }
+            );
+        }
+
+
+
+
+        async function loadItems() {
+
+            const data = await Api.get("/api/item");
+
+            if (!data) {
+
+                Alert.error("Failed to load items");
+
+                return;
+            }
+
+            itemsCache = data;
+        }
+
+        function renderDropdownOptions(
+            selectElement
+        ) {
+
+            let options =
+                `<option value="">
+                    -- Select Item --
+                </option>`;
+
+            itemsCache.forEach(item => {
+
+                options += `
+                    <option value="${item.id}">
+                        ${item.itemName}
+                    </option>
+                `;
+            });
+
+            selectElement.innerHTML =
+                options;
+        }
+
+
 
         async function loadTagTable() {
 
             const data = await Api.get("/api/tag");
+
             if (!data) return;
 
-            table = Table.init("#datatablesIndex", {
-                data: data,
-                columns: [
-                    Table.rowNumber(),
-                    {
-                        data: "tagId",
-                        render: d => `<code>${d}</code>`
-                    },
-                    { data: "itemName" },
-                    { data: "epc" },
-                    { data: "location" },
-                    {
-                        data: "status",
-                        render: function (data) {
-                            if (data === "IN") return `<span class="badge badge-success">IN</span>`;
-                            if (data === "OUT") return `<span class="badge badge-danger">OUT</span>`;
-                            return `<span class="badge badge-secondary">${data || "-"}</span>`;
+            if (table) {
+
+                table.clear();
+
+                table.rows
+                    .add(data)
+                    .draw();
+
+                return;
+            }
+
+            table = Table.init(
+                "#datatablesIndex",
+                {
+                    data: data,
+                    columns: [
+                        Table.rowNumber(),
+                        {
+                            data: "tagId",
+                            render: d =>
+                                `<code>${d}</code>`
+                        },
+                        {
+                            data: "itemName"
+                        },
+                        {
+                            data: "epc"
+                        },
+                        {
+                            data: "location"
+                        },
+
+                        {
+                            data: "status",
+                            render: renderStatusBadge
                         }
-                    }
-                ]
-            });
+                    ]
+                }
+            );
         }
 
-        async function loadItemsDropdown(selectElement) {
 
-            const data = await Api.get("/api/item");
-            if (!data) return Alert.error("Failed to load items");
 
-            let options = `<option value="">-- Select Item --</option>`;
 
-            data.forEach(item => {
-                options += `<option value="${item.id}">${item.itemName}</option>`;
-            });
+        function renderStatusBadge(status) 
+        {
 
-            selectElement.innerHTML = options;
-            initSelect2(selectElement.parentElement);
+            const badgeMap = {
+
+                PRINTED:
+                    "badge-primary",
+
+                STANDBY:
+                    "badge-warning",
+
+                OUT:
+                    "badge-danger",
+
+                IN_STOCK:
+                    "badge-success"
+            };
+
+            return `
+                <span class="badge ${badgeMap[status] || 'badge-secondary'}">
+                    ${status || "-"}
+                </span>
+            `;
         }
 
-        function initSelect2(parent = document) {
-            $(parent).find('.select2').select2({
-                theme: 'bootstrap4',
-                placeholder: "Search...",
-                width: '100%',
-                dropdownParent: $('body')
-            });
-        }
 
-        $(document).on('select2:open', () => {
-            document.querySelector('.select2-container--open .select2-search__field').focus();
-        });
 
         function addRow() {
 
             rowCounter++;
 
-            const tbody = document.querySelector('#tagTable tbody');
+            const tbody = document.querySelector(
+                    "#tagTable tbody"
+                );
 
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>${rowCounter}</td>
+            const row = document.createElement("tr");
+
+            row.innerHTML =
+                generateRowTemplate(
+                    rowCounter
+                );
+
+            tbody.appendChild(row);
+
+            const dropdown = row.querySelector(
+                    ".item-select"
+                );
+
+            renderDropdownOptions(
+                dropdown
+            );
+
+            initSelect2(row);
+
+            updateTotalTags();
+        }
+
+
+
+        function generateRowTemplate(
+            rowNumber
+        ) {
+            return `
+                <td>${rowNumber}</td>
+
                 <td>
                     <select class="form-control select2 item-select"></select>
                 </td>
+
                 <td>
-                    <input type="number" class="form-control qty-input" min="1" max="1000" value="1">
+                    <input
+                        type="number"
+                        class="form-control qty-input"
+                        min="1"
+                        max="1000"
+                        value="1"
+                    >
                 </td>
+
                 <td>
-                    <button class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-danger btn-remove-row"
+                    >
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
-
-            tbody.appendChild(newRow);
-
-            const select = newRow.querySelector('.item-select');
-            loadItemsDropdown(select);
-
-            updateTotalTags();
         }
 
-        async function removeRow(button) {
 
-            const confirm = await Alert.confirm({
-                text: "Delete row?"
-            });
-
-            if (!confirm.isConfirmed) return;
-
-            button.closest('tr').remove();
-
-            updateRowNumbers();
-            updateTotalTags();
-        }
 
         function updateRowNumbers() {
-            const rows = document.querySelectorAll('#tagTable tbody tr');
+
+            const rows = document.querySelectorAll(
+                    "#tagTable tbody tr"
+                );
 
             rows.forEach((row, index) => {
-                row.cells[0].textContent = index + 1;
+
+                row.cells[0].textContent =
+                    index + 1;
             });
 
             rowCounter = rows.length;
         }
 
+
+
         function updateTotalTags() {
 
             let total = 0;
 
-            document.querySelectorAll('.qty-input').forEach(input => {
-                total += parseInt(input.value) || 0;
-            });
+            document.querySelectorAll(".qty-input"  )
+                .forEach(input => {
 
-            document.getElementById('totalTags').textContent = total.toLocaleString();
+                    total += parseInt(input.value) || 0;
+
+                });
+
+            document.getElementById("totalTags" ).textContent = total.toLocaleString();
         }
 
-        document.addEventListener('input', function (e) {
-            if (e.target.classList.contains('qty-input')) {
-                updateTotalTags();
-            }
-        });
+
+
+        function initSelect2(
+            parent = document
+        ) {
+
+            $(parent)
+                .find(".select2")
+                .select2({
+
+                    theme: "bootstrap4",
+
+                    placeholder:
+                        "Search item...",
+
+                    width: "100%",
+
+                    dropdownParent:
+                        $("body")
+                });
+        }
+
+
+
 
         async function printTags() {
 
-            const btn = document.querySelector("button[onclick='printTags()']");
-            btn.disabled = true;
+            const button =  document.getElementById("btnPrintTags");
 
-            const rows = document.querySelectorAll('#tagTable tbody tr');
+            try
+            {
+                setButtonLoading(
+                    button,
+                    true
+                );
 
-            let payload = [];
-            let isValid = true;
+                const payload = buildPrintPayload();
 
-            rows.forEach(row => {
+                if (!payload)
+                    return;
 
-                const itemId = row.querySelector('.item-select').value;
-                const qty = row.querySelector('.qty-input').value;
+                showPrintLoading();
 
-                if (!itemId) isValid = false;
+                const res =
+                    await Api.post(
+                        "/api/tag/print",
+                        payload
+                    );
 
-                if (itemId && qty > 0) {
-                    payload.push({
-                        itemId,
-                        qty: parseInt(qty)
-                    });
+                Swal.close();
+
+                if (!res || !res.ok)
+                {
+                    if (
+                        res?.errorData?.type ===
+                        "warning"
+                    ) {
+                        return;
+                    }
+
+                    Alert.error("Failed to print tags");
+
+                    return;
                 }
-            });
 
-            if (!isValid) {
-                Alert.error("Please select item in all rows");
-                btn.disabled = false;
-                return;
+                await Alert.success(
+                    "Tags printed successfully"
+                );
+
+                resetForm();
+
+                await loadTagTable();
+            }
+            catch (err)
+            {
+                Swal.close();
+
+                Alert.error(
+                    err.message ||
+                    "Failed to print tags"
+                );
+            }
+            finally
+            {
+                setButtonLoading(
+                    button,
+                    false
+                );
+            }
+        }
+
+
+
+        function buildPrintPayload() {
+
+            const rows = document.querySelectorAll(
+                    "#tagTable tbody tr"
+                );
+
+            const payload = [];
+
+            for (const row of rows)
+            {
+                const itemId = row.querySelector(".item-select" ).value;
+
+                const qty = parseInt(
+                        row.querySelector( ".qty-input" ).value
+                    );
+
+                if (!itemId)
+                {
+                    Alert.error( "Please select item in all rows" );
+
+                    return null;
+                }
+
+                if (qty <= 0)
+                {
+                    Alert.error( "Quantity must be greater than zero" );
+
+                    return null;
+                }
+
+                payload.push({
+                    itemId,
+                    qty
+                });
             }
 
-            if (payload.length === 0) {
-                Alert.error("Please add at least one item");
-                btn.disabled = false;
-                return;
+            if (payload.length === 0)
+            {
+                Alert.error( "Please add at least one item" );
+
+                return null;
             }
+
+            return payload;
+        }
+
+
+
+        function showPrintLoading() {
 
             Swal.fire({
                 title: "Printing...",
                 allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
+                didOpen: () =>
+                    Swal.showLoading()
             });
-
-            try {
-
-                const res = await Api.post("/api/tag/print", payload);
-
-                if (res && res.ok) {
-
-                    await Alert.success("Tags printed successfully");
-
-                    resetForm();
-                    loadTagTable();
-
-
-                } else if (res && !res.ok) {
-                      if (res.errorData?.type === "warning")
-                      return;
-
-                    Alert.error("Failed to print tags");
-                }
-            } catch (err) {
-
-                Alert.error(err.message);
-
-            } finally {
-
-                btn.disabled = false;
-
-            }
         }
+
+
+
+        function setButtonLoading(
+            button,
+            isLoading
+        ) {
+
+            button.disabled =
+                isLoading;
+        }
+
+
 
         function resetForm() {
 
-            const tbody = document.querySelector('#tagTable tbody');
+            const tbody = document.querySelector(
+                    "#tagTable tbody"
+                );
 
-            tbody.innerHTML = `
-                <tr>
-                    <td>1</td>
-                    <td>
-                        <select class="form-control select2 item-select" id="firstItemSelect"></select>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control qty-input" value="1">
-                    </td>
-                    <td></td>
-                </tr>
-            `;
+            const row = document.createElement("tr");
 
+            row.innerHTML = generateRowTemplate(1);
+            tbody.innerHTML = "";
+            tbody.appendChild(row);
             rowCounter = 1;
 
-            loadItemsDropdown(document.getElementById("firstItemSelect"));
+            const dropdown = row.querySelector(
+                    ".item-select"
+            );
+
+            renderDropdownOptions(
+                dropdown
+            );
+
+            initSelect2();
             updateTotalTags();
         }
-
     </script>
 
 </body>

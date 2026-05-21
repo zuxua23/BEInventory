@@ -19,16 +19,12 @@ public class AppDBContext : DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Location> Locations { get; set; }
     public DbSet<Reader> Readers { get; set; }
-
     public DbSet<DO> DOs { get; set; }
     public DbSet<DODetail> DODetails { get; set; }
-
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Transaction_Detail> TransactionDetails { get; set; }
-
     public DbSet<StockTaking> StockTakings { get; set; }
     public DbSet<StockTakingDetail> StockTakingDetails { get; set; }
-
     public DbSet<HistoryPrint> Histories { get; set; }
 
 
@@ -36,31 +32,43 @@ public class AppDBContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-        .HasQueryFilter(u => !u.IsDelete);
-
-            modelBuilder.Entity<Role>()
-        .HasQueryFilter(u => !u.IsDelete);
-
-            modelBuilder.Entity<Permission>()
-        .HasQueryFilter(u => !u.IsDelete);
-
-            modelBuilder.Entity<Reader>()
-        .HasQueryFilter(r => !r.IsDelete);
-
+        //FOR ENUM CONVERSION
         modelBuilder.Entity<Tag>()
-        .Property(x => x.Status)
-        .HasConversion<string>();
+            .Property(x => x.Status)
+            .HasConversion<string>();
 
+        modelBuilder.Entity<HistoryPrint>()
+            .Property(x => x.Type)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Transaction>()
+            .Property(x => x.TrsType)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<DO>()
+            .Property(x => x.Status)
+            .HasConversion<string>();
+        
+        modelBuilder.Entity<StockTaking>()
+            .Property(x => x.Status)
+            .HasConversion<string>();
+        
+        modelBuilder.Entity<StockTakingDetail>()
+            .Property(x => x.Action)
+            .HasConversion<string>();
+
+
+        //FOR UNIQUE INDEX
         modelBuilder.Entity<Tag>()
             .HasIndex(x => x.TagId)
             .IsUnique();
 
         modelBuilder.Entity<User>()
-        .HasIndex(u => u.UserId)
-        .IsUnique();
+            .HasIndex(u => u.UserId)
+            .IsUnique();
 
 
+        //FOR RELATION
         modelBuilder.Entity<User_Role>()
             .HasOne(ur => ur.User)
             .WithMany(u => u.UserRoles)
@@ -84,6 +92,7 @@ public class AppDBContext : DbContext
             .WithMany(p => p.RolePermissions)
             .HasForeignKey(rp => rp.PermissionId)
             .OnDelete(DeleteBehavior.NoAction);
+
         modelBuilder.Entity<Transaction_Detail>()
             .HasOne(td => td.Transaction)
             .WithMany(t => t.TransactionDetails)
@@ -119,11 +128,13 @@ public class AppDBContext : DbContext
             .WithMany()
             .HasForeignKey(d => d.ItemId)
             .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<HistoryPrint>()
             .HasOne(h => h.Item)
             .WithMany()
             .HasForeignKey(h => h.ItemId)
             .OnDelete(DeleteBehavior.NoAction);
+
         modelBuilder.Entity<Permission>()
             .HasOne(p => p.Module)
             .WithMany(m => m.Permissions)

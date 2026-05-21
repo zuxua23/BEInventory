@@ -84,7 +84,7 @@
 
                                         <div class="form-group">
                                             <label><i class="fas fa-user-shield mr-2"></i>Role</label>
-                                            <input id="RoleUpdate" class="form-control">
+                                            <input id="RoleUpdate" class="form-control" readonly>
                                         </div>
 
                                     </form>
@@ -344,21 +344,20 @@
                 const role = roles.find(r => r.name === roleName);
                 if (!role) return;
 
-                const rowId = Date.now() + Math.random();
-
+                const rowId = `row_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
                 let options = roles.map(r =>
                     `<option value="${r.id}" ${r.name === roleName ? "selected" : ""}>${r.name}</option>`
                 ).join("");
 
                 const html = `
-                    <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
+                    <div class="detail-item d-flex align-items-center mb-2" id="${rowId}"">
                         <div class="flex-grow-1 mr-2">
                             <select class="form-control select2 role-select">
                                 ${options}
                             </select>
                         </div>
                         <button type="button" class="btn btn-danger btn-sm"
-                                onclick="$('#row_${rowId}').remove()">
+                               onclick="$('#${rowId}').remove()">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -386,6 +385,7 @@
                 if (val) roleIds.push(val);
             });
 
+            roleIds = [...new Set(roleIds)];
             const res = await Api.post("/api/user/update-roles", {
                 userId: id,
                 roles: roleIds

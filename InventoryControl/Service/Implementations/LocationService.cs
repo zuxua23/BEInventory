@@ -189,6 +189,7 @@ public class LocationService : ILocationService
 
             var oldLocId = location.LocId;
             var oldName = location.Name;
+            var oldDescription = location.Description;
 
             location.LocId = dto.LocId;
             location.Name = dto.Name;
@@ -210,8 +211,8 @@ public class LocationService : ILocationService
                 performedBy: updatedBy,
                 description:
                     $"Updated location from " +
-                    $"LocId='{oldLocId}', Name='{oldName}' " +
-                    $"to LocId='{dto.LocId}', Name='{dto.Name}'."
+                    $"LocId='{oldLocId}', Name='{oldName}', Description='{oldDescription}' " +
+                    $"to LocId='{dto.LocId}', Name='{dto.Name}', Description='{dto.Description}'."
             );
         }
         catch (Exception ex)

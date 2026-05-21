@@ -3,6 +3,7 @@
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -107,7 +108,7 @@ public class StockPreparationService : IStockPreparationService
                 );
             }
 
-            if (tag.Status != "IN_STOCK")
+            if (tag.Status != TagStatus.IN_STOCK)
             {
                 DailyFileLogger.Warn(
                     $"Tag '{tag.TagId}' is not in IN_STOCK status. Current status='{tag.Status}'.",
@@ -141,7 +142,7 @@ public class StockPreparationService : IStockPreparationService
                     .Where(td =>
                         td.ItemId == tag.ItemId &&
                         td.Transaction.TrsType ==
-                            "STOCK_PREPARATION" &&
+                            TransactionType.STOCK_PREPARATION &&
                         td.Transaction.ReferenceId ==
                             dto.DoId
                     )
@@ -162,7 +163,7 @@ public class StockPreparationService : IStockPreparationService
             var transaction = new Transaction
             {
                 TrsId = Guid.NewGuid().ToString(),
-                TrsType = "STOCK_PREPARATION",
+                TrsType = TransactionType.STOCK_PREPARATION,
                 ReferenceId = dto.DoId,
                 CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
@@ -180,7 +181,7 @@ public class StockPreparationService : IStockPreparationService
                 }
             );
 
-            tag.Status = "RESERVED";
+            tag.Status = TagStatus.RESERVED;
             tag.LocationId = location.Id;
             tag.UpdatedBy = user;
             tag.UpdatedAt = DateTime.UtcNow;
@@ -191,7 +192,7 @@ public class StockPreparationService : IStockPreparationService
                     Id = Guid.NewGuid().ToString(),
                     TagId = tag.Id,
                     ItemId = tag.ItemId,
-                    Type = "STOCK_PREPARATION",
+                    Type = HistoryType.STOCK_PREPARATION,
                     Reference = dto.DoId,
                     Action =
                         "RESERVED_TO_" +
@@ -203,9 +204,9 @@ public class StockPreparationService : IStockPreparationService
                 }
             );
 
-            if (doData.Status == "DRAFT")
+            if (doData.Status == DoStatus.DRAFT)
             {
-                doData.Status = "PREPARATION";
+                doData.Status = DoStatus.PREPARATION;
 
                 DailyFileLogger.Info(
                     $"Delivery order '{dto.DoId}' status updated from DRAFT to PREPARATION.",

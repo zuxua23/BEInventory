@@ -73,7 +73,7 @@ public class TransactionService : ITransactionService
                 select new TransactionHistoryDto
                 {
                     TxDate = t.CreatedAt,
-                    TxType = t.TrsType,
+                    TxType = t.TrsType.ToString(),
 
                     DoNumber =
                         d != null
