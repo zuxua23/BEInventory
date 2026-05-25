@@ -12,29 +12,36 @@ public class Tag
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; }
 
     [Required]
     [Column("tag_id")]
+    [MaxLength(10)]
     public string TagId { get; set; }
 
     [Required]
-    [Column("itm_id")]
+    [Column("item_id")]
+    [MaxLength(36)]
     public string ItemId { get; set; }
 
     [Column("tag_epc")]
+    [MaxLength(30)]
     public string EpcTag { get; set; }
 
     [Required]
     [Column("status")]
+    [MaxLength(30)]
     public TagStatus Status { get; set; } //PRINTED / IN_STOCK/ RESERVED /OUT /STANBY
 
     [Required]
-    [Column("loc_id")]
+    [Column("location_id")]
+    [MaxLength(36)]
     public string LocationId { get; set; }
 
     [Required]
     [Column("created_by")]
+    [MaxLength(50)]
     public string CreatedBy { get; set; }
 
     [Required]
@@ -42,6 +49,7 @@ public class Tag
     public DateTime CreatedAt { get; set; }
 
     [Column("updated_by")]
+    [MaxLength(50)]
     public string? UpdatedBy { get; set; }
 
     [Column("updated_at")]

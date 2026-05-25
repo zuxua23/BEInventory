@@ -8,18 +8,22 @@ public class Transaction_Detail
 {
     [Key]
     [Column("trs_detail_id")]
+    [MaxLength(36)]
     public string TrdId { get; set; }
 
     [Required]
     [Column("trs_id")]
+    [MaxLength(36)]
     public string TrsId { get; set; }
 
     [Required]
     [Column("tag_id")]
+    [MaxLength(36)]
     public string TagId { get; set; }
 
     [Required]
-    [Column("itm_id")]
+    [Column("item_id")]
+    [MaxLength(36)]
     public string ItemId { get; set; }
 
     public Transaction Transaction { get; set; }

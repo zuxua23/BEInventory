@@ -8,23 +8,29 @@ public class Permission
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     [Column("module_id")]
+    [MaxLength(36)]
     public string? ModuleId { get; set; }
 
     [Column("operation")]
+    [MaxLength(50)]
     public string? Operation { get; set; }
 
     [Required]
     [Column("per_code")]
+    [MaxLength(50)]
     public string Code { get; set; }
 
     [Required]
     [Column("per_name")]
+    [MaxLength(50)]
     public string Name { get; set; }
 
     [Column("created_by")]
+    [MaxLength(50)]
     public string? CreatedBy { get; set; }
 
     [Column("created_at")]

@@ -8,17 +8,21 @@ public class User_Role
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; }
 
     [Required]
     [Column("role_id")]
+    [MaxLength(36)]
     public string RoleId { get; set; }
 
     [Required]
     [Column("user_id")]
+    [MaxLength(36)]
     public string UserId { get; set; }
 
     [Column("created_by")]
+    [MaxLength(50)]
     public string? CreatedBy { get; set; }
 
     
@@ -26,10 +30,10 @@ public class User_Role
     public DateTime CreatedAt { get; set; }
 
     [Column("updated_by")]
+    [MaxLength(50)]
     public string? UpdatedBy { get; set; }
 
     [Column("updated_at")]
-
     public DateTime? UpdatedAt { get; set; }
 
     public Role Role { get; set; }

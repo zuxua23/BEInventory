@@ -25,7 +25,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.DO", b =>
                 {
                     b.Property<string>("DoId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("do_id");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -33,11 +34,13 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("DoNumber")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("do_number");
 
                     b.Property<bool>("IsDelete")
@@ -45,12 +48,14 @@ namespace InventoryControl.Migrations
                         .HasColumnName("isDelete");
 
                     b.Property<string>("ScannerType")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("scanner_type");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -58,7 +63,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("DoId");
@@ -69,17 +75,20 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.DODetail", b =>
                 {
                     b.Property<string>("DoDetailId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("do_detail_id");
 
                     b.Property<string>("DoId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("do_id");
 
                     b.Property<string>("ItemId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("itm_id");
 
                     b.Property<int?>("QtyRequired")
@@ -98,12 +107,14 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.HistoryPrint", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("action");
 
                     b.Property<DateTime>("CreatedAt")
@@ -112,27 +123,32 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("ItemId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("itm_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("item_id");
 
                     b.Property<string>("Reference")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("ref_no");
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("tag_id");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("trs_type");
 
                     b.HasKey("Id");
@@ -147,7 +163,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Item", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -156,11 +173,13 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("itm_desc");
 
                     b.Property<bool>("IsDelete")
@@ -169,12 +188,14 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("ItmId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
                         .HasColumnName("itm_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("itm_name");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -182,7 +203,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -196,7 +218,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Location", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -205,12 +228,14 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("loc_desc");
 
                     b.Property<bool>("IsDelete")
@@ -219,16 +244,18 @@ namespace InventoryControl.Migrations
 
                     b.Property<bool>("IsSystem")
                         .HasColumnType("bit")
-                        .HasColumnName("is_system");
+                        .HasColumnName("isSystem");
 
                     b.Property<string>("LocId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("loc_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("loc_name");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -236,7 +263,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -247,7 +275,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Module", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<bool>("IsActive")
@@ -256,13 +285,15 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("ModuleKey")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("module_key");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("mod_key");
 
                     b.Property<string>("ModuleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("module_name");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("mod_name");
 
                     b.HasKey("Id");
 
@@ -272,12 +303,14 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Permission", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("per_code");
 
                     b.Property<DateTime>("CreatedAt")
@@ -285,7 +318,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<bool>("IsActive")
@@ -297,16 +331,19 @@ namespace InventoryControl.Migrations
                         .HasColumnName("isDelete");
 
                     b.Property<string>("ModuleId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("module_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("per_name");
 
                     b.Property<string>("Operation")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("operation");
 
                     b.HasKey("Id");
@@ -319,7 +356,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Reader", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -328,12 +366,14 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("IpAddress")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
                         .HasColumnName("ip_address");
 
                     b.Property<bool>("IsDelete")
@@ -342,22 +382,26 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("LocationId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("loc_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("location_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("rdr_name");
 
                     b.Property<string>("RdrId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("rdr_id");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("reader_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -365,7 +409,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -381,12 +426,14 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Role", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("rol_code");
 
                     b.Property<bool>("IsActive")
@@ -398,7 +445,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("isDelete");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("rol_name");
 
                     b.HasKey("Id");
@@ -409,21 +457,20 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Role_Permission", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
-
-                    b.Property<int?>("Override")
-                        .HasColumnType("int")
-                        .HasColumnName("is_override");
 
                     b.Property<string>("PermissionId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("permission_id");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("role_id");
 
                     b.HasKey("Id");
@@ -438,7 +485,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.StockTaking", b =>
                 {
                     b.Property<string>("SttId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("stt_id");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -446,16 +494,19 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Remark")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("remark");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("status");
 
                     b.HasKey("SttId");
@@ -466,30 +517,36 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.StockTakingDetail", b =>
                 {
                     b.Property<string>("StdId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("st_detail_id");
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("action");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("item_id");
 
                     b.Property<string>("Remark")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("remark");
 
                     b.Property<string>("SttId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("stt_id");
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("tag_id");
 
                     b.HasKey("StdId");
@@ -506,7 +563,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Tag", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -515,12 +573,14 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("EpcTag")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("tag_epc");
 
                     b.Property<bool>("IsDelete")
@@ -529,22 +589,26 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("ItemId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("itm_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("item_id");
 
                     b.Property<string>("LocationId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("loc_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("location_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("status");
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
                         .HasColumnName("tag_id");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -552,7 +616,8 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
@@ -570,7 +635,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Transaction", b =>
                 {
                     b.Property<string>("TrsId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("trs_id");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -578,20 +644,24 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("ReaderId")
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("rdr_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("reader_id");
 
                     b.Property<string>("ReferenceId")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("reference_id");
 
                     b.Property<string>("TrsType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
                         .HasColumnName("trs_type");
 
                     b.HasKey("TrsId");
@@ -604,22 +674,26 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.Transaction_Detail", b =>
                 {
                     b.Property<string>("TrdId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("trs_detail_id");
 
                     b.Property<string>("ItemId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("itm_id");
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
+                        .HasColumnName("item_id");
 
                     b.Property<string>("TagId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("tag_id");
 
                     b.Property<string>("TrsId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("trs_id");
 
                     b.HasKey("TrdId");
@@ -636,7 +710,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.User", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -645,12 +720,14 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Fullname")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("usr_fullname");
 
                     b.Property<bool>("IsActive")
@@ -663,7 +740,8 @@ namespace InventoryControl.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("usr_password");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -671,17 +749,20 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
                         .HasColumnName("usr_id");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("usr_name");
 
                     b.HasKey("Id");
@@ -695,7 +776,8 @@ namespace InventoryControl.Migrations
             modelBuilder.Entity("InventoryControl.Entity.User_Role", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -703,12 +785,14 @@ namespace InventoryControl.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("role_id");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -716,12 +800,14 @@ namespace InventoryControl.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("updated_by");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(36)
+                        .HasColumnType("nvarchar(36)")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");

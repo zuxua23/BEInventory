@@ -8,13 +8,16 @@ public class Role
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; }
 
     [Required]
     [Column("rol_code")]
+    [MaxLength(30)]
     public string Code { get; set; }
 
     [Column("rol_name")]
+    [MaxLength(50)]
     public string? Name { get; set; }
 
     [Column("isActive")]

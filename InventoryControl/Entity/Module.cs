@@ -8,12 +8,15 @@ public class Module
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; }
 
-    [Column("module_key")]
+    [Column("mod_key")]
+    [MaxLength(30)]
     public string ModuleKey { get; set; }
 
-    [Column("module_name")]
+    [Column("mod_name")]
+    [MaxLength(50)]
     public string ModuleName { get; set; }
 
     [Column("isActive")]

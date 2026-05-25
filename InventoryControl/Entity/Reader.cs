@@ -10,29 +10,36 @@ public class Reader
 {
     [Key]
     [Column("id")]
+    [MaxLength(36)]
     public string Id { get; set; }
 
     [Required]
-    [Column("rdr_id")]
+    [Column("reader_id")]
+    [MaxLength(30)]
     public string RdrId { get; set; }
 
     [Required]
-    [Column("loc_id")]
+    [Column("location_id")]
+    [MaxLength(36)]
     public string LocationId { get; set; }
 
     [Required]
     [Column("rdr_name")]
+    [MaxLength(50)]
     public string Name { get; set; }
 
     [Required]
     [Column("ip_address")]
+    [MaxLength(20)]
     public string IpAddress { get; set; }
 
     [Column("status")]
+    [MaxLength(30)]
     public string Status { get; set; } // READY, OFFLINE, IN_USE
 
     [Required]
     [Column("created_by")]
+    [MaxLength(50)]
     public string CreatedBy { get; set; }
 
     [Required]
@@ -40,6 +47,7 @@ public class Reader
     public DateTime CreatedAt { get; set; }
 
     [Column("updated_by")]
+    [MaxLength(50)]
     public string? UpdatedBy { get; set; }
 
     [Column("updated_at")]

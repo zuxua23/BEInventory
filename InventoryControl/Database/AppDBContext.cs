@@ -35,28 +35,33 @@ public class AppDBContext : DbContext
         //FOR ENUM CONVERSION
         modelBuilder.Entity<Tag>()
             .Property(x => x.Status)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(30);
 
         modelBuilder.Entity<HistoryPrint>()
             .Property(x => x.Type)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(30);
 
         modelBuilder.Entity<Transaction>()
             .Property(x => x.TrsType)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(30);
 
         modelBuilder.Entity<DO>()
             .Property(x => x.Status)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(30);
         
         modelBuilder.Entity<StockTaking>()
             .Property(x => x.Status)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(30);
         
         modelBuilder.Entity<StockTakingDetail>()
             .Property(x => x.Action)
-            .HasConversion<string>();
-
+            .HasConversion<string>()
+            .HasMaxLength(30);
 
         //FOR UNIQUE INDEX
         modelBuilder.Entity<Tag>()

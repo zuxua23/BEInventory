@@ -1,5 +1,5 @@
 ﻿using InventoryControl.Database;
-//using InventoryControl.Database.Seeder;
+using InventoryControl.Database.Seeder;
 using InventoryControl.Routes;
 using InventoryControl.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -86,11 +86,11 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 #region SEEDER
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
-//    await SeedAccess.Initialize(services);
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedAccess.Initialize(services);
+}
 #endregion
 
 #region MIDDLEWARE PIPELINE
