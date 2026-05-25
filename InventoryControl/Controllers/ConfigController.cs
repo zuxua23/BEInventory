@@ -9,12 +9,10 @@ namespace InventoryControl.Controllers;
 public class ConfigController : Controller
 {
     private readonly ConfigService _configService;
-    private readonly AppRestartService _restartService;
 
-    public ConfigController(ConfigService configService, AppRestartService restartService)
+    public ConfigController(ConfigService configService)
     {
         _configService = configService;
-        _restartService = restartService;
     }
 
     [HttpPost("update-connection")]
@@ -23,8 +21,6 @@ public class ConfigController : Controller
         try
         {
             _configService.UpdateConnection(dto);
-
-            _restartService.Restart();
 
             return Ok(new { message = "Connection updated. Restarting app..." });
         }
