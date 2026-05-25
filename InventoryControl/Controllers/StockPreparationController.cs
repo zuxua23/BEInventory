@@ -19,12 +19,54 @@ public class StockPreparationController : ControllerBase
         _service = service;
     }
 
-    [HttpPost]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> Prepare(StockPreparationRequestDto dto)
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.PrepareAsync(dto, user);
-        return Ok(new { message = "Tag berhasil diprepare" });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.PrepareAsync(dto, user);
+            return Ok(new { message = "Tag prepared successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
+    public async Task<IActionResult> PrepareBulk([FromBody] StockPreparationBulkRequestDto dto)
+    {
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.PrepareBulkAsync(dto, user);
+            return Ok(new { message = $"Successfully prepared {dto.ScannedCodes.Count} tags" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
+
+    public async Task<IActionResult> GetDoDrafts()
+    {
+        try
+        {
+            var result = await _service.GetDoDraftAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
+    public async Task<IActionResult> GetDoDetail(string id)
+    {
+        var data = await _service.GetDoDetailAsync(id);
+        if (data == null) return NotFound();
+        return Ok(data);
     }
 }

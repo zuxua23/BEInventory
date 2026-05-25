@@ -22,9 +22,31 @@ public class StockInController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_IN")]
     public async Task<IActionResult> StockIn([FromBody] StockInDto dto) 
     {
-        var user = User.Identity?.Name ?? "system";
-        await _service.StockInAsync(dto, user);
-        return Ok(new { message = "Stock In berhasil" });
+       try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.StockInAsync(dto, user);
+            return Ok(new { message = "Stock In successful" });
+        }
+        catch(Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
+    [HttpGet]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetTagByCode(string code, string scannerType)
+    {
+        try
+        {
+            var result = await _service.GetTagByCodeAsync(code, scannerType);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

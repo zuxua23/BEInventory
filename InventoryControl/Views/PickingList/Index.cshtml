@@ -270,23 +270,26 @@
         $("#detailContainer").append(`
             <div class="detail-item card border-0 shadow-sm mb-3 p-3">
 
-                <div class="row align-items-end">
+                <div class="row align-items-start">
 
-                    <div class="col-md-5">
+                    <div class="col-md-5 d-flex flex-column">
                         <select class="form-control select2 item-select" required>
                         </select>
+                                        <small class="stock-info mt-1 d-block" style="min-height:20px;"></small>
+
                     </div>
 
-                    <div class="col-md-5">
+                    <div class="col-md-5 d-flex flex-column">
                         <input class="form-control qty"
                                type="number"
                                placeholder="Enter qty"
                                min="1"
                                step="1">
-
+                                         <small class="text-danger qty-error mt-1 d-block"
+                       style="min-height:20px;"></small>
                     </div>
 
-                    <div class="col-md-2 text-center">
+            <div class="col-md-2 d-flex justify-content-center align-items-center">
 
                         <button type="button"
                                 class="btn btn-danger btn-sm remove-item px-3">
@@ -315,13 +318,13 @@
 
             if (stock == null) {
 
-                row.find(".stock-info")
-                    .html(`
-                        <span class="text-danger">
-                            Failed to load stock
-                        </span>
-                    `);
-
+            row.find(".stock-info")
+                .html(`
+                    Available Stock:
+                    <span class="font-weight-bold text-primary">
+                        ${stock}
+                    </span>
+                `);
                 return;
             }
 
@@ -342,21 +345,21 @@
             const qty = parseInt($(this).val()) || 0;
             const max = parseInt($(this).attr("max")) || 0;
 
-            $(this).siblings(".qty-error").remove();
+            const errorEl = $(this)
+                .closest(".d-flex")
+                .find(".qty-error");
 
             if (qty > max) {
 
                 $(this).addClass("is-invalid");
 
-                $(this).after(`
-                    <small class="text-danger qty-error">
-                        Qty exceeds available stock (${max})
-                    </small>
-                `);
+                errorEl.text(`Qty exceeds available stock (${max})`);
 
             } else {
 
                 $(this).removeClass("is-invalid");
+
+                errorEl.text("");
             }
         });
 

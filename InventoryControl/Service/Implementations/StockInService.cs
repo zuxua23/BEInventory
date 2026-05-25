@@ -209,53 +209,22 @@ public class StockInService : IStockInService
         }
     }
 
-    public async Task<TagResponseDto?> GetTagByCodeAsync(
-        string code
-    )
+    public async Task<TagResponseDto?> GetTagByCodeAsync(string code, string scannerType)
     {
-        try
-        {
-            DailyFileLogger.Info(
-                $"Retrieving tag information using code '{code}'."
-            );
-
-            var tag = await _db.Tags
-                .Include(t => t.Item)
-                .Include(t => t.Location)
-                .FirstOrDefaultAsync(t =>
-                    t.EpcTag == code ||
-                    t.TagId == code
-                );
-
-            if (tag == null)
+        var tag = await _db.Tags
+            .AsNoTracking()
+            .Where(t => scannerType == "RFID" ? t.EpcTag == code : t.TagId == code)
+            .Select(t => new TagResponseDto
             {
-                DailyFileLogger.Warn(
-                    $"Tag with code '{code}' was not found."
-                );
+                TagId = t.TagId,
+                Epc = t.EpcTag,
+                ItemName = t.Item.Name,
+                Status = t.Status.ToString(),
+                Location = t.Location.Name
+            })
+            .FirstOrDefaultAsync();
 
-                return null;
-            }
-
-            DailyFileLogger.Info(
-                $"Successfully retrieved tag with TagId '{tag.TagId}'."
-            );
-
-            return new TagResponseDto
-            {
-                TagId = tag.TagId,
-                ItemName = tag.Item?.Name,
-                Status = tag.Status.ToString(),
-                Location = tag.Location?.Name
-            };
-        }
-        catch (Exception ex)
-        {
-            DailyFileLogger.Error(
-                $"An error occurred while retrieving tag with code '{code}'.",
-                ex
-            );
-
-            throw;
-        }
+        return tag;
     }
+  
 }

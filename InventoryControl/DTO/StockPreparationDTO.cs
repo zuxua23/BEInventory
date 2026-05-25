@@ -8,9 +8,10 @@ public class StockPreparationRequestDto
     public string LocId { get; set; } = null!;
 
 }
-//public class StockPreparationDto
-//{
-//    public string DoId { get; set; } = null!;
-//    public List<string> TagIds { get; set; } = new();
-//    public string ReaderId { get; set; } = null!;
-//}
+public class StockPreparationBulkRequestDto
+{
+    public string DoId { get; set; } = null!;
+    public List<string> ScannedCodes { get; set; } = new();
+    public string ScannerType { get; set; } = null!;
+    public string LocId { get; set; } = null!;
+}
