@@ -25,4 +25,5 @@ public class DODetail
     public DO? DO { get; set; }
 
     public Item? Item { get; set; }
+    public ICollection<DODetailTag>? DODetailTags { get; set; }
 }

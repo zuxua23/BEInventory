@@ -21,6 +21,11 @@ public class ReaderController : Controller
     [AuthorizePermissionHybrid("READER_GET")]
     public IActionResult Detail(string id)
     {
+        var user = HttpContext.Session.GetString("UserId");
+        if (user == null)
+            return Redirect("/");
+        ViewData["pages"] = "reader";
+        ViewData["parent"] = "master";
         ViewData["id"] = id;
         return View();
     }

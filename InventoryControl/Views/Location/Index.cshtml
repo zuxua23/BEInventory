@@ -148,9 +148,11 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i>Create
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
                         </button>
                     </div>
                 </form>
@@ -258,7 +260,7 @@
 
         async function deleteLocation(id) {
 
-                    const confirm = await Alert.deleteConfirm("Location", "This location will be permanently deleted!");
+                    const confirm = await Alert.deleteConfirm("Location", "This location will be deleted!");
 
             if (!confirm.isConfirmed) return;
 

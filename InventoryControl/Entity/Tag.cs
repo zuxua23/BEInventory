@@ -62,5 +62,6 @@ public class Tag
     public Item Item { get; set; }
 
     public ICollection<Transaction_Detail>? TransactionDetails { get; set; }
+    public ICollection<DODetailTag>? DODetailTags { get; set; }
 
 }

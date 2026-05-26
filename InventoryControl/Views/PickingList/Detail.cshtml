@@ -80,7 +80,7 @@
                                         <div id="details"></div>
 
                                         <button type="button"
-                                                class="btn btn-success btn-sm mt-2"
+                                                class="btn btn-success btn-sm mt-2 action-btn detail-btn"
                                                 onclick="addDetail()">
                                             <i class="fas fa-plus mr-1"></i>Item
                                         </button>
@@ -88,11 +88,11 @@
                                     </form>
 
                                     <div class="d-flex justify-content-end pt-3 border-top">
-                                        <a href="/pickinglist" class="btn btn-secondary btn-modern mr-3">
+                                        <a href="/pickinglist" class="btn btn-secondary btn-modern mr-3 action-btn">
                                             <i class="fas fa-times mr-1"></i>Cancel
                                         </a>
                                         <button type="button"
-                                                class="btn btn-primary btn-modern px-5"
+                                                class="btn btn-primary btn-modern px-5 action-btn"
                                                 onclick="updateDO()">
                                             <i class="fas fa-save mr-2"></i>Update
                                         </button>
@@ -121,6 +121,7 @@
 
         const canUpdate = @canUpdate.ToString().ToLower();
         let id = "@ViewData["id"]";
+        let currentStatus = "";
 
         $(document).ready(load);
 
@@ -133,16 +134,27 @@
                 return;
             }
 
+            currentStatus = data.status;
             $("#doNumber").val(data.doNumber);
 
             $("#details").html("");
 
             data.details.forEach(d => {
-                addDetail(d.itemId, d.qtyRequired);
+                addDetail(d.itemId, d.qtyRequired,d.tags || [], currentStatus !== "DRAFT");
             });
+
+             if (currentStatus !== "DRAFT") {
+
+                $(".qty").prop("disabled", true);
+
+                $(".remove-item").hide();
+
+                $(".detail-btn").hide();
+
+                $("button[onclick='updateDO()']").hide();            }
         }
 
-        async function loadItemDropdown(selectElement, selectedId = "") {
+        async function loadItemDropdown(selectElement, selectedId = "", disabled = false) {
 
             const data = await Api.get("/api/item");
             if (!data) return;
@@ -169,12 +181,22 @@
                 width: '100%',
                 dropdownParent: $('body')
             });
+
+            if (selectedId) {
+                $(selectElement).trigger('change');
+            }
+            
+            if (disabled) {
+                $(selectElement).prop("disabled", true);
+            }
         }
 
 
         $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
+
+    
 
         $(document).on("click", ".remove-item", async function () {
 
@@ -187,28 +209,134 @@
             $(this).closest(".detail-item").remove();
         });
 
-        function addDetail(selectedId = "", qty = "") {
+        function addDetail(selectedId = "", qty = "",tags=[], disabled = false) {
 
-            $("#details").append(`
-                <div class="row mb-2 detail-item align-items-center">
-                    <div class="col">
-                        <select class="form-control select2 item-select"></select>
-                    </div>
-                    <div class="col">
-                     <input class="form-control qty"  value="${qty}" type="number" min="1" step="1" inputmode="numeric">
-                    </div>
-                    <div class="col-2 text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-item">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `);
+                $("#details").append(`
+
+                   <div class="detail-item card border-0 shadow-sm mb-3 p-3">
+                       <div class="row align-items-start">
+                           <div class="col-md-5 d-flex flex-column">
+                               <select class="form-control select2 item-select"></select>
+
+                               <small class="stock-info mt-1 d-block"
+                                      style="min-height:20px;">
+                               </small>
+                           </div>
+
+                           <div class="col-md-5 d-flex flex-column">
+
+                               <input class="form-control qty"
+                                      value="${qty}"
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      inputmode="numeric">
+
+                               <small class="text-danger qty-error mt-1 d-block"></small>
+
+                               <div class="reserved-tags mt-2">
+                                   ${
+                                       tags.length > 0
+                                       ? `
+                                           <small class="text-muted d-block mb-1">
+                                               Reserved RFID Tags
+                                           </small>
+
+                                           ${tags.map(t => `
+                                               <span class="badge badge-info mr-1">
+                                                   ${t.tagId}
+                                               </span>
+                                           `).join("")}
+                                       `
+                                       : ""
+                                   }
+                               </div>
+                           </div>
+
+                           <div class="col-md-2 d-flex justify-content-center align-items-center">
+                               <button type="button" class="btn btn-danger btn-sm remove-item action-btn">
+                                   <i class="fas fa-trash"></i>
+                               </button>
+                           </div>
+                       </div>
+                   </div>
+               `);
 
                 const select = $("#details .item-select").last();
 
-                loadItemDropdown(select, selectedId);
+                loadItemDropdown(select, selectedId,disabled);
         }
+
+        $(document).on( "change",".item-select",
+
+            async function () {
+
+                const row = $(this).closest(".detail-item");
+
+                const itemId = $(this).val();
+
+                if (!itemId) return;
+
+                const stock = await Api.get(
+                    `/api/item/${itemId}/available-stock`
+                );
+
+                if (stock == null) {
+
+                    row.find(".stock-info")
+                        .html(`
+                            <span class="text-danger">
+                                Failed to load stock
+                            </span>
+                        `);
+
+                    return;
+                }
+
+                row.find(".stock-info")
+                    .html(`
+                        Available Stock:
+                        <span class="font-weight-bold text-primary">
+                            ${stock}
+                        </span>
+                    `);
+
+                row.find(".qty")
+                    .attr("max", stock);
+            }
+        );
+
+        $(document).on(
+            "input",
+            ".qty",
+            function () {
+
+                const qty =
+                    parseInt($(this).val()) || 0;
+
+                const max =
+                    parseInt($(this).attr("max")) || 0;
+
+                const errorEl = $(this)
+                    .closest(".detail-item")
+                    .find(".qty-error");
+
+                if (qty > max) {
+
+                    $(this).addClass("is-invalid");
+
+                    errorEl.text(
+                        `Qty exceeds available stock (${max})`
+                    );
+
+                } else {
+
+                    $(this).removeClass("is-invalid");
+
+                    errorEl.text("");
+                }
+            }
+        );
 
         async function updateDO() {
 
@@ -239,10 +367,35 @@
                 return Alert.error("Please add at least one item");
             }
 
+
+            const duplicate = details.some(
+                (x, i) =>
+                    details.findIndex(
+                        y => y.itemId === x.itemId
+                    ) !== i
+            );
+
+            if (duplicate) {
+                Alert.error("Duplicate item is not allowed" );
+                return;
+            }
+
+            if ($(".is-invalid").length > 0) {
+                Alert.error("Please fix invalid qty" );
+                return;
+            }
+
+        
             const payload = {
                 doNumber: $("#doNumber").val(),
                 details
             };
+
+            Swal.fire({
+                title: "Updating...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
             const res = await Api.put(`/api/pickinglist/${id}`, payload);
 

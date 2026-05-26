@@ -90,26 +90,32 @@
                                     </form>
 
                                     <div class="d-flex justify-content-end pt-3 border-top">
-                                        <a href="/user" class="btn btn-secondary btn-modern mr-3">
+
+                                        <a href="/user"
+                                           class="btn btn-secondary btn-modern mr-2 action-btn">
                                             <i class="fas fa-times mr-1"></i>Cancel
                                         </a>
+
                                         @if (canUpdate)
                                         {
-                                            <button class="btn btn-warning btn-modern mr-2"
-                                            data-toggle="modal"
-                                            data-target="#updatePassword">
+                                            <button class="btn btn-warning btn-modern mr-2 action-btn"
+                                                    data-toggle="modal"
+                                                    data-target="#updatePassword">
                                                 <i class="fas fa-key mr-1"></i>Password
                                             </button>
-                                            <button class="btn btn-info btn-modern mr-2"
-                                            data-toggle="modal"
-                                            data-target="#roleUpdate">
+
+                                            <button class="btn btn-info btn-modern mr-2 action-btn"
+                                                    data-toggle="modal"
+                                                    data-target="#roleUpdate">
                                                 <i class="fas fa-plus mr-1"></i>Role
                                             </button>
-                                            <button class="btn btn-primary btn-modern px-5"
-                                            onclick="updateUser()">
+
+                                            <button class="btn btn-primary btn-modern action-btn"
+                                                    onclick="updateUser()">
                                                 <i class="fas fa-save mr-2"></i>Update
                                             </button>
                                         }
+
                                     </div>
 
                                 </div>
@@ -144,8 +150,11 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary btn-modern" onclick="updatePassword()">
-                        <i class="fas fa-save mr-1"></i>Update
+                    <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-modern action-btn">
+                        <i class="fas fa-save mr-1"></i>Save
                     </button>
                 </div>
 
@@ -183,14 +192,17 @@
                         <div id="detailContainer">
                         </div>
 
-                        <button type="button" class="btn btn-success btn-sm mt-2" onclick="addDetail()">
+                        <button type="button" class="btn btn-success btn-sm mt-2 detail-btn" onclick="addDetail()">
                             <i class="fas fa-plus mr-1"></i> Add Role
                         </button>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i>Update Roles
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
                         </button>
                     </div>
                 </form>

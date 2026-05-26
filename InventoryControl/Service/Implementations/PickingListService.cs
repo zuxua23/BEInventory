@@ -29,7 +29,10 @@ public class PickingListService : IPickingListService
             var result = await _db.DOs
                 .Where(x => !x.IsDelete)
                 .Include(x => x.Details)
-                .ThenInclude(d => d.Item)
+                    .ThenInclude(d => d.Item)
+                .Include(x => x.Details)
+                    .ThenInclude(d => d.DODetailTags)
+                        .ThenInclude(dt => dt.Tag)
                 .IgnoreQueryFilters()
                 .Select(x => new DOResponseDto
                 {
@@ -44,7 +47,12 @@ public class PickingListService : IPickingListService
                             DoDetailId = d.DoDetailId,
                             ItemId = d.ItemId,
                             ItemName = d.Item.Name,
-                            QtyRequired = d.QtyRequired
+                            QtyRequired = d.QtyRequired,
+                            Tags = d.DODetailTags.Select(x => new DOTagResponseDto
+                            {
+                                TagId = x.Tag.TagId,
+                                EpcTag = x.Tag.EpcTag
+                            }).ToList()
                         })
                         .ToList()
                 })
@@ -77,6 +85,12 @@ public class PickingListService : IPickingListService
 
             var result = await _db.DOs
                 .Include(x => x.Details)
+                    .ThenInclude(d => d.Item)
+
+                .Include(x => x.Details)
+                    .ThenInclude(d => d.DODetailTags)
+                        .ThenInclude(dt => dt.Tag)
+
                 .FirstOrDefaultAsync(x =>
                     x.DoId == id &&
                     !x.IsDelete
@@ -108,11 +122,10 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task CreateAsync(
-        PickingListDTO request,
-        string createdBy
-    )
+    public async Task CreateAsync( PickingListDTO request, string createdBy )
     {
+        using var transaction = await _db.Database.BeginTransactionAsync();
+
         try
         {
             DailyFileLogger.Info(
@@ -147,52 +160,77 @@ public class PickingListService : IPickingListService
                 CreatedAt = DateTime.UtcNow,
                 IsDelete = false
             };
+            var doDetails = new List<DODetail>();
 
-            var groupedDetails = request.Details
-                .GroupBy(x => x.ItemId)
-                .Select(g => new
-                {
-                    ItemId = g.Key,
-                    Qty = g.Sum(x => x.QtyRequired)
-                })
-                .ToList();
+            var doDetailTags = new List<DODetailTag>();
 
-            foreach (var detail in groupedDetails)
+            foreach (var requestDetail in request.Details)
             {
-                var availableStock = await _db.Tags
-                    .CountAsync(x =>
-                        x.ItemId == detail.ItemId &&
-                        x.Status == TagStatus.IN_STOCK
-                    );
+                var qtyRequired = requestDetail.QtyRequired ?? 0;
 
-                if (detail.Qty > availableStock)
+                if (qtyRequired <= 0)
+                {
+                    throw new Exception(
+                        "Qty required must be greater than 0."
+                    );
+                }
+
+                var availableTags = await _db.Tags
+                    .Where(x =>
+                        x.ItemId == requestDetail.ItemId &&
+                        x.Status == TagStatus.IN_STOCK &&
+                        !x.IsDelete
+                    )
+                    .OrderBy(x => x.TagId)
+                    .Take(qtyRequired)
+                    .ToListAsync();
+
+                if (availableTags.Count < qtyRequired)
                 {
                     var itemName = await _db.Items
-                        .Where(x => x.Id == detail.ItemId)
+                        .Where(x => x.Id == requestDetail.ItemId)
                         .Select(x => x.Name)
                         .FirstOrDefaultAsync();
 
                     throw new Exception(
-                        $"Item '{itemName}' only has {availableStock} available stock(s). Requested: {detail.Qty}."
+                        $"Item '{itemName}' only has {availableTags.Count} available tag(s). Requested: {qtyRequired}."
                     );
                 }
-            }
-
-            var details = request.Details
-                .Select(d => new DODetail
+                var doDetail = new DODetail
                 {
                     DoDetailId = Guid.NewGuid().ToString(),
                     DoId = doEntity.DoId,
-                    ItemId = d.ItemId,
-                    QtyRequired = d.QtyRequired
-                })
-                .ToList();
+                    ItemId = requestDetail.ItemId,
+                    QtyRequired = qtyRequired
+                };
+
+                foreach (var tag in availableTags)
+                {
+                    tag.Status = TagStatus.RESERVED;
+                    tag.UpdatedBy = createdBy;
+                    tag.UpdatedAt = DateTime.UtcNow;
+
+                    doDetailTags.Add(new DODetailTag
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        DoDetailId = doDetail.DoDetailId,
+                        TagId = tag.Id,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
+                doDetails.Add(doDetail);
+            }
 
             _db.DOs.Add(doEntity);
 
-            _db.DODetails.AddRange(details);
+            _db.DODetails.AddRange(doDetails);
+
+            _db.DODetailTags.AddRange(doDetailTags);
 
             await _db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
 
             DailyFileLogger.Info(
                 $"Delivery order successfully created with ID '{doEntity.DoId}'.",
@@ -205,11 +243,13 @@ public class PickingListService : IPickingListService
                 entityId: doEntity.DoNumber,
                 performedBy: createdBy,
                 description:
-                    $"Created delivery order with {details.Count} item(s)."
+                    $"Created delivery order with {doDetails.Count} item(s)."
             );
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
+
             DailyFileLogger.Error(
                 "An error occurred while creating delivery order.",
                 ex,
@@ -220,12 +260,10 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task UpdateAsync(
-        string id,
-        PickingListDTO dto,
-        string updatedBy
-    )
+    public async Task UpdateAsync(string id, PickingListDTO dto,string updatedBy)
     {
+        using var transaction = await _db.Database.BeginTransactionAsync();
+
         try
         {
             DailyFileLogger.Info(
@@ -233,11 +271,13 @@ public class PickingListService : IPickingListService
             );
 
             var doEntity = await _db.DOs
-                .Include(x => x.Details)
-                .FirstOrDefaultAsync(x =>
-                    x.DoId == id &&
-                    !x.IsDelete
-                );
+                  .Include(x => x.Details)
+                  .ThenInclude(d => d.DODetailTags)
+                  .FirstOrDefaultAsync(x =>
+                      x.DoId == id &&
+                      !x.IsDelete
+                  );
+
 
             if (doEntity == null)
             {
@@ -260,58 +300,100 @@ public class PickingListService : IPickingListService
                     "Delivery order can only be updated in DRAFT status."
                 );
             }
+            // RELEASE OLD TAGS
+            var oldRelations = await _db.DODetailTags
+                .Include(x => x.Tag)
+                .Include(x => x.DODetail)
+                .Where(x => x.DODetail.DoId == id)
+                .ToListAsync();
 
+            foreach (var relation in oldRelations)
+            {
+                relation.Tag.Status = TagStatus.IN_STOCK;
+                relation.Tag.UpdatedBy = updatedBy;
+                relation.Tag.UpdatedAt = DateTime.UtcNow;
+            }
             var oldDoNumber = doEntity.DoNumber;
 
+            _db.DODetailTags.RemoveRange(oldRelations);
+
+            _db.DODetails.RemoveRange(doEntity.Details);
+            // UPDATE
             doEntity.DoNumber = dto.DoNumber;
             doEntity.UpdatedBy = updatedBy;
             doEntity.UpdatedAt = DateTime.UtcNow;
 
-            _db.DODetails.RemoveRange(
-                doEntity.Details
-            );
+            var newDetails = new List<DODetail>();
 
-            var groupedDetails = dto.Details
-                .GroupBy(x => x.ItemId)
-                .Select(g => new
-                {
-                    ItemId = g.Key,
-                    Qty = g.Sum(x => x.QtyRequired)
-                })
-                .ToList();
-            foreach (var detail in groupedDetails)
+            var newDetailTags = new List<DODetailTag>();
+
+            foreach (var requestDetail in dto.Details)
             {
-                var availableStock = await _db.Tags
-                    .CountAsync(x =>
-                        x.ItemId == detail.ItemId &&
-                        x.Status == TagStatus.IN_STOCK
-                    );
+                var qtyRequired = requestDetail.QtyRequired ?? 0;
 
-                if (detail.Qty > availableStock)
+                if (qtyRequired <= 0)
+                {
+                    throw new Exception(
+                        "Qty required must be greater than 0."
+                    );
+                }
+
+                var availableTags = await _db.Tags
+                    .Where(x =>
+                        x.ItemId == requestDetail.ItemId &&
+                        x.Status == TagStatus.IN_STOCK &&
+                        !x.IsDelete
+                    )
+                    .OrderBy(x => x.TagId)
+                    .Take(qtyRequired)
+                    .ToListAsync();
+
+                if (availableTags.Count < qtyRequired)
                 {
                     var itemName = await _db.Items
-                        .Where(x => x.Id == detail.ItemId)
+                        .Where(x => x.Id == requestDetail.ItemId)
                         .Select(x => x.Name)
                         .FirstOrDefaultAsync();
 
                     throw new Exception(
-                        $"Item '{itemName}' only has {availableStock} available stock(s). Requested: {detail.Qty}."
+                        $"Item '{itemName}' only has {availableTags.Count} available tag(s). Requested: {qtyRequired}."
                     );
                 }
-            }
-            var newDetails = dto.Details
-                .Select(d => new DODetail
+
+
+                var doDetail = new DODetail
                 {
                     DoDetailId = Guid.NewGuid().ToString(),
                     DoId = doEntity.DoId,
-                    ItemId = d.ItemId,
-                    QtyRequired = d.QtyRequired
-                })
-                .ToList();
+                    ItemId = requestDetail.ItemId,
+                    QtyRequired = qtyRequired
+                };
+
+                foreach (var tag in availableTags)
+                {
+                    tag.Status = TagStatus.RESERVED;
+                    tag.UpdatedBy = updatedBy;
+                    tag.UpdatedAt = DateTime.UtcNow;
+
+                    newDetailTags.Add(new DODetailTag
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        DoDetailId = doDetail.DoDetailId,
+                        TagId = tag.Id,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
+                newDetails.Add(doDetail);
+            }
 
             _db.DODetails.AddRange(newDetails);
 
+            _db.DODetailTags.AddRange(newDetailTags);
+
             await _db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
 
             DailyFileLogger.Info(
                 $"Delivery order successfully updated. ID='{id}'."
@@ -323,11 +405,12 @@ public class PickingListService : IPickingListService
                 entityId: doEntity.DoNumber,
                 performedBy: updatedBy,
                 description:
-                    $"Updated delivery order from Number='{oldDoNumber}' to Number='{dto.DoNumber}'."
-            );
+                    $"Updated delivery order from Number='{oldDoNumber}' to '{dto.DoNumber}'.");
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
+
             DailyFileLogger.Error(
                 $"An error occurred while updating delivery order with ID '{id}'.",
                 ex
@@ -337,11 +420,10 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task DeleteAsync(
-        string id,
-        string deletedBy
-    )
+    public async Task DeleteAsync(string id, string deletedBy )
     {
+        using var transaction = await _db.Database.BeginTransactionAsync();
+
         try
         {
             DailyFileLogger.Info(
@@ -367,11 +449,34 @@ public class PickingListService : IPickingListService
                 );
             }
 
+            // RELEASE TAGS
+            var relations = await _db.DODetailTags
+                .Include(x => x.Tag)
+                .Include(x => x.DODetail)
+                .Where(x => x.DODetail.DoId == id)
+                .ToListAsync();
+            var details = await _db.DODetails
+                .Where(x => x.DoId == id)
+                .ToListAsync();
+
+            _db.DODetails.RemoveRange(details);
+
+            foreach (var relation in relations)
+            {
+                relation.Tag.Status = TagStatus.IN_STOCK;
+                relation.Tag.UpdatedBy = deletedBy;
+                relation.Tag.UpdatedAt = DateTime.UtcNow;
+            }
+
+            _db.DODetailTags.RemoveRange(relations);
+
             doData.IsDelete = true;
             doData.UpdatedBy = deletedBy;
             doData.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
+
+            await transaction.CommitAsync();
 
             DailyFileLogger.Info(
                 $"Delivery order successfully soft deleted. ID='{id}'.",
@@ -389,6 +494,8 @@ public class PickingListService : IPickingListService
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
+
             DailyFileLogger.Error(
                 $"An error occurred while deleting delivery order with ID '{id}'.",
                 ex,

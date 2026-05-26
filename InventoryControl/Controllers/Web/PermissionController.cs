@@ -18,10 +18,5 @@ public class PermissionController : Controller
 
         return View();
     }
-    //[HttpGet("/user/detail")]
-    //public IActionResult Detail(string id)
-    //{
-    //    ViewData["id"] = id;
-    //    return View();
-    //}
+
 }

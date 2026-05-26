@@ -21,6 +21,13 @@ public class UserController : Controller
     [HttpGet("/user/detail")]
     public IActionResult Detail(string id)
     {
+        var user = HttpContext.Session.GetString("UserId");
+
+        if (user == null)
+            return Redirect("/");
+
+        ViewData["pages"] = "user";
+        ViewData["parent"] = "master";
         ViewData["id"] = id;
         return View();
     }

@@ -113,62 +113,42 @@
                 <form id="createUserForm">
                     <div class="modal-body">
 
-                        <div class="row">
-
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
-                                    <input type="text" id="userId" name="userId" class="form-control" readonly>
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-id-card mr-2"></i>Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="fullname" class="form-control" required>
-                                </div>
-                            </div>
-
+                        <div class="form-group">
+                            <label><i class="fas fa-id-card mr-2"></i>Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="fullname" class="form-control" required>
                         </div>
 
-                        <div class="row">
-
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-user mr-2"></i>Username <span class="text-danger">*</span></label>
-                                    <input type="text" name="username" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-lock mr-2"></i>Password <span class="text-danger">*</span></label>
-                                    <input type="password" name="password" class="form-control" required>
-                                </div>
-                            </div>
-                                <div class="col-12">
-                                    <div class="form-group">
-                                    <label><i class="fas fa-user-shield mr-2"></i>Role <span class="text-danger">*</span></label>
-                                    <select id="roleSelect" name="roleIds" class="form-control select2" multiple style="width:100%"><option></option></select>
-                                    </div>
-                                </div>
-
+                        <div class="form-group">
+                            <label><i class="fas fa-user mr-2"></i>Username <span class="text-danger">*</span></label>
+                            <input type="text" name="username" class="form-control" required>
                         </div>
 
+                        <div class="form-group">
+                            <label><i class="fas fa-lock mr-2"></i>Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
 
-                            <div class="modal-footer">
-                                <button class="btn btn-primary btn-modern">
-                                    <i class="fas fa-save mr-1"></i>Create
-                                </button>
-                            </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-user-shield mr-2"></i>Role <span class="text-danger">*</span></label>
+                            <select id="roleSelect" name="roleIds" class="form-control select2" multiple style="width:100%"><option></option></select>
+                        </div>
 
                     </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                    </div>
+
                 </form>
-                    </div>
+             </div>
 
-            </div>
-        </div>
-    </div>
+         </div>
+    </div>    
 
     @Html.Partial("_BaseScript")
     <script src="~/helper/api.js"></script>
@@ -218,23 +198,7 @@
             document.querySelector('.select2-container--open .select2-search__field').focus();
         });
 
-        function generateUserId(data) {
-            let max = 0;
 
-            data.forEach(user => {
-                if (!user.userId) return;
-
-                let idString = user.userId.replace(/\D/g, "");
-                let number = parseInt(idString);
-
-                if (!isNaN(number) && number > max) {
-                    max = number;
-                }
-            });
-
-            let formatted = "USR" + String(max + 1).padStart(5, '0');
-            $("#userId").val(formatted);
-        }
 
         async function loadUsers() {
 
@@ -330,8 +294,6 @@
         }
 
         $('#createUser').on('shown.bs.modal', function () {
-            const data = table.rows().data().toArray();
-            generateUserId(data);
             loadRolesDropdown();
         });
 

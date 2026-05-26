@@ -135,8 +135,11 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i>Create
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
                         </button>
                     </div>
                 </form>
@@ -276,7 +279,7 @@
 
         async function deleteReader(id) {
 
-            const confirm = await Alert.deleteConfirm("Reader", "This Reader will be permanently deleted!");
+            const confirm = await Alert.deleteConfirm("Reader", "This Reader will be deleted!");
             if (!confirm.isConfirmed) return;
 
             const res = await Api.delete(`/api/reader/${id}`);

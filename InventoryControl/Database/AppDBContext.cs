@@ -21,6 +21,7 @@ public class AppDBContext : DbContext
     public DbSet<Reader> Readers { get; set; }
     public DbSet<DO> DOs { get; set; }
     public DbSet<DODetail> DODetails { get; set; }
+    public DbSet<DODetailTag> DODetailTags { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Transaction_Detail> TransactionDetails { get; set; }
     public DbSet<StockTaking> StockTakings { get; set; }
@@ -70,6 +71,10 @@ public class AppDBContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.UserId)
+            .IsUnique();
+
+        modelBuilder.Entity<DODetailTag>()
+            .HasIndex(u => u.TagId)
             .IsUnique();
 
 
@@ -145,6 +150,18 @@ public class AppDBContext : DbContext
             .WithMany(m => m.Permissions)
             .HasForeignKey(p => p.ModuleId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<DODetailTag>()
+            .HasOne(x => x.DODetail)
+            .WithMany(x => x.DODetailTags)
+            .HasForeignKey(x => x.DoDetailId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DODetailTag>()
+            .HasOne(x => x.Tag)
+            .WithMany(x => x.DODetailTags)
+            .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

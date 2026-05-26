@@ -124,15 +124,18 @@
 
                         <div id="detailContainer"></div>
 
-                        <button type="button" class="btn btn-success btn-sm mt-2" onclick="addDetail()">
+                        <button type="button" class="btn btn-success btn-sm mt-2 detail-btn" onclick="addDetail()">
                             <i class="fas fa-plus mr-1"></i>Item
                         </button>
 
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary btn-modern">
-                            <i class="fas fa-save mr-1"></i>Create
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
                         </button>
                     </div>
                 </form>
@@ -320,7 +323,6 @@
 
             row.find(".stock-info")
                 .html(`
-                    Available Stock:
                     <span class="font-weight-bold text-primary">
                         ${stock}
                     </span>
@@ -431,6 +433,7 @@
 
                 $("#createPickingList").modal("hide");
                 form.reset();
+                $("#detailContainer").html("");
                 loadDO();
             } else if (res && !res.ok) {
                   if (res.errorData?.type === "warning")
