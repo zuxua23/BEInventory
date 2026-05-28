@@ -269,15 +269,20 @@ body {
 
 .password-toggle {
     position: absolute;
+    right: 18px;
     top: 50%;
-    right: 20px;
-    padding: 6px;
-    border-radius: 8px;
-    font-size: 18px;
-    color: #9ca3af;
-    cursor: pointer;
     transform: translateY(-50%);
-    transition: all 0.3s ease;
+    cursor: pointer;
+    z-index: 10;
+    color: #999;
+}
+
+.input-group {
+    position: relative;
+}
+
+.form-control {
+    padding-right: 50px;
 }
 
     .password-toggle:hover {

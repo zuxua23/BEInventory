@@ -19,14 +19,13 @@
                 <p class="form-subtitle">Please sign in to continue</p>
             </div>
 
-            <form asp-route="auth-login" method="post">
+            <form id="loginForm" asp-controller="Auth" asp-action="Login" method="post">
                 <div class="input-group">
                     <input type="text"
                            class="form-control"
                            name="username"
                            id="username"
                            placeholder=" "
-                           required
                            autocomplete="username">
                     <i class="fas fa-user input-icon"></i>
                 </div>
@@ -37,7 +36,6 @@
                            name="password"
                            id="password"
                            placeholder=" "
-                           required
                            autocomplete="current-password">
                     <i class="fas fa-lock input-icon"></i>
                     <i class="fas fa-eye-slash password-toggle" id="togglePassword"></i>
@@ -74,11 +72,21 @@
     <script src="~/helper/api.js"></script>
     <script src="~/helper/alert.js"></script>
 
+    @if (TempData["LoginError"] != null)
+    {
+        <script>
+            $(document).ready(function () {
+                Alert.error("@TempData["LoginError"]");
+            });
+        </script>
+    }
     <script>
 
         $(document).ready(function () {
             initialize();
         });
+
+
 
         function initialize() {
 
@@ -114,6 +122,34 @@
             $(".form-control")
                 .on("focus", handleInputFocus)
                 .on("blur", handleInputBlur);
+
+            $("#loginBtn").on(
+                    "click",
+                    validateLogin
+            );
+        }
+
+        function validateLogin() {
+
+            const username =
+                $("#username").val().trim();
+
+            const password =
+                $("#password").val().trim();
+
+            if (!username) {
+                Alert.warning("Username tidak boleh kosong");
+                $("#username").focus();
+                return;
+            }
+
+            if (!password) {
+                Alert.warning("Password tidak boleh kosong");
+                $("#password").focus();
+                return;
+            }
+
+            $("#loginForm").submit();
         }
 
         function initParticles() {
@@ -175,9 +211,10 @@
 
             if (
                 e.key === "Enter" &&
-                !$("#loginBtn").prop("disabled")
+                !$("#loginBtn").prop("disabled") &&
+                !$(e.target).closest("#configModal").length
             ) {
-                $("#loginForm").submit();
+                validateLogin();
             }
         }
 
@@ -207,19 +244,47 @@
 
         async function saveConnection() {
 
+            const server =
+                $("#server").val().trim();
+
+            const database =
+                $("#database").val().trim();
+
+            const userId =
+                $("#userId").val().trim();
+
+            const password =
+                $("#passwordDb").val().trim();
+
+            if (!server) {
+                Alert.warning("Server tidak boleh kosong");
+                $("#server").focus();
+                return;
+            }
+
+            if (!database) {
+                Alert.warning("Database tidak boleh kosong");
+                $("#database").focus();
+                return;
+            }
+
+            if (!userId) {
+                Alert.warning("User Id tidak boleh kosong");
+                $("#userId").focus();
+                return;
+            }
+
+            if (!password) {
+                Alert.warning("Password database tidak boleh kosong");
+                $("#passwordDb").focus();
+                return;
+            }
+
             const payload = {
-
-                server:
-                    $("#server").val(),
-
-                database:
-                    $("#database").val(),
-
-                userId:
-                    $("#userId").val(),
-
-                password:
-                    $("#passwordDb").val()
+                server: server,
+                database: database,
+                userId: userId,
+                password: password
             };
 
             const res = await Api.post(

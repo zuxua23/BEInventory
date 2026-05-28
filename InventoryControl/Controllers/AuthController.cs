@@ -41,7 +41,7 @@ public class AuthController : Controller
         }
         catch (Exception e)
         {
-            TempData["is_error"] = e.Message;
+            TempData["LoginError"] = "Username atau password salah.";
             return RedirectToAction("Index");
         }
     }
