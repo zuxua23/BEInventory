@@ -108,15 +108,29 @@ public class StockPreparationService : IStockPreparationService
                 );
             }
 
-            if (tag.Status != TagStatus.IN_STOCK)
+            if (tag.Status != TagStatus.ALLOCATED)
             {
                 DailyFileLogger.Warn(
-                    $"Tag '{tag.TagId}' is not in IN_STOCK status. Current status='{tag.Status}'.",
+                    $"Tag '{tag.TagId}' is not in ALLOCATED status. Current status='{tag.Status}'.",
                     user
                 );
 
                 throw new Exception(
-                    $"Tag '{tag.TagId}' is not in IN_STOCK status."
+                    $"Tag '{tag.TagId}' is not in ALLOCATED status."
+                );
+            }
+
+            var isTagInDo = await _db.DODetailTags
+                .Include(x => x.DODetail)
+                .AnyAsync(x =>
+                    x.TagId == tag.Id &&
+                    x.DODetail.DoId == dto.DoId
+                );
+
+            if (!isTagInDo)
+            {
+                throw new Exception(
+                    $"Tag '{tag.TagId}' is not allocated for this delivery order."
                 );
             }
 
@@ -285,14 +299,26 @@ public class StockPreparationService : IStockPreparationService
             var missing = dto.ScannedCodes.Where(c => !foundCodes.Contains(c)).ToList();
             if (missing.Any())
                 throw new Exception($"Tags not found: {string.Join(", ", missing)}");
+
+            var allocatedTagIds = await _db.DODetailTags
+                .Include(x => x.DODetail)
+                .Where(x => x.DODetail.DoId == dto.DoId)
+                .Select(x => x.TagId)
+                .ToListAsync();
+
             foreach (var tag in tags)
             {
-                if (tag.Status != TagStatus.IN_STOCK)
-                    throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be IN_STOCK");
+                if (tag.Status != TagStatus.ALLOCATED)
+                    throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be ALLOCATED");
+
+                if (!allocatedTagIds.Contains(tag.Id))
+                    throw new Exception($"Tag '{tag.TagId}' is not allocated for this delivery order.");
+
                 var detail = doData.Details.FirstOrDefault(d => d.ItemId == tag.ItemId);
                 if (detail == null)
                     throw new Exception($"Item {tag.ItemId} is not in this DO");
             }
+    
 
             var reservedPerItem = await _db.TransactionDetails
                 .Where(td => td.Transaction.TrsType == TransactionType.STOCK_PREPARATION

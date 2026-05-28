@@ -329,6 +329,15 @@ public class StockTakingService : IStockTakingService
                 DailyFileLogger.Warn($"RemoveAsync failed: Tag {dto.TagId} was not found");
                 throw new Exception("Tag was not found");
             }
+            var existsInSystem = await _db.StockTakingDetails
+                .AnyAsync(x =>
+                    x.SttId == dto.SttId &&
+                    x.TagId == tag.Id &&
+                    x.Action == TakingAction.SYSTEM
+                );
+
+            if (!existsInSystem)
+                throw new Exception("Tag is not included in this stock taking snapshot");
 
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
@@ -348,15 +357,48 @@ public class StockTakingService : IStockTakingService
             throw;
         }
     }
-
     public async Task ManualAddAsync(StockTakingManualAddDto dto)
     {
         try
         {
+            var st = await _db.StockTakings
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
+
+            if (st == null)
+                throw new Exception("Stock taking session was not found");
+
+            if (st.Status != TakingStatus.OPEN)
+                throw new Exception("Stock taking session has already been completed");
+
+            var tag = await _db.Tags
+                .FirstOrDefaultAsync(x =>
+                    x.TagId == dto.NewTagId ||
+                    x.EpcTag == dto.NewTagId
+                );
+
+            if (tag == null)
+                throw new Exception("Replacement tag was not found");
+
+            if (tag.Status != TagStatus.STANDBY)
+                throw new Exception("Replacement tag must be in STANDBY status");
+
+            if (tag.ItemId != null && tag.ItemId != dto.ItemId)
+                throw new Exception("Replacement tag item does not match selected item");
+
+            var alreadyUsed = await _db.StockTakingDetails
+                .AnyAsync(x =>
+                    x.SttId == dto.SttId &&
+                    x.TagId == tag.Id
+                );
+
+            if (alreadyUsed)
+                throw new Exception("Replacement tag is already used in this stock taking session");
+
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
                 StdId = Guid.NewGuid().ToString(),
                 SttId = dto.SttId,
+                TagId = tag.Id,
                 ItemId = dto.ItemId,
                 Remark = dto.Remark,
                 Action = TakingAction.ADD_MANUAL
@@ -364,43 +406,111 @@ public class StockTakingService : IStockTakingService
 
             await _db.SaveChangesAsync();
 
-            DailyFileLogger.Info($"StockTaking manual add. SttId={dto.SttId}, Item={dto.ItemId}");
+            DailyFileLogger.Info(
+                $"StockTaking manual replacement recorded. SttId={dto.SttId}, NewTag={tag.TagId}, Item={dto.ItemId}"
+            );
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error("An error occurred in ManualAddAsync StockTaking", ex);
+            DailyFileLogger.Error(
+                "An error occurred in ManualAddAsync StockTaking",
+                ex
+            );
+
             throw;
         }
     }
+
     public async Task<object> GetCompareAsync(string sttId)
     {
         var system = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
-            .GroupBy(x => x.ItemId)
-            .Select(g => new
-            {
-                ItemId = g.Key,
-                QtySystem = g.Count()
-            })
-            .ToListAsync();
+             .Where(x =>
+                 x.SttId == sttId &&
+                 x.Action == TakingAction.SYSTEM)
+             .Join(_db.Tags,
+                 std => std.TagId,
+                 tag => tag.Id,
+                 (std, tag) => new
+                 {
+                     std.ItemId,
+                     tag.LocationId
+                 })
+             .Join(_db.Locations,
+                 x => x.LocationId,
+                 loc => loc.Id,
+                 (x, loc) => new
+                 {
+                     x.ItemId,
+                     Location = loc.Name
+                 })
+             .GroupBy(x => new
+             {
+                 x.ItemId,
+                 x.Location
+             })
+             .Select(g => new
+             {
+                 ItemId = g.Key.ItemId,
+                 Location = g.Key.Location,
+                 QtySystem = g.Count()
+             })
+             .ToListAsync();
 
         var scan = await _db.StockTakingDetails
-            .Where(x => x.SttId == sttId && x.Action == TakingAction.FOUND)
-            .GroupBy(x => x.ItemId)
-            .Select(g => new
-            {
-                ItemId = g.Key,
-                QtyScan = g.Count()
-            })
-            .ToListAsync();
+                .Where(x =>
+                    x.SttId == sttId &&
+                    x.Action == TakingAction.FOUND)
+                .Join(_db.Tags,
+                    std => std.TagId,
+                    tag => tag.Id,
+                    (std, tag) => new
+                    {
+                        std.ItemId,
+                        tag.LocationId
+                    })
+                .Join(_db.Locations,
+                    x => x.LocationId,
+                    loc => loc.Id,
+                    (x, loc) => new
+                    {
+                        x.ItemId,
+                        Location = loc.Name
+                    })
+                .GroupBy(x => new
+                {
+                    x.ItemId,
+                    x.Location
+                })
+                .Select(g => new
+                {
+                    ItemId = g.Key.ItemId,
+                    Location = g.Key.Location,
+                    QtyScan = g.Count()
+                })
+                .ToListAsync();
 
-        return system.Select(s => new
+        return system.Select(s =>
         {
-            s.ItemId,
-            s.QtySystem,
-            QtyScan = scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0,
-            Status = scan.Any(x => x.ItemId == s.ItemId) ? "Scanned" : "Pending",
-            Difference = (scan.FirstOrDefault(x => x.ItemId == s.ItemId)?.QtyScan ?? 0) - s.QtySystem
+            var scanned = scan.FirstOrDefault(x =>
+                x.ItemId == s.ItemId &&
+                x.Location == s.Location
+            );
+
+            var qtyScan = scanned?.QtyScan ?? 0;
+            var difference = qtyScan - s.QtySystem;
+
+            return new
+            {
+                s.ItemId,
+                s.Location,
+                s.QtySystem,
+                QtyScan = qtyScan,
+                Difference = difference,
+                Status =
+                    difference == 0
+                        ? "MATCH"
+                        : "MISSING"
+                            };
         });
     }
     public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
@@ -422,14 +532,7 @@ public class StockTakingService : IStockTakingService
                 .Where(d => d.SttId == dto.SttId)
                 .ToListAsync();
 
-            try
-            {
-                await ApplyAdjustments(details, dto.SttId, user);
-            }
-            catch (Exception ex)
-            {
-                DailyFileLogger.Warn($"Adjustment failed, but finalize will continue. Stock taking session={dto.SttId} | {ex.Message}");
-            }
+            await ApplyAdjustments(details, dto.SttId, user);
 
             st.Status = TakingStatus.COMPLETED;
 
@@ -629,12 +732,13 @@ public class StockTakingService : IStockTakingService
         var ws = workbook.Worksheets.Add("Compare");
 
         ws.Cell(1, 1).Value = "Item";
-        ws.Cell(1, 2).Value = "System Qty";
-        ws.Cell(1, 3).Value = "Scan Qty";
-        ws.Cell(1, 4).Value = "Difference";
-        ws.Cell(1, 5).Value = "Status";
+        ws.Cell(1, 2).Value = "Location";
+        ws.Cell(1, 3).Value = "System Qty";
+        ws.Cell(1, 4).Value = "Scan Qty";
+        ws.Cell(1, 5).Value = "Difference";
+        ws.Cell(1, 6).Value = "Status";
 
-        var header = ws.Range(1, 1, 1, 5);
+        var header = ws.Range(1, 1, 1, 6);
 
         header.Style.Font.Bold = true;
         header.Style.Fill.BackgroundColor =
@@ -645,12 +749,13 @@ public class StockTakingService : IStockTakingService
         foreach (var item in data)
         {
             ws.Cell(row, 1).Value = item.ItemId;
-            ws.Cell(row, 2).Value = item.QtySystem;
-            ws.Cell(row, 3).Value = item.QtyScan;
-            ws.Cell(row, 4).Value = item.Difference;
-            ws.Cell(row, 5).Value = item.Status;
+            ws.Cell(row, 2).Value = item.Location;
+            ws.Cell(row, 3).Value = item.QtySystem;
+            ws.Cell(row, 4).Value = item.QtyScan;
+            ws.Cell(row, 5).Value = item.Difference;
+            ws.Cell(row, 6).Value = item.Status;
 
-            var range = ws.Range(row, 1, row, 5);
+            var range = ws.Range(row, 1, row, 6);
 
             if (item.Status == "MATCH")
             {
@@ -661,11 +766,6 @@ public class StockTakingService : IStockTakingService
             {
                 range.Style.Fill.BackgroundColor =
                     XLColor.LightPink;
-            }
-            else if (item.Status == "OVER")
-            {
-                range.Style.Fill.BackgroundColor =
-                    XLColor.LightYellow;
             }
 
             row++;
@@ -683,65 +783,89 @@ public class StockTakingService : IStockTakingService
     {
         var systemData = await _db.StockTakingDetails
             .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => new
+                {
+                    std.ItemId,
+                    tag.LocationId
+                })
+            .Join(_db.Locations,
+                x => x.LocationId,
+                loc => loc.Id,
+                (x, loc) => new
+                {
+                    x.ItemId,
+                    Location = loc.Name
+                })
             .GroupBy(x => new
             {
-                x.ItemId
+                x.ItemId,
+                x.Location
             })
             .Select(g => new
             {
-                g.Key.ItemId,
+                ItemId = g.Key.ItemId,
+                Location = g.Key.Location,
                 QtySystem = g.Count()
             })
             .ToListAsync();
 
         var scanData = await _db.StockTakingDetails
             .Where(x => x.SttId == sttId && x.Action == TakingAction.FOUND)
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => new
+                {
+                    std.ItemId,
+                    tag.LocationId
+                })
+            .Join(_db.Locations,
+                x => x.LocationId,
+                loc => loc.Id,
+                (x, loc) => new
+                {
+                    x.ItemId,
+                    Location = loc.Name
+                })
             .GroupBy(x => new
             {
-                x.ItemId
+                x.ItemId,
+                x.Location
             })
             .Select(g => new
             {
-                g.Key.ItemId,
+                ItemId =g.Key.ItemId,
+                Location = g.Key.Location,
                 QtyScan = g.Count()
             })
             .ToListAsync();
 
-        var result = systemData
-            .GroupJoin(
-                scanData,
-                s => s.ItemId,
-                f => f.ItemId,
-                (s, f) => new { s, f }
-            )
-            .SelectMany(
-                x => x.f.DefaultIfEmpty(),
-                (x, f) =>
-                {
-                    int qtyScan = f?.QtyScan ?? 0;
+        return systemData.Select(s =>
+        {
+            var scanned = scanData.FirstOrDefault(x =>
+                x.ItemId == s.ItemId &&
+                x.Location == s.Location
+            );
 
-                    int difference =
-                        qtyScan - x.s.QtySystem;
+            var qtyScan = scanned?.QtyScan ?? 0;
+            var difference = qtyScan - s.QtySystem;
 
-                    string status =
-                        difference == 0
-                            ? "MATCH"
-                            : difference < 0
-                                ? "MISSING"
-                                : "OVER";
-
-                    return new StockTakingCompareExportDto
-                    {
-                        ItemId = x.s.ItemId,
-                        QtySystem = x.s.QtySystem,
-                        QtyScan = qtyScan,
-                        Difference = difference,
-                        Status = status
-                    };
-                })
-            .ToList();
-
-        return result;
+            return new StockTakingCompareExportDto
+            {
+                ItemId = s.ItemId,
+                Location = s.Location,
+                QtySystem = s.QtySystem,
+                QtyScan = qtyScan,
+                Difference = difference,
+                Status =
+                    difference == 0
+                        ? "MATCH"
+                        : "MISSING"
+                            };
+        }).ToList();
     }
 
     private string GenerateCompareCsv(
@@ -750,13 +874,14 @@ public class StockTakingService : IStockTakingService
         var sb = new StringBuilder();
 
         sb.AppendLine(
-            "Item,System Qty,Scan Qty,Difference,Status"
+            "Item,Location,System Qty,Scan Qty,Difference,Status"
         );
 
         foreach (var item in data)
         {
             sb.AppendLine(
                 $"{item.ItemId}," +
+                $"{item.Location}," +
                 $"{item.QtySystem}," +
                 $"{item.QtyScan}," +
                 $"{item.Difference}," +
@@ -807,16 +932,28 @@ public class StockTakingService : IStockTakingService
     public async Task<object> GetProgressAsync(string sttId)
     {
         var total = await _db.StockTakingDetails
-            .CountAsync(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM);
+            .CountAsync(x =>
+                x.SttId == sttId &&
+                x.Action == TakingAction.SYSTEM);
 
-        var scanned = await _db.StockTakingDetails
-            .CountAsync(x => x.SttId == sttId && x.Action == TakingAction.FOUND);
+        var processed = await _db.StockTakingDetails
+            .CountAsync(x =>
+                x.SttId == sttId &&
+                (
+                    x.Action == TakingAction.FOUND ||
+                    x.Action == TakingAction.REMOVE ||
+                    x.Action == TakingAction.ADD_MANUAL
+                ));
 
         return new
         {
             Total = total,
-            Scanned = scanned,
-            Progress = total == 0 ? 0 : (scanned * 100 / total)
+            Processed = processed,
+            Remaining = total - processed,
+            Progress =
+                total == 0
+                    ? 0
+                    : (processed * 100 / total)
         };
     }
 

@@ -176,5 +176,11 @@ public class StockTakingController : ControllerBase
             fileName
         );
     }
+    [HttpGet("progress/{sttId}")]
+    public async Task<IActionResult> GetProgress(string sttId)
+    {
+        var data = await _service.GetProgressAsync(sttId);
+        return Ok(data);
+    }
 
 }

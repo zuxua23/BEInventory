@@ -1,12 +1,14 @@
 ﻿namespace InventoryControl.Service.Implementations;
 
-using System.Text;
 using ClosedXML.Excel;
 using InventoryControl.Database;
 using InventoryControl.DTO;
+using InventoryControl.Entity;
+using InventoryControl.Models;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 public class TransactionService : ITransactionService
 {
@@ -43,36 +45,21 @@ public class TransactionService : ITransactionService
             var query =
                 from t in _db.Transactions
 
-                join td in _db.TransactionDetails
-                    on t.TrsId equals td.TrsId
-
-                join tag in _db.Tags
-                    on td.TagId equals tag.Id
-
-                join item in _db.Items
-                    on td.ItemId equals item.Id
-
                 join reader in _db.Readers
                     on t.ReaderId equals reader.Id
                     into readerJoin
-
                 from reader in readerJoin.DefaultIfEmpty()
 
                 join d in _db.DOs
                     on t.ReferenceId equals d.DoId
                     into doJoin
-
                 from d in doJoin.DefaultIfEmpty()
-
-                join loc in _db.Locations
-                    on tag.LocationId equals loc.Id
-                    into locJoin
-
-                from loc in locJoin.DefaultIfEmpty()
 
                 select new TransactionHistoryDto
                 {
+                    Id = t.TrsId,
                     TxDate = t.CreatedAt,
+                    TrsType = t.TrsType,
                     TxType = t.TrsType.ToString(),
 
                     DoNumber =
@@ -85,13 +72,8 @@ public class TransactionService : ITransactionService
                             ? reader.Name
                             : "-",
 
-                    TagId = tag.TagId,
-                    ItemName = item.Name,
-
-                    LocationName =
-                        loc != null
-                            ? loc.Name
-                            : "-"
+                    TotalTag = _db.TransactionDetails
+                        .Count(td => td.TrsId == t.TrsId)
                 };
 
             if (fromDate.HasValue)
@@ -110,29 +92,30 @@ public class TransactionService : ITransactionService
 
             if (!string.IsNullOrEmpty(txType))
             {
-                query = query.Where(x =>
-                    x.TxType == txType
-                );
+                if (Enum.TryParse<TransactionType>(
+                    txType,
+                    out var parsedType
+                ))
+                {
+                    query = query.Where(x =>
+                        x.TrsType == parsedType
+                    );
+                }
             }
+
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.ToLower();
 
                 query = query.Where(x =>
-                    (x.ItemName != null &&
-                     x.ItemName.ToLower().Contains(keyword))
-
-                    || (x.TagId != null &&
-                        x.TagId.ToLower().Contains(keyword))
-
-                    || (x.DoNumber != null &&
-                        x.DoNumber.ToLower().Contains(keyword))
-
-                    || (x.LocationName != null &&
-                        x.LocationName.ToLower().Contains(keyword))
+                    (x.DoNumber != null &&
+                     x.DoNumber.ToLower().Contains(keyword))
 
                     || (x.ReaderName != null &&
                         x.ReaderName.ToLower().Contains(keyword))
+
+                    || (x.TxType != null &&
+                        x.TxType.ToLower().Contains(keyword))
                 );
             }
 
@@ -157,17 +140,122 @@ public class TransactionService : ITransactionService
         }
     }
 
+    public async Task<TransactionHistoryDetailResponseDto?> GetDetail(string id)
+    {
+        try
+        {
+            DailyFileLogger.Info(
+                $"Retrieving transaction detail with ID '{id}'."
+            );
+
+            var header =
+                await (
+                    from t in _db.Transactions
+
+                    join reader in _db.Readers
+                        on t.ReaderId equals reader.Id
+                        into readerJoin
+                    from reader in readerJoin.DefaultIfEmpty()
+
+                    join d in _db.DOs
+                        on t.ReferenceId equals d.DoId
+                        into doJoin
+                    from d in doJoin.DefaultIfEmpty()
+
+                    where t.TrsId == id
+
+                    select new TransactionHistoryDetailResponseDto
+                    {
+                        Id = t.TrsId,
+                        TxDate = t.CreatedAt,
+                        TxType = t.TrsType.ToString(),
+
+                        DoNumber =
+                            d != null
+                                ? d.DoNumber
+                                : "-",
+
+                        ReaderName =
+                            reader != null
+                                ? reader.Name
+                                : "-"
+                    }
+                )
+                .FirstOrDefaultAsync();
+
+            if (header == null)
+                return null;
+
+            header.Details =
+                await (
+                    from td in _db.TransactionDetails
+
+                    join tag in _db.Tags
+                        on td.TagId equals tag.Id
+
+                    join item in _db.Items
+                        on td.ItemId equals item.Id
+
+                    join loc in _db.Locations
+                        on tag.LocationId equals loc.Id
+                        into locJoin
+                    from loc in locJoin.DefaultIfEmpty()
+
+                    where td.TrsId == id
+
+                    select new TransactionHistoryDetailDto
+                    {
+                        TagId = tag.TagId,
+                        ItemName = item.Name,
+
+                        LocationName =
+                            loc != null
+                                ? loc.Name
+                                : "-"
+                    }
+                )
+                .ToListAsync();
+
+            header.TotalTag = header.Details.Count;
+
+            if (header == null)
+            {
+                DailyFileLogger.Warn(
+                    $"Transaction with ID '{id}' was not found."
+                );
+
+                return null;
+            }
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved transaction detail with ID '{id}'."
+            );
+
+            return header;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                $"An error occurred while retrieving transaction detail with ID '{id}'.",
+                ex
+            );
+
+            throw;
+        }
+    }
+
     public async Task<byte[]> ExportExcel(
         DateTime? fromDate,
         DateTime? toDate,
         string? txType,
-        string? keyword
+        string? keyword,
+        string exportBy
     )
     {
         try
         {
             DailyFileLogger.Info(
-                "Starting transaction history Excel export."
+                $"Starting transaction history Excel export. ExportBy='{exportBy}'."
             );
 
             var data = await GetHistory(
@@ -189,9 +277,7 @@ public class TransactionService : ITransactionService
                 "Type",
                 "DO Number",
                 "Reader",
-                "Tag ID",
-                "Item",
-                "Location"
+                "Total Tag"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -238,13 +324,8 @@ public class TransactionService : ITransactionService
                     d.ReaderName;
 
                 ws.Cell(row, 5).Value =
-                    d.TagId;
+                    d.TotalTag;
 
-                ws.Cell(row, 6).Value =
-                    d.ItemName;
-
-                ws.Cell(row, 7).Value =
-                    d.LocationName;
 
                 row++;
             }
@@ -292,7 +373,7 @@ public class TransactionService : ITransactionService
                 action: "EXPORT_EXCEL",
                 entity: "TRANSACTION_HISTORY",
                 entityId: "TRANSACTION_EXPORT",
-                performedBy: "SYSTEM",
+                performedBy: exportBy,
                 description:
                     $"Exported {data.Count} transaction history record(s) to Excel."
             );
@@ -303,7 +384,8 @@ public class TransactionService : ITransactionService
         {
             DailyFileLogger.Error(
                 "An error occurred during Excel export.",
-                ex
+                ex,
+                exportBy
             );
 
             throw;
@@ -314,13 +396,14 @@ public class TransactionService : ITransactionService
         DateTime? fromDate,
         DateTime? toDate,
         string? txType,
-        string? keyword
+        string? keyword,
+        string exportBy
     )
     {
         try
         {
             DailyFileLogger.Info(
-                "Starting transaction history CSV export."
+                $"Starting transaction history CSV export. ExportBy='{exportBy}'."
             );
 
             var data = await GetHistory(
@@ -333,11 +416,11 @@ public class TransactionService : ITransactionService
             var sb = new StringBuilder();
 
             sb.AppendLine(
-                "Date,Type,DO Number,Reader,Tag ID,Item,Location"
+                "Date,Type,DO Number,Reader,Total Tag"
             );
 
-            string Escape(string val) =>
-                $"\"{val?.Replace("\"", "\"\"")}\"";
+            string Escape(string? val) =>
+                $"\"{val?.Replace("\"", "\"\"") ?? "-"}\"";
 
             foreach (var d in data)
             {
@@ -346,9 +429,7 @@ public class TransactionService : ITransactionService
                     $"{Escape(d.TxType)}," +
                     $"{Escape(d.DoNumber)}," +
                     $"{Escape(d.ReaderName)}," +
-                    $"{Escape(d.TagId)}," +
-                    $"{Escape(d.ItemName)}," +
-                    $"{Escape(d.LocationName)}"
+                    $"{d.TotalTag}"
                 );
             }
 
@@ -360,7 +441,7 @@ public class TransactionService : ITransactionService
                 action: "EXPORT_CSV",
                 entity: "TRANSACTION_HISTORY",
                 entityId: "TRANSACTION_EXPORT",
-                performedBy: "SYSTEM",
+                performedBy: exportBy,
                 description:
                     $"Exported {data.Count} transaction history record(s) to CSV."
             );
@@ -373,7 +454,8 @@ public class TransactionService : ITransactionService
         {
             DailyFileLogger.Error(
                 "An error occurred during CSV export.",
-                ex
+                ex,
+                exportBy
             );
 
             throw;

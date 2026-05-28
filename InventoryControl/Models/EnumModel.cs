@@ -4,6 +4,7 @@ public enum TagStatus
 {
     PRINTED,
     STANDBY,
+    ALLOCATED,
     RESERVED,
     OUT,
     IN_STOCK

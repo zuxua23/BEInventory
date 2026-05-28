@@ -368,6 +368,8 @@
             startAutoRefresh();
         });
 
+
+
         async function loadSystemData() {
 
             if (!currentSttId) return;
@@ -396,6 +398,19 @@
 
             $("#totalItems").text(totalItems);
             $("#totalStock").text(totalStock);
+        }
+
+        async function loadProgress() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/progress/${currentSttId}`);
+
+            if (!data) return;
+
+            $("#scannedCount").text(data.processed);
+            $("#totalData").text(data.total);
+            $("#progressPercent").text(data.progress + "%");
         }
 
         async function loadScanData() {
@@ -433,8 +448,8 @@
                     x.status
                 ]).node();
 
-                if (x.selisih < 0) $(row).addClass("table-danger");
-                else if (x.selisih > 0) $(row).addClass("table-success");
+                if (x.difference  < 0) $(row).addClass("table-danger");
+                else if (x.difference  > 0) $(row).addClass("table-success");
             });
 
             tableCollect.draw();
@@ -453,6 +468,7 @@
 
             refreshInterval = setInterval(() => {
                 loadScanData();
+                loadProgress();
             }, 3000);
         }
 
@@ -506,8 +522,15 @@
         }
 
         function updateButtonState() {
+
             $("#startBtn").prop("disabled", isSessionActive);
             $("#endBtn").prop("disabled", !isSessionActive);
+
+            $("#remarkInput").prop("readonly", isSessionActive);
+
+            $("#locIdSelect")
+                .prop("disabled", isSessionActive)
+                .trigger("change.select2");
         }
 
     </script>

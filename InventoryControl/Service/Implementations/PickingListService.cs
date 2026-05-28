@@ -206,7 +206,7 @@ public class PickingListService : IPickingListService
 
                 foreach (var tag in availableTags)
                 {
-                    tag.Status = TagStatus.RESERVED;
+                    tag.Status = TagStatus.ALLOCATED;
                     tag.UpdatedBy = createdBy;
                     tag.UpdatedAt = DateTime.UtcNow;
 
@@ -371,7 +371,7 @@ public class PickingListService : IPickingListService
 
                 foreach (var tag in availableTags)
                 {
-                    tag.Status = TagStatus.RESERVED;
+                    tag.Status = TagStatus.ALLOCATED;
                     tag.UpdatedBy = updatedBy;
                     tag.UpdatedAt = DateTime.UtcNow;
 

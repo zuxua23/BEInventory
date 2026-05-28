@@ -20,7 +20,8 @@ public class StockTakingManualAddDto
 {
     public string SttId { get; set; }
     public string ItemId { get; set; }
-    public string Remark { get; set; }
+    public string NewTagId { get; set; }
+    public string? Remark { get; set; }
 }
 public class StockTakingFinalizeDto
 {

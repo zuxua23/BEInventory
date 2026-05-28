@@ -26,13 +26,26 @@ public class TransactionController : ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetDetail(string id)
+    {
+        var result = await _service.GetDetail(id);
+
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
     [HttpGet("export/excel")]
     public async Task<IActionResult> ExportExcel(
     DateTime? fromDate,
     DateTime? toDate,
     string? txType, string? keyword)
     {
-        var file = await _service.ExportExcel(fromDate, toDate, txType, keyword );
+        var exportBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        var file = await _service.ExportExcel(fromDate, toDate, txType, keyword,exportBy );
         var datePart = "";
 
         if (fromDate.HasValue && toDate.HasValue)
@@ -48,7 +61,9 @@ public class TransactionController : ControllerBase
     [HttpGet("export/csv")]
     public async Task<IActionResult> ExportCsv(DateTime? fromDate, DateTime? toDate, string? txType, string? keyword)
     {
-        var file = await _service.ExportCsv(fromDate, toDate, txType, keyword);
+        var exportBy = HttpContext.Session.GetString("UserId") ?? "system";
+
+        var file = await _service.ExportCsv(fromDate, toDate, txType, keyword, exportBy);
 
         var datePart = "";
 
