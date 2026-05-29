@@ -19,6 +19,26 @@ public class StockOutService : IStockOutService
         _db = db;
     }
 
+
+    private static readonly ConcurrentDictionary<string, DateTime> _logThrottleCache = new();
+    private const int LOG_THROTTLE_SECONDS = 10;
+
+    private static bool ShouldWriteLog(string key)
+    {
+        var now = DateTime.UtcNow;
+
+        if (
+            _logThrottleCache.TryGetValue(key, out var lastTime) &&
+            (now - lastTime).TotalSeconds < LOG_THROTTLE_SECONDS
+        )
+        {
+            return false;
+        }
+
+        _logThrottleCache[key] = now;
+        return true;
+    }
+
     public async Task StockOutAsync(
         StockOutDto dto,
         string user
@@ -197,10 +217,6 @@ public class StockOutService : IStockOutService
     {
         try
         {
-            DailyFileLogger.Info(
-                $"RFID scan received. EPC='{dto.Epc}', DO='{dto.DoId}'.",
-                user
-            );
 
             var normalizedEpc =
                 dto.Epc.Replace(" ", "");
@@ -214,10 +230,13 @@ public class StockOutService : IStockOutService
 
             if (tag == null)
             {
-                DailyFileLogger.Warn(
-                    $"Tag not found for EPC '{dto.Epc}'.",
-                    user
-                );
+                if (ShouldWriteLog($"NOT_FOUND:{dto.DoId}:{normalizedEpc}"))
+                {
+                    DailyFileLogger.Warn(
+                        $"Tag not found for EPC '{dto.Epc}'.",
+                        user
+                    );
+                }
 
                 return;
             }
@@ -249,12 +268,15 @@ public class StockOutService : IStockOutService
 
             if (!isValid)
             {
-                DailyFileLogger.Warn(
-                    $"Tag '{tag.TagId}' is not reserved for DO '{dto.DoId}'.",
-                    user
-                );
+                if (ShouldWriteLog($"INVALID:{dto.DoId}:{tag.TagId}"))
+                {
+                    DailyFileLogger.Warn(
+                        $"Tag '{tag.TagId}' is not reserved for DO '{dto.DoId}'.",
+                        user
+                    );
 
-                LastInvalidTag = tag.TagId;
+                    LastInvalidTag = tag.TagId;
+                }
 
                 return;
             }
@@ -295,10 +317,13 @@ public class StockOutService : IStockOutService
 
             if (exists)
             {
-                DailyFileLogger.Warn(
-                    $"Duplicate scan detected for TagId '{tag.TagId}'.",
-                    user
-                );
+                if (ShouldWriteLog($"DUPLICATE:{dto.DoId}:{tag.TagId}"))
+                {
+                    DailyFileLogger.Warn(
+                        $"Duplicate scan detected for TagId '{tag.TagId}'.",
+                        user
+                    );
+                }
 
                 return;
             }

@@ -52,7 +52,7 @@ public class StockOutController : ControllerBase
     public async Task<IActionResult> StartAsync(StartScanDto dto)
     {
         RfidSession.Set(dto.ReaderId, dto.DoId);
-        Console.WriteLine("IP" + dto.IpAddress);
+        Console.WriteLine($"[RFID START] ReaderId={dto.ReaderId}, DO={dto.DoId}, IP={dto.IpAddress}");
 
         await _readerService.StartReader(dto.ReaderId, dto.IpAddress);
 
@@ -72,7 +72,6 @@ public class StockOutController : ControllerBase
     [AuthorizePermissionHybrid("ITEM_GET")]
     public async Task<IActionResult> GetItems(string doId)
     {
-        Console.WriteLine("=============================="+doId);
 
         var data = await _service.GetItemsAsync(doId);
         return Ok(data);

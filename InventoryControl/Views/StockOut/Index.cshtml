@@ -221,7 +221,13 @@
 
         let pollingInterval = null;
         let currentDo = null;
+        let isScanning = false;
+        let renderedTags = new Set();
 
+        let lastInvalidTag = null;
+        let lastInvalidTime = null;
+        const INVALID_ALERT_COOLDOWN = 10000;
+        let isCompletedShown = false;
         const invalidSound = new Audio('/sound/out.mp3');
 
 
@@ -277,112 +283,137 @@
         });
 
         async function startScanning() {
-
+            if (isScanning) return;
             const doId = $("#doIdSelect").val();
             const readerSelect = document.getElementById("rdrIdSelect");
 
             const readerId = readerSelect.value;
             const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
 
-            if (!ip) return Alert.error("Reader IP not found");
             if (!doId || !readerId) return Alert.error("Select DO & Reader first");
+            if (!ip) return Alert.error("Reader IP not found");
 
             currentDo = doId;
 
-        const res = await Api.post("/stockout/start", {
-            doId,
-            readerId,
-            ipAddress: ip
-        });
+            const res = await Api.post("/stockout/start", {
+                doId,
+                readerId,
+                ipAddress: ip
+            });
 
-        if (res && res.ok) {
+            if (!res || !res.ok) {
+                if (res?.errorData?.type === "warning") return;
+                return Alert.error("Failed to start stock out scanning");
+            }
 
-            await Alert.success("Stock out scanning started successfully");
+            isScanning = true;
+            isCompletedShown = false;
+            renderedTags.clear();
+            lastInvalidTag = null;
+            lastInvalidTime = null;
 
-        } else if (res && !res.ok) {
-
-            if (res.errorData?.type === "warning")
-                return;
-
-            Alert.error("Failed to start stock out scanning");
-            return;
-        }
+            $("#startScanBtn").prop("disabled", true);
+            $("#doIdSelect").prop("disabled", true).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", true).trigger("change.select2");
 
             $("#processStatus")
                 .text("Scanning...")
                 .removeClass()
-                .addClass("badge badge-warning");
+                .addClass("badge badge-warning p-2 mb-3");
 
-            loadItems(doId);
+            await Alert.success("Stock out scanning started successfully");
+
+            await loadItems(doId);
+            await loadTags();
 
             startPolling(doId);
         }
 
-        async function stopScan() {
-
+        async function stopScan(showAlert = true) {
             const readerId = $("#rdrIdSelect").val();
+
+            if (!readerId) return;
 
             const res = await Api.post(`/stockout/stop?readerId=${readerId}`);
 
             if (res && res.ok) {
-
-                await Alert.success("Stock out scanning stopped");
-
+                if (showAlert) {
+                    await Alert.success("Stock out scanning stopped");
+                }
             } else if (res && !res.ok) {
-
-                if (res.errorData?.type === "warning")
-                    return;
-
-                Alert.error("Failed to stop stock out scanning");
-                return;
+                if (res.errorData?.type === "warning") return;
+                return Alert.error("Failed to stop stock out scanning");
             }
+
             clearInterval(pollingInterval);
+            pollingInterval = null;
+            isScanning = false;
 
-            $("#scanProgress").css("width", "0%");
-            $("#progressText").text("0 / 0 scanned");
+            $("#startScanBtn").prop("disabled", false);
+            $("#doIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", false).trigger("change.select2");
 
-            $("#processStatus")
-                .text("Ready")
-                .removeClass()
-                .addClass("badge badge-secondary");
+            lastInvalidTag = null;
+            lastInvalidTime = null;
+
+             if (showAlert) {
+                $("#scanProgress").css("width", "0%");
+                $("#progressText").text("0 / 0 scanned");
+
+                $("#processStatus")
+                    .text("Ready")
+                    .removeClass()
+                    .addClass("badge badge-secondary p-2 mb-3");
+            }
         }
 
-    function startPolling(doId) {
+        function startPolling(doId) {
 
-    if (pollingInterval) clearInterval(pollingInterval);
+            if (pollingInterval) clearInterval(pollingInterval);
 
-    pollingInterval = setInterval(async () => {
+            pollingInterval = setInterval(async () => {
 
-        try {
+            try {
 
-            const invalid = await Api.get('/stockout/invalid-scan');
+                const invalid = await Api.get('/stockout/invalid-scan');
 
-            if (invalid?.tagId) {
+                if (invalid?.tagId) {
+                    const now = Date.now();
 
-                invalidSound.pause();
-                invalidSound.currentTime = 0;
+                    const isSameInvalid =
+                        lastInvalidTag === invalid.tagId &&
+                        lastInvalidTime &&
+                        now - lastInvalidTime < INVALID_ALERT_COOLDOWN;
 
-                await invalidSound.play();
+                    if (!isSameInvalid) {
+                        lastInvalidTag = invalid.tagId;
+                        lastInvalidTime = now;
 
-                Alert.error(`Invalid Tag : ${invalid.tagId}`);
+                        invalidSound.pause();
+                        invalidSound.currentTime = 0;
+
+                        await invalidSound.play();
+
+                        Alert.error(`Invalid Tag : ${invalid.tagId}`);
+                    }
+                }
+
+                const items = await Api.get(`/stockout/items?doId=${doId}`);
+
+                if (!items) return;
+
+                updateItemProgress(items);
+                await updateGlobalProgress(items);
+
+                await loadTags();
+
+            } catch (err) {
+
+                console.error(err);
             }
 
-            const items = await Api.get(`/stockout/items?doId=${doId}`);
-
-            if (!items) return;
-
-            updateItemProgress(items);
-            updateGlobalProgress(items);
-
-            await loadTags();
-
-        } catch (err) {
-
-            console.error(err);
-        }
-
-    }, 1000);
-}
+        }, 1000);
+    }
 
         function updateItemProgress(items) {
 
@@ -408,7 +439,7 @@
             });
         }
 
-        function updateGlobalProgress(items) {
+        async function updateGlobalProgress(items) {
 
             const totalRequired = items.reduce((s, i) => s + i.required, 0);
             const totalScanned = items.reduce((s, i) => s + i.scanned, 0);
@@ -420,30 +451,64 @@
             $("#scanProgress").css("width", percent + "%");
             $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
 
-            if (totalScanned === totalRequired && totalRequired > 0) {
+            if (totalScanned === totalRequired && totalRequired > 0 && !isCompletedShown) {
+                isCompletedShown = true;
+
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                isScanning = false;
+
+                $("#scanProgress").css("width", "100%");
+                $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
+
                 $("#processStatus")
                     .text("Completed")
                     .removeClass()
-                    .addClass("badge badge-success");
+                    .addClass("badge badge-success p-2 mb-3");
+
+                await stopScan(false);
+
+                Alert.success("Stock out completed. All required tags have been scanned.");
             }
         }
 
         async function loadTags() {
+            if (!currentDo) return;
 
             const tags = await Api.get(`/stockout/tags?doId=${currentDo}`);
             if (!tags) return;
 
             const tagList = $("#tagList");
-            tagList.html("");
+
+            if (tags.length === 0) {
+                tagList.html(`
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-qrcode fa-3x mb-3 opacity-50"></i>
+                        <p>Start scanning to see tags</p>
+                    </div>
+                `);
+                return;
+            }
+
+            if (renderedTags.size === 0) {
+                tagList.html("");
+            }
 
             tags.forEach(tag => {
+                const key = tag.tagId;
 
-                tagList.append(`
-                    <div class="tag-item scanned">
-                        <div class="tag-icon tag-scanned">✓</div>
-                        <div>
-                            <div class="font-weight-bold small">${tag.tagId}</div>
-                            <div class="text-muted small">${tag.itemId}</div>
+                if (renderedTags.has(key)) return;
+
+                renderedTags.add(key);
+
+                tagList.prepend(`
+                    <div class="tag-item scanned mb-2 p-2 border rounded">
+                        <div class="d-flex align-items-center">
+                            <div class="tag-icon tag-scanned mr-2">✓</div>
+                            <div>
+                                <div class="font-weight-bold small">${tag.tagId}</div>
+                                <div class="text-muted small">${tag.itemId}</div>
+                            </div>
                         </div>
                     </div>
                 `);
@@ -499,11 +564,14 @@
         }
 
         $("#doIdSelect").on("change", function () {
+            if (isScanning) return;
 
             const doId = $(this).val();
             if (!doId) return;
 
             currentDo = doId;
+            renderedTags.clear();
+
             loadItems(doId);
         });
 

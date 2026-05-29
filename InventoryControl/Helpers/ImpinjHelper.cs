@@ -16,7 +16,7 @@ public class ImpinjReaderService
     private readonly ConcurrentDictionary<string, DateTime>
         _tagCache = new();
 
-    private const double RSSI_THRESHOLD = -60;
+    private const double RSSI_THRESHOLD = -90;
 
     private const int CACHE_TTL_SECONDS = 10;
 
@@ -90,6 +90,9 @@ public class ImpinjReaderService
             var settings =
                 reader.QueryDefaultSettings();
 
+            settings.Antennas.GetAntenna(1).IsEnabled = true;
+            settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
+
             settings.Report.Mode =
                 ReportMode.Individual;
 
@@ -100,9 +103,6 @@ public class ImpinjReaderService
             settings.Report
                 .IncludeFirstSeenTime =
                     true;
-
-            settings.ReaderMode =
-                ReaderMode.AutoSetDenseReader;
 
             reader.ApplySettings(settings);
 
@@ -213,10 +213,6 @@ public class ImpinjReaderService
                 return;
             }
 
-            SystemLogger.Info(
-                $"RFID tag batch received. ReaderId='{readerId}', TotalTags='{report.Tags.Count}'."
-            );
-
             await HandleTags(
                 readerId,
                 report
@@ -250,10 +246,6 @@ public class ImpinjReaderService
                 return;
             }
 
-            SystemLogger.Info(
-                $"RFID processing session found. ReaderId='{readerId}', DO='{doId}'."
-            );
-
             using var scope =
                 _scopeFactory.CreateScope();
 
@@ -274,31 +266,22 @@ public class ImpinjReaderService
                     .Trim()
                     .ToUpper();
 
-                if (
-                    tag.PeakRssiInDbm <
-                    RSSI_THRESHOLD
-                )
+                if (tag.PeakRssiInDbm < RSSI_THRESHOLD)
                 {
                     skippedCount++;
-
                     continue;
                 }
 
                 if (
                     _tagCache.ContainsKey(epc) &&
-                    (
-                        DateTime.UtcNow -
-                        _tagCache[epc]
-                    ).TotalSeconds < 2
+                    (DateTime.UtcNow - _tagCache[epc]).TotalSeconds < 2
                 )
                 {
                     skippedCount++;
-
                     continue;
                 }
 
-                _tagCache[epc] =
-                    DateTime.UtcNow;
+                _tagCache[epc] = DateTime.UtcNow;
 
                 processedCount++;
 
@@ -311,11 +294,9 @@ public class ImpinjReaderService
                     },
                     "RFID_SYSTEM"
                 );
+            
             }
 
-            SystemLogger.Info(
-                $"RFID tag processing completed. ReaderId='{readerId}', Processed='{processedCount}', Skipped='{skippedCount}'."
-            );
         }
         catch (Exception ex)
         {
