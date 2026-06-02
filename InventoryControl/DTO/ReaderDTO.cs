@@ -24,3 +24,20 @@ public class ReaderScanDto
     public string ReaderId { get; set; }
     public string Epc { get; set; }
 }
+
+
+public class ReaderSettingDto
+{
+    public string ReaderId { get; set; }
+    public List<ReaderSettingItemDto> Antennas { get; set; } = new();
+}
+
+public class ReaderSettingItemDto
+{
+    public int AntennaNo { get; set; }
+    public bool IsEnabled { get; set; }
+    public double TxPower { get; set; }
+    public double Sensitivity { get; set; }
+    public string SearchMode { get; set; }
+    public string Session { get; set; }
+}

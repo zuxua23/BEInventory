@@ -19,6 +19,7 @@ public class AppDBContext : DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Location> Locations { get; set; }
     public DbSet<Reader> Readers { get; set; }
+    public DbSet<ReaderSettings> ReaderSettings { get; set; }
     public DbSet<DO> DOs { get; set; }
     public DbSet<DODetail> DODetails { get; set; }
     public DbSet<DODetailTag> DODetailTags { get; set; }
@@ -161,6 +162,12 @@ public class AppDBContext : DbContext
             .HasOne(x => x.Tag)
             .WithMany(x => x.DODetailTags)
             .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ReaderSettings>()
+            .HasOne(x => x.Reader)
+            .WithMany()
+            .HasForeignKey(x => x.ReaderId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

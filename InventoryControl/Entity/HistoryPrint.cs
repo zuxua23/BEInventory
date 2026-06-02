@@ -27,7 +27,7 @@ public class HistoryPrint
     public HistoryType Type { get; set; }
 
     [Column("ref_no")]
-    [MaxLength(30)]
+    [MaxLength(50)]
     public string Reference { get; set; }
 
     [Column("created_by")]

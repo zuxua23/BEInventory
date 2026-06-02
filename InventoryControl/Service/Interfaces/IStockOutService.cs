@@ -9,4 +9,5 @@ public interface IStockOutService
     Task<List<ItemListDto>> GetItemsAsync(string doId);
     Task<ProgressDto> GetProgressAsync(string doId);
     Task<List<TagDto>> GetTagsAsync(string doId);
+    Task ConfirmStockOutAsync(string doId, string user);
 }

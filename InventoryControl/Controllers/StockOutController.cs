@@ -37,6 +37,37 @@ public class StockOutController : ControllerBase
         return Ok("Stock Out finalized");
     }
 
+    [HttpPost("confirm")]
+    [AuthorizePermissionHybrid("STOCK_OUT")]
+    public async Task<IActionResult> ConfirmSession([FromQuery] string doId)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(doId))
+            {
+                return BadRequest(new
+                {
+                    type = "warning",
+                    message = "DO is required."
+                });
+            }
+
+            var user = HttpContext.Session.GetString("UserId") ?? "system";
+
+            await _service.ConfirmStockOutAsync(doId, user);
+
+            return Ok("Stock Out confirmed");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                type = "error",
+                message = ex.Message
+            });
+        }
+    }
+
     [HttpPost("scan")]
     [AuthorizePermissionHybrid("STOCK_OUT")]
     public async Task<IActionResult> Scan(StockOutResponseDto dto)

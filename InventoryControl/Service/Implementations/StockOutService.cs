@@ -39,193 +39,66 @@ public class StockOutService : IStockOutService
         return true;
     }
 
-    public async Task StockOutAsync(
-        StockOutDto dto,
-        string user
-    )
+    public class StockOutScanTemp
     {
-        using var trx =
-            await _db.Database.BeginTransactionAsync();
-
-        try
-        {
-            DailyFileLogger.Info(
-                $"Starting stock out process. DO='{dto.DoId}', Reader='{dto.ReaderId}'.",
-                user
-            );
-
-            var doData = await _db.DOs
-                .Include(d => d.Details)
-                .FirstOrDefaultAsync(d =>
-                    d.DoId == dto.DoId &&
-                    !d.IsDelete
-                );
-
-            if (doData == null)
-            {
-                DailyFileLogger.Warn(
-                    $"Delivery order '{dto.DoId}' was not found.",
-                    user
-                );
-
-                throw new Exception(
-                    "Delivery order not found."
-                );
-            }
-
-            var reservedDetails = await _db.TransactionDetails
-                .Include(td => td.Tag)
-                .Include(td => td.Transaction)
-                .Where(td =>
-                    td.Transaction.TrsType == TransactionType.STOCK_PREPARATION &&
-                    td.Transaction.ReferenceId == dto.DoId
-                )
-                .ToListAsync();
-
-            if (!reservedDetails.Any())
-            {
-                DailyFileLogger.Warn(
-                    $"No reserved tags found for DO '{dto.DoId}'.",
-                    user
-                );
-
-                throw new Exception(
-                    "No reserved tags found for this delivery order."
-                );
-            }
-
-            foreach (var doDetail in doData.Details)
-            {
-                var reservedCount = reservedDetails
-                    .Count(x =>
-                        x.ItemId == doDetail.ItemId
-                    );
-
-                if (reservedCount != doDetail.QtyRequired)
-                {
-                    DailyFileLogger.Warn(
-                        $"Required quantity for ItemId '{doDetail.ItemId}' is not fulfilled.",
-                        user
-                    );
-
-                    throw new Exception(
-                        $"Required quantity for ItemId '{doDetail.ItemId}' is not fulfilled."
-                    );
-                }
-            }
-
-            var trxHeader = new Transaction
-            {
-                TrsId = Guid.NewGuid().ToString(),
-                TrsType = TransactionType.STOCK_OUT,
-                ReferenceId = dto.DoId,
-                ReaderId = dto.ReaderId,
-                CreatedBy = user,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _db.Transactions.Add(trxHeader);
-
-            foreach (var detail in reservedDetails)
-            {
-                var tag = detail.Tag;
-
-                if (tag.Status != TagStatus.RESERVED)
-                {
-                    DailyFileLogger.Warn(
-                        $"Tag '{tag.TagId}' is not in RESERVED status.",
-                        user
-                    );
-
-                    throw new Exception(
-                        $"Tag '{tag.TagId}' is not in RESERVED status."
-                    );
-                }
-
-                tag.Status = TagStatus.OUT;
-                tag.UpdatedBy = user;
-                tag.UpdatedAt = DateTime.UtcNow;
-
-                _db.TransactionDetails.Add(
-                    new Transaction_Detail
-                    {
-                        TrdId = Guid.NewGuid().ToString(),
-                        TrsId = trxHeader.TrsId,
-                        TagId = detail.TagId,
-                        ItemId = detail.ItemId
-                    }
-                );
-
-                _db.Histories.Add(
-                    new HistoryPrint
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        TagId = detail.TagId,
-                        ItemId = detail.ItemId,
-                        Type = HistoryType.STOCK_OUT,
-                        Reference = dto.DoId,
-                        Action = "OUT",
-                        CreatedBy = user,
-                        CreatedAt = DateTime.UtcNow
-                    }
-                );
-
-                DailyFileLogger.Info(
-                    $"Tag '{tag.TagId}' successfully processed for stock out.",
-                    user
-                );
-            }
-
-            doData.Status = DoStatus.COMPLETED;
-
-            await _db.SaveChangesAsync();
-
-            await trx.CommitAsync();
-
-            DailyFileLogger.Info(
-                $"Stock out completed successfully. DO='{dto.DoId}', TotalTags='{reservedDetails.Count}'.",
-                user
-            );
-
-            DailyFileLogger.Audit(
-                action: "STOCK_OUT",
-                entity: "DELIVERY_ORDER",
-                entityId: dto.DoId,
-                performedBy: user,
-                description:
-                    $"Processed stock out for {reservedDetails.Count} tag(s)."
-            );
-        }
-        catch (Exception ex)
-        {
-            await trx.RollbackAsync();
-
-            DailyFileLogger.Error(
-                "An error occurred during stock out process.",
-                ex,
-                user
-            );
-
-            throw;
-        }
+        public string DoId { get; set; }
+        public string ReaderId { get; set; }
+        public string TagDbId { get; set; }
+        public string TagId { get; set; }
+        public string ItemId { get; set; }
+        public string Epc { get; set; }
+        public DateTime ScannedAt { get; set; }
     }
 
-    public async Task ScanStockOutAsync(
-        StockOutResponseDto dto,
-        string user
-    )
+
+    public static class StockOutScanSession
+    {
+        private static readonly ConcurrentDictionary<string, List<StockOutScanTemp>> _sessions = new();
+
+        public static void Add(string doId, StockOutScanTemp scan)
+        {
+            var list = _sessions.GetOrAdd(doId, _ => new List<StockOutScanTemp>());
+
+            lock (list)
+            {
+                if (!list.Any(x => x.TagDbId == scan.TagDbId))
+                {
+                    list.Add(scan);
+                }
+            }
+        }
+
+        public static List<StockOutScanTemp> Get(string doId)
+        {
+            if (!_sessions.TryGetValue(doId, out var list))
+                return new List<StockOutScanTemp>();
+
+            lock (list)
+            {
+                return list.ToList();
+            }
+        }
+
+        public static void Clear(string doId)
+        {
+            _sessions.TryRemove(doId, out _);
+        }
+
+    }
+
+    public async Task ScanStockOutAsync( StockOutResponseDto dto,string user)
     {
         try
         {
-
-            var normalizedEpc =
-                dto.Epc.Replace(" ", "");
+            var normalizedEpc = dto.Epc
+                .Replace(" ", "")
+                .Trim()
+                .ToUpper();
 
             var tag = await _db.Tags
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t =>
-                    t.EpcTag.Replace(" ", "") ==
-                    normalizedEpc
+                    t.EpcTag.Replace(" ", "").ToUpper() == normalizedEpc
                 );
 
             if (tag == null)
@@ -280,134 +153,24 @@ public class StockOutService : IStockOutService
 
                 return;
             }
-
-            var trx = await _db.Transactions
-                .FirstOrDefaultAsync(x =>
-                    x.TrsType == TransactionType.STOCK_OUT &&
-                    x.ReferenceId == dto.DoId
-                );
-
-            if (trx == null)
-            {
-                trx = new Transaction
+            StockOutScanSession.Add(
+                dto.DoId,
+                new StockOutScanTemp
                 {
-                    TrsId = Guid.NewGuid().ToString(),
-                    TrsType = TransactionType.STOCK_OUT,
-                    ReferenceId = dto.DoId,
+                    DoId = dto.DoId,
                     ReaderId = dto.ReaderId,
-                    CreatedBy = user,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _db.Transactions.Add(trx);
-
-                await _db.SaveChangesAsync();
-
-                DailyFileLogger.Info(
-                    $"New stock out transaction created. TransactionId='{trx.TrsId}'.",
-                    user
-                );
-            }
-
-            var exists = await _db.TransactionDetails
-                .AnyAsync(x =>
-                    x.TagId == tag.Id &&
-                    x.TrsId == trx.TrsId
-                );
-
-            if (exists)
-            {
-                if (ShouldWriteLog($"DUPLICATE:{dto.DoId}:{tag.TagId}"))
-                {
-                    DailyFileLogger.Warn(
-                        $"Duplicate scan detected for TagId '{tag.TagId}'.",
-                        user
-                    );
-                }
-
-                return;
-            }
-
-            var tagUpdate = new Tag
-            {
-                Id = tag.Id,
-                Status = TagStatus.OUT,
-                UpdatedBy = user,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _db.Tags.Attach(tagUpdate);
-
-            _db.Entry(tagUpdate)
-                .Property(x => x.Status)
-                .IsModified = true;
-
-            _db.TransactionDetails.Add(
-                new Transaction_Detail
-                {
-                    TrdId = Guid.NewGuid().ToString(),
-                    TrsId = trx.TrsId,
-                    TagId = tag.Id,
-                    ItemId = tag.ItemId
+                    TagDbId = tag.Id,
+                    TagId = tag.TagId,
+                    ItemId = tag.ItemId,
+                    Epc = normalizedEpc,
+                    ScannedAt = DateTime.UtcNow
                 }
             );
-
-            await _db.SaveChangesAsync();
 
             DailyFileLogger.Info(
-                $"Tag '{tag.TagId}' successfully scanned for stock out.",
+                $"Tag '{tag.TagId}' scanned temporarily for stock out. DO='{dto.DoId}'.",
                 user
             );
-
-            var totalRequired =
-                await _db.TransactionDetails
-                    .CountAsync(x =>
-                        x.Transaction.ReferenceId ==
-                            dto.DoId &&
-                        x.Transaction.TrsType ==
-                            TransactionType.STOCK_PREPARATION
-                    );
-
-            var totalScanned =
-                await _db.TransactionDetails
-                    .CountAsync(x =>
-                        x.Transaction.ReferenceId ==
-                            dto.DoId &&
-                        x.Transaction.TrsType ==
-                            TransactionType.STOCK_OUT
-                    );
-
-            if (
-                totalRequired > 0 &&
-                totalRequired == totalScanned
-            )
-            {
-                var doData = await _db.DOs
-                    .FirstOrDefaultAsync(x =>
-                        x.DoId == dto.DoId
-                    );
-
-                if (doData != null)
-                {
-                    doData.Status = DoStatus.COMPLETED;
-
-                    await _db.SaveChangesAsync();
-
-                    DailyFileLogger.Info(
-                        $"Delivery order '{dto.DoId}' marked as COMPLETED.",
-                        user
-                    );
-
-                    DailyFileLogger.Audit(
-                        action: "COMPLETE_STOCK_OUT",
-                        entity: "DELIVERY_ORDER",
-                        entityId: dto.DoId,
-                        performedBy: user,
-                        description:
-                            $"Completed stock out process for DO '{dto.DoId}'."
-                    );
-                }
-            }
         }
         catch (Exception ex)
         {
@@ -421,15 +184,158 @@ public class StockOutService : IStockOutService
         }
     }
 
-    public async Task<List<ItemListDto>> GetItemsAsync(
-        string doId
-    )
+    public async Task ConfirmStockOutAsync(string doId, string user)
+    {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
+        try
+        {
+            var scanned = StockOutScanSession.Get(doId);
+
+            if (!scanned.Any())
+                throw new Exception("No scanned tags found.");
+
+            var reservedDetails = await _db.TransactionDetails
+                .Include(x => x.Transaction)
+                .Include(x => x.Tag)
+                .Where(x =>
+                    x.Transaction.TrsType == TransactionType.STOCK_PREPARATION &&
+                    x.Transaction.ReferenceId == doId
+                )
+                .ToListAsync();
+
+            if (!reservedDetails.Any())
+                throw new Exception("No reserved tags found for this delivery order.");
+
+            var reservedTagIds = reservedDetails
+                .Select(x => x.TagId)
+                .ToHashSet();
+
+            var scannedTagIds = scanned
+                .Select(x => x.TagDbId)
+                .ToHashSet();
+
+            var missingTags = reservedTagIds
+                .Where(x => !scannedTagIds.Contains(x))
+                .ToList();
+
+            if (missingTags.Any())
+            {
+                throw new Exception(
+                    $"Cannot confirm stock out. Missing {missingTags.Count} tag(s)."
+                );
+            }
+
+            var existingStockOut = await _db.Transactions
+                .AnyAsync(x =>
+                    x.TrsType == TransactionType.STOCK_OUT &&
+                    x.ReferenceId == doId
+                );
+
+            if (existingStockOut)
+                throw new Exception("This delivery order has already been stocked out.");
+
+            var readerId = scanned.First().ReaderId;
+
+            var trxHeader = new Transaction
+            {
+                TrsId = Guid.NewGuid().ToString(),
+                TrsType = TransactionType.STOCK_OUT,
+                ReferenceId = doId,
+                ReaderId = readerId,
+                CreatedBy = user,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Transactions.Add(trxHeader);
+
+            foreach (var detail in reservedDetails)
+            {
+                var tag = detail.Tag;
+
+                if (tag.Status != TagStatus.RESERVED)
+                {
+                    throw new Exception(
+                        $"Tag '{tag.TagId}' is not in RESERVED status."
+                    );
+                }
+
+                tag.Status = TagStatus.OUT;
+                tag.UpdatedBy = user;
+                tag.UpdatedAt = DateTime.UtcNow;
+
+                _db.TransactionDetails.Add(
+                    new Transaction_Detail
+                    {
+                        TrdId = Guid.NewGuid().ToString(),
+                        TrsId = trxHeader.TrsId,
+                        TagId = detail.TagId,
+                        ItemId = detail.ItemId
+                    }
+                );
+
+                _db.Histories.Add(
+                    new HistoryPrint
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        TagId = detail.TagId,
+                        ItemId = detail.ItemId,
+                        Type = HistoryType.STOCK_OUT,
+                        Reference = doId,
+                        Action = "OUT",
+                        CreatedBy = user,
+                        CreatedAt = DateTime.UtcNow
+                    }
+                );
+            }
+
+            var doData = await _db.DOs
+                .FirstOrDefaultAsync(x => x.DoId == doId && !x.IsDelete);
+
+            if (doData == null)
+                throw new Exception("Delivery order not found.");
+
+            doData.Status = DoStatus.COMPLETED;
+
+            await _db.SaveChangesAsync();
+            await trx.CommitAsync();
+
+            StockOutScanSession.Clear(doId);
+
+            DailyFileLogger.Audit(
+                action: "CONFIRM_STOCK_OUT",
+                entity: "DELIVERY_ORDER",
+                entityId: doId,
+                performedBy: user,
+                description: $"Confirmed stock out for {reservedDetails.Count} tag(s)."
+            );
+        }
+        catch (Exception ex)
+        {
+            await trx.RollbackAsync();
+
+            DailyFileLogger.Error(
+                $"An error occurred during stock out confirmation for DO '{doId}'.",
+                ex,
+                user
+            );
+
+            throw;
+        }
+    }
+
+    public async Task<List<ItemListDto>> GetItemsAsync( string doId )
     {
         try
         {
             DailyFileLogger.Info(
                 $"Retrieving stock out item progress for DO '{doId}'."
             );
+            var scanned = StockOutScanSession.Get(doId);
+
+            var scannedItemCounts = scanned
+                .GroupBy(x => x.ItemId)
+                .ToDictionary(x => x.Key, x => x.Count());
 
             var items = await (
                 from d in _db.DODetails
@@ -450,16 +356,16 @@ public class StockOutService : IStockOutService
                                 doId &&
                             td.Transaction.TrsType ==
                                 TransactionType.STOCK_PREPARATION),
-
-                    Scanned = _db.TransactionDetails
-                        .Count(td =>
-                            td.ItemId == d.ItemId &&
-                            td.Transaction.ReferenceId ==
-                                doId &&
-                            td.Transaction.TrsType ==
-                                TransactionType.STOCK_OUT)
+                    Scanned = 0
                 })
                 .ToListAsync();
+
+            foreach (var item in items)
+            {
+                item.Scanned = scannedItemCounts.ContainsKey(item.ItemId)
+                    ? scannedItemCounts[item.ItemId]
+                    : 0;
+            }
 
             DailyFileLogger.Info(
                 $"Successfully retrieved {items.Count} item progress record(s) for DO '{doId}'."
@@ -478,9 +384,7 @@ public class StockOutService : IStockOutService
         }
     }
 
-    public async Task<ProgressDto> GetProgressAsync(
-        string doId
-    )
+    public async Task<ProgressDto> GetProgressAsync( string doId)
     {
         try
         {
@@ -490,17 +394,10 @@ public class StockOutService : IStockOutService
 
             var total = await _db.TransactionDetails
                 .CountAsync(x =>
-                    x.Transaction.ReferenceId ==
-                    doId
-                );
+                    x.Transaction.ReferenceId == doId &&
+                    x.Transaction.TrsType == TransactionType.STOCK_PREPARATION);
 
-            var scanned = await _db.TransactionDetails
-                .CountAsync(x =>
-                    x.Transaction.ReferenceId ==
-                        doId &&
-                    x.Transaction.TrsType ==
-                        TransactionType.STOCK_OUT
-                );
+            var scanned = StockOutScanSession.Get(doId).Count;
 
             DailyFileLogger.Info(
                 $"Progress retrieved successfully for DO '{doId}'. Total='{total}', Scanned='{scanned}'."
@@ -523,9 +420,7 @@ public class StockOutService : IStockOutService
         }
     }
 
-    public async Task<List<TagDto>> GetTagsAsync(
-        string doId
-    )
+    public async Task<List<TagDto>> GetTagsAsync( string doId)
     {
         try
         {
@@ -533,25 +428,16 @@ public class StockOutService : IStockOutService
                 $"Retrieving scanned tags for DO '{doId}'."
             );
 
-            var tags = await _db.TransactionDetails
-                .Where(x =>
-                    x.Transaction.ReferenceId ==
-                        doId &&
-                    x.Transaction.TrsType ==
-                        TransactionType.STOCK_OUT
-                )
+            var scanned = StockOutScanSession.Get(doId);
+
+            return scanned
+                .OrderByDescending(x => x.ScannedAt)
                 .Select(x => new TagDto
                 {
                     TagId = x.TagId,
                     ItemId = x.ItemId
                 })
-                .ToListAsync();
-
-            DailyFileLogger.Info(
-                $"Successfully retrieved {tags.Count} scanned tag(s) for DO '{doId}'."
-            );
-
-            return tags;
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -562,6 +448,11 @@ public class StockOutService : IStockOutService
 
             throw;
         }
+    }
+
+    public async Task StockOutAsync(StockOutDto dto, string user)
+    {
+        await ConfirmStockOutAsync(dto.DoId, user);
     }
 
     public static class RfidSession

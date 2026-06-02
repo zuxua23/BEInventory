@@ -85,6 +85,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                     printCommands.Add(
                         BuildSBPL(
                             qrTag: tag.TagId,
+                            epcTag:tag.EpcTag,
                             printDate:
                                 DateTime.Now
                                     .ToString(
@@ -294,16 +295,26 @@ public class PrintTagRegisService : IPrintTagRegisService
         return location;
     }
 
-    private async Task<long>GetCurrentRunningNumberAsync()
+    private string GenerateEpcTag(Item item, long runningNumber)
+    {
+        var itemNumber = new string(item.ItmId.Where(char.IsDigit).ToArray());
+
+        if (string.IsNullOrWhiteSpace(itemNumber))
+            itemNumber = "0";
+
+        return $"30{long.Parse(itemNumber):D6}{runningNumber:D16}";
+    }
+
+    private async Task<long> GetCurrentRunningNumberAsync()
     {
         var lastTag = await _db.Tags
-            .OrderByDescending(x =>
-                x.CreatedAt )
+            .OrderByDescending(x => x.TagId)
             .FirstOrDefaultAsync();
 
-        if (lastTag == null) { return 0;  }
+        if (lastTag == null)
+            return 0;
 
-        return long.Parse( lastTag.TagId.Substring(3));
+        return long.Parse(lastTag.TagId.Substring(3));
     }
 
     private async Task PrintToPrinterAsync(
@@ -329,7 +340,7 @@ public class PrintTagRegisService : IPrintTagRegisService
         {
             Id = Guid.NewGuid().ToString(),
             TagId = $"TAG{runningNumber:D5}",
-            EpcTag = $"A{item.ItmId}{runningNumber:D10}",
+            EpcTag = GenerateEpcTag(item, runningNumber),
             ItemId = item.Id,
             LocationId = location.Id,
             Status = TagStatus.PRINTED,
@@ -390,7 +401,8 @@ public class PrintTagRegisService : IPrintTagRegisService
     private const string SBPL_TEMPLATE = @"
 A
 A3V+00000H+0000CS6#F5A1V00384H0913
-ZAPSWKpercobaan1
+ZAPSWKpercobaan1 
+IP0e:h,epc:{epcTag},fsw:1;
 %0H0425V00303P02
 RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
 %0H0656V001162D30,L,07,1,0
@@ -410,6 +422,7 @@ public class PrintTagRegisService : IPrintTagRegisService
 Q1Z";
 
     private string BuildSBPL(
+        string epcTag,
         string qrTag,
         string printDate,
         string itemName,
@@ -418,26 +431,12 @@ public class PrintTagRegisService : IPrintTagRegisService
     )
     {
         return SBPL_TEMPLATE
-            .Replace(
-                "{qrTag}",
-                qrTag
-            )
-            .Replace(
-                "{printDate}",
-                printDate
-            )
-            .Replace(
-                "{itemName}",
-                itemName
-            )
-            .Replace(
-                "{itemId}",
-                itemId
-            )
-            .Replace(
-                "{itemDesc}",
-                itemDesc
-            );
+            .Replace("{epcTag}", epcTag)
+            .Replace("{qrTag}", qrTag)
+            .Replace("{printDate}", printDate)
+            .Replace("{itemName}", itemName)
+            .Replace("{itemId}", itemId)
+            .Replace("{itemDesc}", itemDesc);
     }
 
 

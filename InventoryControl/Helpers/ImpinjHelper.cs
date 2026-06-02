@@ -16,7 +16,7 @@ public class ImpinjReaderService
     private readonly ConcurrentDictionary<string, DateTime>
         _tagCache = new();
 
-    private const double RSSI_THRESHOLD = -90;
+    private const double RSSI_THRESHOLD = -70;
 
     private const int CACHE_TTL_SECONDS = 10;
 
@@ -91,7 +91,7 @@ public class ImpinjReaderService
                 reader.QueryDefaultSettings();
 
             settings.Antennas.GetAntenna(1).IsEnabled = true;
-            settings.Antennas.GetAntenna(1).TxPowerInDbm = 30;
+            settings.Antennas.GetAntenna(1).TxPowerInDbm = 10;
 
             settings.Report.Mode =
                 ReportMode.Individual;

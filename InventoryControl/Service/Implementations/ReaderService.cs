@@ -1,5 +1,6 @@
 ﻿namespace InventoryControl.Service.Implementations;
 
+using DocumentFormat.OpenXml.Spreadsheet;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Entity;
@@ -193,6 +194,23 @@ public class ReaderService : IReaderService
 
             _db.Readers.Add(reader);
 
+            for (int i = 1; i <= 4; i++)
+            {
+                _db.ReaderSettings.Add(new ReaderSettings
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ReaderId = reader.Id,
+                    AntennaNo = i,
+                    IsEnabled = i == 1,
+                    TxPower = 30,
+                    Sensitivity = -70,
+                    SearchMode = "DualTarget",
+                    Session = "S2",
+                    CreatedBy = createdBy,
+                    CreatedAt = DateTime.UtcNow,
+                    IsDelete = false
+                });
+            }
             await _db.SaveChangesAsync();
 
             DailyFileLogger.Info(

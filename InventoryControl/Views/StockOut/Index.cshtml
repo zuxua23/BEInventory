@@ -194,6 +194,12 @@
                                         <i class="fas fa-stop mr-2"></i>Stop Scan
                                     </button>
 
+                                    <button id="confirmBtn"
+                                            class="btn btn-success btn-block mt-3"
+                                            onclick="confirmStockOut()"
+                                            disabled>
+                                        <i class="fas fa-check mr-2"></i>Confirm Stock Out
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -315,6 +321,7 @@
             $("#startScanBtn").prop("disabled", true);
             $("#doIdSelect").prop("disabled", true).trigger("change.select2");
             $("#rdrIdSelect").prop("disabled", true).trigger("change.select2");
+                $("#confirmBtn").prop("disabled", true);
 
             $("#processStatus")
                 .text("Scanning...")
@@ -330,6 +337,11 @@
         }
 
         async function stopScan(showAlert = true) {
+
+            if (showAlert) {
+                $("#confirmBtn").prop("disabled", true);
+            }
+
             const readerId = $("#rdrIdSelect").val();
 
             if (!readerId) return;
@@ -454,23 +466,58 @@
             if (totalScanned === totalRequired && totalRequired > 0 && !isCompletedShown) {
                 isCompletedShown = true;
 
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                isScanning = false;
-
                 $("#scanProgress").css("width", "100%");
                 $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
 
                 $("#processStatus")
-                    .text("Completed")
+                    .text("Ready to Confirm")
                     .removeClass()
-                    .addClass("badge badge-success p-2 mb-3");
+                    .addClass("badge badge-info p-2 mb-3");
+
+                $("#confirmBtn").prop("disabled", false);
+
+
+                Alert.success("All tags scanned. Please confirm stock out to update database.");
+            }
+        }
+
+
+         async function confirmStockOut() {
+            if (!currentDo) {
+                return Alert.error("Select DO first");
+            }
+
+            const result = await Alert.confirm(
+                "Confirm Stock Out?",
+                "All scanned tags will be updated to OUT and this DO will be completed."
+            );
+
+            if (!result) return;
+
+            const res = await Api.post(`/stockout/confirm?doId=${currentDo}`);
+
+            if (!res || !res.ok) {
+                return Alert.error(
+                    res?.errorData?.message || "Failed to confirm stock out"
+                );
+            }
+
+            $("#confirmBtn").prop("disabled", true);
 
                 await stopScan(false);
 
-                Alert.success("Stock out completed. All required tags have been scanned.");
-            }
+            $("#processStatus")
+                .text("Completed")
+                .removeClass()
+                .addClass("badge badge-success p-2 mb-3");
+
+            await Alert.success("Stock out confirmed successfully.");
+
+            $("#doIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#startScanBtn").prop("disabled", false);
         }
+
 
         async function loadTags() {
             if (!currentDo) return;
