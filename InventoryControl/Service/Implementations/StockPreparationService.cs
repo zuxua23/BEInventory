@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.Database;
 using InventoryControl.DTO;
@@ -117,20 +117,6 @@ public class StockPreparationService : IStockPreparationService
 
                 throw new Exception(
                     $"Tag '{tag.TagId}' is not in ALLOCATED status."
-                );
-            }
-
-            var isTagInDo = await _db.DODetailTags
-                .Include(x => x.DODetail)
-                .AnyAsync(x =>
-                    x.TagId == tag.Id &&
-                    x.DODetail.DoId == dto.DoId
-                );
-
-            if (!isTagInDo)
-            {
-                throw new Exception(
-                    $"Tag '{tag.TagId}' is not allocated for this delivery order."
                 );
             }
 
@@ -258,8 +244,6 @@ public class StockPreparationService : IStockPreparationService
 
             throw;
         }
-
-
     }
 
     public async Task PrepareBulkAsync(StockPreparationBulkRequestDto dto, string user)
@@ -301,25 +285,15 @@ public class StockPreparationService : IStockPreparationService
             if (missing.Any())
                 throw new Exception($"Tags not found: {string.Join(", ", missing)}");
 
-            var allocatedTagIds = await _db.DODetailTags
-                .Include(x => x.DODetail)
-                .Where(x => x.DODetail.DoId == dto.DoId)
-                .Select(x => x.TagId)
-                .ToListAsync();
-
             foreach (var tag in tags)
             {
                 if (tag.Status != TagStatus.ALLOCATED)
                     throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be ALLOCATED");
 
-                if (!allocatedTagIds.Contains(tag.Id))
-                    throw new Exception($"Tag '{tag.TagId}' is not allocated for this delivery order.");
-
                 var detail = doData.Details.FirstOrDefault(d => d.ItemId == tag.ItemId);
                 if (detail == null)
                     throw new Exception($"Item {tag.ItemId} is not in this DO");
             }
-    
 
             var reservedPerItem = await _db.TransactionDetails
                 .Where(td => td.Transaction.TrsType == TransactionType.STOCK_PREPARATION
@@ -395,7 +369,6 @@ public class StockPreparationService : IStockPreparationService
         }
     }
 
-
     public async Task<List<DOResponseDto>> GetDoDraftAsync()
     {
         try
@@ -403,7 +376,7 @@ public class StockPreparationService : IStockPreparationService
             var result = await _db.DOs
             .Include(x => x.Details)
             .ThenInclude(d => d.Item)
-            .Where(x => !x.IsDelete && (x.Status == DoStatus.DRAFT || x.Status == DoStatus.PREPARATION))
+            .Where(x => !x.IsDelete && x.Status == DoStatus.DRAFT)
             .Select(x => new DOResponseDto
             {
                 DoId = x.DoId,
@@ -430,6 +403,7 @@ public class StockPreparationService : IStockPreparationService
             throw;
         }
     }
+
     public async Task<DOResponseDto?> GetDoDetailAsync(string id)
     {
         return await _db.DOs
@@ -452,5 +426,35 @@ public class StockPreparationService : IStockPreparationService
                 }).ToList()
             })
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<object> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto)
+    {
+        var isRfid = dto.ScannerType == "RFID";
+        var query = _db.Tags
+            .Include(t => t.Item)
+            .Include(t => t.Location)
+            .AsQueryable();
+
+        if (isRfid)
+        {
+            query = query.Where(t => dto.Codes.Contains(t.EpcTag));
+        }
+        else
+        {
+            query = query.Where(t => dto.Codes.Contains(t.TagId));
+        }
+
+        var tags = await query.Select(t => new
+        {
+            TagId = t.TagId,
+            EpcTag = t.EpcTag,
+            ItemId = t.ItemId,
+            ItemName = t.Item != null ? t.Item.Name : null,
+            Status = t.Status.ToString(),
+            Location = t.Location != null ? t.Location.Name : null
+        }).ToListAsync();
+
+        return tags;
     }
 }

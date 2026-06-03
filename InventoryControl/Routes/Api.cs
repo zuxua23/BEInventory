@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Routes;
+namespace InventoryControl.Routes;
 
 public static class Api
 {
@@ -134,6 +134,12 @@ public static class Api
             pattern: "/api/preparation/do/{id}",
             defaults: new { controller = "StockPreparation", action = "GetDoDetail" })
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-preparation-bulk-info",
+            pattern: "/api/preparation/bulk-info",
+            defaults: new { controller = "StockPreparation", action = "GetTagsInfoBulk" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
         app.MapControllerRoute(
             name: "api-search-item-list",

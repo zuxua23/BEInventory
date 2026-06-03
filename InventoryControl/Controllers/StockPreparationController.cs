@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
@@ -73,5 +73,20 @@ public class StockPreparationController : ControllerBase
         var data = await _service.GetDoDetailAsync(id);
         if (data == null) return NotFound();
         return Ok(data);
+    }
+
+    [HttpPost("bulk-info")]
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
+    public async Task<IActionResult> GetTagsInfoBulk([FromBody] TagBulkInfoRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.GetTagsInfoBulkAsync(dto);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
