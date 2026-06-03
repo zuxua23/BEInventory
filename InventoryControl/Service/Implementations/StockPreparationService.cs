@@ -403,7 +403,7 @@ public class StockPreparationService : IStockPreparationService
             var result = await _db.DOs
             .Include(x => x.Details)
             .ThenInclude(d => d.Item)
-            .Where(x => !x.IsDelete && (x.Status == DoStatus.DRAFT || x.Status == DoStatus.PREPARATION))
+            .Where(x => !x.IsDelete && x.Status == DoStatus.DRAFT)
             .Select(x => new DOResponseDto
             {
                 DoId = x.DoId,
