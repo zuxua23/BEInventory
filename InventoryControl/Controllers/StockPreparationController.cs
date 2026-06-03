@@ -9,7 +9,7 @@ namespace InventoryControl.Controllers;
 
 [InventoryLock]
 [ApiController]
-[Route("stockpreparation")]
+[Route("api/preparation")]
 public class StockPreparationController : ControllerBase
 {
     private readonly IStockPreparationService _service;
@@ -19,6 +19,7 @@ public class StockPreparationController : ControllerBase
         _service = service;
     }
 
+    [HttpPost]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> Prepare(StockPreparationRequestDto dto)
     {
@@ -34,6 +35,7 @@ public class StockPreparationController : ControllerBase
         }
     }
 
+    [HttpPost("bulk")]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> PrepareBulk([FromBody] StockPreparationBulkRequestDto dto)
     {
@@ -48,8 +50,9 @@ public class StockPreparationController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
 
+    [HttpGet("do")]
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> GetDoDrafts()
     {
         try
@@ -62,6 +65,8 @@ public class StockPreparationController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("do/{id}")]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
     public async Task<IActionResult> GetDoDetail(string id)
     {

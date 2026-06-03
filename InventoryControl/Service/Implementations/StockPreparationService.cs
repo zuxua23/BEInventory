@@ -285,9 +285,10 @@ public class StockPreparationService : IStockPreparationService
             if (location == null)
                 throw new Exception("Location not found");
 
+            var scannedCodes = dto.ScannedCodes;
             var tags = dto.ScannerType == "RFID"
-                ? await _db.Tags.Where(t => dto.ScannedCodes.Contains(t.EpcTag)).ToListAsync()
-                : await _db.Tags.Where(t => dto.ScannedCodes.Contains(t.TagId)).ToListAsync();
+                ? await _db.Tags.Where(t => EF.Constant(scannedCodes).Contains(t.EpcTag)).ToListAsync()
+                : await _db.Tags.Where(t => EF.Constant(scannedCodes).Contains(t.TagId)).ToListAsync();
 
             if (!tags.Any())
                 throw new Exception("Tags not found in database");
@@ -402,7 +403,7 @@ public class StockPreparationService : IStockPreparationService
             var result = await _db.DOs
             .Include(x => x.Details)
             .ThenInclude(d => d.Item)
-            .Where(x => !x.IsDelete && x.Status == DoStatus.DRAFT)
+            .Where(x => !x.IsDelete && (x.Status == DoStatus.DRAFT || x.Status == DoStatus.PREPARATION))
             .Select(x => new DOResponseDto
             {
                 DoId = x.DoId,

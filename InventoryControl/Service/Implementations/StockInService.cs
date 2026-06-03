@@ -218,6 +218,7 @@ public class StockInService : IStockInService
             .Select(t => new TagResponseDto
             {
                 TagId = t.TagId,
+                ItemId = t.ItemId,
                 Epc = t.EpcTag,
                 ItemName = t.Item.Name,
                 Status = t.Status.ToString(),
