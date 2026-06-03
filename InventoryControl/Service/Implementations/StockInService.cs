@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.Database;
 using InventoryControl.DTO;
@@ -48,17 +48,18 @@ public class StockInService : IStockInService
             }
 
             List<Tag> tags;
+            var scannedCodes = dto.ScannedCodes;
 
             if (dto.ScannerType == "RFID")
             {
                 tags = await _db.Tags
                     .Where(t =>
-                        dto.ScannedCodes.Contains(t.EpcTag)
+                        EF.Constant(scannedCodes).Contains(t.EpcTag)
                     )
                     .ToListAsync();
 
                 DailyFileLogger.Info(
-                    $"RFID scanner detected {dto.ScannedCodes.Count} scanned tag(s).",
+                    $"RFID scanner detected {scannedCodes.Count} scanned tag(s).",
                     user
                 );
             }
@@ -66,12 +67,12 @@ public class StockInService : IStockInService
             {
                 tags = await _db.Tags
                     .Where(t =>
-                        dto.ScannedCodes.Contains(t.TagId)
+                        EF.Constant(scannedCodes).Contains(t.TagId)
                     )
                     .ToListAsync();
 
                 DailyFileLogger.Info(
-                    $"QR scanner detected {dto.ScannedCodes.Count} scanned tag(s).",
+                    $"QR scanner detected {scannedCodes.Count} scanned tag(s).",
                     user
                 );
             }

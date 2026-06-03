@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.Database;
 using InventoryControl.DTO;
@@ -194,11 +194,11 @@ public class PrintTagRegisService : IPrintTagRegisService
                 );
             }
 
+            var tagIds = dto.TagIds;
             var tags = await _db.Tags
                 .Where(t =>
-                    dto.TagIds.Contains(
-                        t.TagId
-                    )
+                    EF.Constant(tagIds).Contains(t.EpcTag) ||
+                    EF.Constant(tagIds).Contains(t.TagId)
                 )
                 .ToListAsync();
 

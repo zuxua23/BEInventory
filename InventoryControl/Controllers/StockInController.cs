@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Utility;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace InventoryControl.Controllers;
 [InventoryLock]
 [ApiController]
-[Route("stockin")]
+[Route("api/stockin")]
 public class StockInController : ControllerBase
 {
     private readonly IStockInService _service;
