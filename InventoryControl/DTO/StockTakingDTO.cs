@@ -58,3 +58,14 @@ public class StockTakingCompareExportDto
 
     public string Status { get; set; }
 }
+
+public class StockTakingSessionTagDto
+{
+    public string TagId { get; set; }
+    public string EpcTag { get; set; }
+    public string ItemId { get; set; }
+    public string ItemCode { get; set; }
+    public string ItemName { get; set; }
+    public string LocationId { get; set; }
+    public string Location { get; set; }
+}

@@ -65,7 +65,7 @@ public class StockTakingService : IStockTakingService
         if (session == null)
             return null;
 
-        var locationIds = await _db.StockTakingDetails
+        var locations = await _db.StockTakingDetails
             .Where(x =>
                 x.SttId == session.SttId &&
                 x.Action == TakingAction.SYSTEM)
@@ -74,15 +74,56 @@ public class StockTakingService : IStockTakingService
                 tag => tag.Id,
                 (std, tag) => tag.LocationId)
             .Distinct()
+            .Join(_db.Locations,
+                locId => locId,
+                loc => loc.Id,
+                (locId, loc) => new { Id = locId, Name = loc.Name })
             .ToListAsync();
+
+        var locationIds = locations.Select(x => x.Id).ToList();
+        var locationNames = locations.Select(x => x.Name).ToList();
 
         return new
         {
             session.SttId,
             session.Remark,
             session.Status,
-            LocationIds = locationIds
+            LocationIds = locationIds,
+            Locations = locationNames,
+            Location = string.Join(", ", locationNames)
         };
+    }
+
+    public async Task<List<StockTakingSessionTagDto>> GetSessionTagsAsync(string sttId)
+    {
+        var data = await _db.StockTakingDetails
+            .Where(std => std.SttId == sttId && std.Action == TakingAction.SYSTEM)
+            .Join(_db.Tags,
+                std => std.TagId,
+                tag => tag.Id,
+                (std, tag) => tag)
+            .Join(_db.Items,
+                tag => tag.ItemId,
+                item => item.Id,
+                (tag, item) => new { tag, item })
+            .Join(_db.Locations,
+                ti => ti.tag.LocationId,
+                loc => loc.Id,
+                (ti, loc) => new StockTakingSessionTagDto
+                {
+                    TagId = ti.tag.TagId,
+                    EpcTag = ti.tag.EpcTag,
+                    ItemId = ti.tag.ItemId,
+                    ItemCode = ti.item.ItmId,
+                    ItemName = ti.item.Name,
+                    LocationId = loc.Id,
+                    Location = loc.Name
+                })
+            .ToListAsync();
+
+        DailyFileLogger.Info($"GetSessionTagsAsync SttId={sttId} count={data.Count}");
+
+        return data;
     }
 
     public async Task<List<object>> GetSystemDataAsync(string sttId)

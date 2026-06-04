@@ -121,6 +121,25 @@ public class StockTakingController : ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("tags/{sttId}")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
+    public async Task<IActionResult> GetSessionTags(string sttId)
+    {
+        try
+        {
+            var data = await _service.GetSessionTagsAsync(sttId);
+            return Ok(data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = ex.Message,
+                detail = ex.InnerException?.Message
+            });
+        }
+    }
+
     [HttpGet("export/system/excel")]
     public async Task<IActionResult> ExportSystemExcel(string sttId)
     {

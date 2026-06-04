@@ -15,6 +15,7 @@ public interface IStockTakingService
     Task BulkScanAsync(StockTakingBulkScanDto dto);
     Task<object> GetCompareAsync(string sttId);
     Task<List<object>> GetSystemDataAsync(string sttId);
+    Task<List<StockTakingSessionTagDto>> GetSessionTagsAsync(string sttId);
     Task<object?> GetActiveAsync();
     Task<byte[]> ExportSystemExcelAsync(string sttId);
     Task<string> ExportSystemCsvAsync(string sttId);
