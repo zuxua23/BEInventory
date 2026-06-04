@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
@@ -399,6 +399,7 @@ public class StockTakingService : IStockTakingService
             throw;
         }
     }
+
     public async Task ManualAddAsync(StockTakingManualAddDto dto)
     {
         try
@@ -421,8 +422,8 @@ public class StockTakingService : IStockTakingService
             if (tag == null)
                 throw new Exception("Replacement tag was not found");
 
-            if (tag.Status != TagStatus.STANDBY)
-                throw new Exception("Replacement tag must be in STANDBY status");
+            if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED)
+                throw new Exception("Replacement tag must be in STANDBY or PRINTED status");
 
             if (tag.ItemId != null && tag.ItemId != dto.ItemId)
                 throw new Exception("Replacement tag item does not match selected item");
@@ -644,18 +645,36 @@ public class StockTakingService : IStockTakingService
             .Where(t => EF.Constant(addTagIds).Contains(t.Id))
             .ToListAsync();
 
+        // Collect system details to derive location for manual-add replacements
+        var systemDetails = details
+            .Where(d => d.Action == TakingAction.SYSTEM && d.TagId != null)
+            .ToList();
+
+        var systemTagIds = systemDetails.Select(d => d.TagId!).Distinct().ToList();
+        var systemTagLocations = await _db.Tags
+            .Where(t => EF.Constant(systemTagIds).Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id, t => t.LocationId);
+
         foreach (var add in addManuals)
         {
             var tag = addTags.FirstOrDefault(t => t.Id == add.TagId);
 
-            if (tag == null) continue; 
+            if (tag == null) continue;
 
-            if (tag.Status != TagStatus.STANDBY) continue; 
+            if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED) continue;
 
             tag.Status = TagStatus.IN_STOCK;
             tag.ItemId = add.ItemId;
             tag.UpdatedBy = user;
             tag.UpdatedAt = DateTime.UtcNow;
+
+            // Set location from the system snapshot for the same item
+            var systemDetailForItem = systemDetails.FirstOrDefault(d => d.ItemId == add.ItemId);
+            if (systemDetailForItem?.TagId != null &&
+                systemTagLocations.TryGetValue(systemDetailForItem.TagId, out var locationId))
+            {
+                tag.LocationId = locationId;
+            }
 
             _db.Histories.Add(new HistoryPrint
             {
@@ -999,4 +1018,34 @@ public class StockTakingService : IStockTakingService
         };
     }
 
+    public async Task<List<AvailableTagDto>> GetAvailableTagsAsync(string sttId)
+    {
+        var sessionItemIds = await _db.StockTakingDetails
+            .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
+            .Select(x => x.ItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var tags = await _db.Tags
+            .Where(t =>
+                (t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED) &&
+                !t.IsDelete &&
+                EF.Constant(sessionItemIds).Contains(t.ItemId))
+            .Join(_db.Items,
+                t => t.ItemId,
+                i => i.Id,
+                (t, i) => new AvailableTagDto
+                {
+                    TagId = t.TagId,
+                    EpcTag = t.EpcTag,
+                    ItemId = t.ItemId,
+                    ItemName = i.Name,
+                    Status = t.Status.ToString()
+                })
+            .ToListAsync();
+
+        DailyFileLogger.Info($"GetAvailableTagsAsync SttId={sttId} count={tags.Count}");
+
+        return tags;
+    }
 }
