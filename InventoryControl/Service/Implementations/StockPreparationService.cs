@@ -373,10 +373,12 @@ public class StockPreparationService : IStockPreparationService
     {
         try
         {
+            // Include DRAFT and PREPARATION so users can continue a started DO
             var result = await _db.DOs
             .Include(x => x.Details)
             .ThenInclude(d => d.Item)
-            .Where(x => !x.IsDelete && x.Status == DoStatus.DRAFT)
+            .Where(x => !x.IsDelete &&
+                (x.Status == DoStatus.DRAFT || x.Status == DoStatus.PREPARATION))
             .Select(x => new DOResponseDto
             {
                 DoId = x.DoId,
