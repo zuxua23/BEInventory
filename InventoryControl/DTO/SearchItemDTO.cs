@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.DTO;
+namespace InventoryControl.DTO;
 
 public class SearchItemListDto
 {
@@ -6,6 +6,7 @@ public class SearchItemListDto
     public string EpcTag { get; set; }
     public string ItemName { get; set; }
     public string Location { get; set; }
+    public string Status { get; set; }
 }
 
 public class TagDetailDto

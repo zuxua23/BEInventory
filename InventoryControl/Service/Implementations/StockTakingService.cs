@@ -436,6 +436,24 @@ public class StockTakingService : IStockTakingService
             if (alreadyUsed)
                 throw new Exception("Replacement tag is already used in this stock taking session");
 
+            var systemTagId = await _db.StockTakingDetails
+                .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.SYSTEM && x.ItemId == dto.ItemId)
+                .Select(x => x.TagId)
+                .FirstOrDefaultAsync();
+
+            string? locationId = null;
+            if (systemTagId != null)
+                locationId = await _db.Tags
+                    .Where(t => t.Id == systemTagId)
+                    .Select(t => t.LocationId)
+                    .FirstOrDefaultAsync();
+
+            tag.Status = TagStatus.IN_STOCK;
+            tag.ItemId = dto.ItemId;
+            tag.UpdatedAt = DateTime.UtcNow;
+            if (locationId != null)
+                tag.LocationId = locationId;
+
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
                 StdId = Guid.NewGuid().ToString(),
@@ -1047,4 +1065,3 @@ public class StockTakingService : IStockTakingService
         return tags;
     }
 }
-

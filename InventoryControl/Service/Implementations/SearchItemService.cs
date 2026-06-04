@@ -1,4 +1,4 @@
-﻿
+
 using InventoryControl.Service.Interfaces;
 using InventoryControl.Database;
 using InventoryControl.DTO;
@@ -26,7 +26,9 @@ public class SearchItemService : ISearchItemService
                 TagId = t.TagId,
                 EpcTag = t.EpcTag,
                 ItemName = t.Item.Name,
-                Location = t.Location != null ? t.Location.Name : "-"
+                Location = t.Location != null ? t.Location.Name : "-",
+                Status = t.Status == TagStatus.RESERVED ? "PREPARATION" :
+                         t.Status == TagStatus.IN_STOCK ? "STOCK IN" : t.Status.ToString()
             })
             .ToListAsync();
     }
