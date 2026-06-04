@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Controllers;
+namespace InventoryControl.Controllers;
 
 using DocumentFormat.OpenXml.Packaging;
 using InventoryControl.DTO;
@@ -139,6 +139,14 @@ public class StockTakingController : ControllerBase
             });
         }
     }
+    [HttpGet("available-tags/{sttId}")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
+    public async Task<IActionResult> GetAvailableTags(string sttId)
+    {
+        var data = await _service.GetAvailableTagsAsync(sttId);
+        return Ok(data);
+    }
+
 
     [HttpGet("export/system/excel")]
     public async Task<IActionResult> ExportSystemExcel(string sttId)

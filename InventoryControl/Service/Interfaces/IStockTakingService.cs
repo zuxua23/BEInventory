@@ -1,4 +1,4 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Entity;
 
 namespace InventoryControl.Service.Interfaces;
@@ -22,5 +22,7 @@ public interface IStockTakingService
     Task<byte[]> ExportCompareExcelAsync(string sttId);
     Task<string> ExportCompareCsvAsync(string sttId);
     Task<object> GetProgressAsync(string sttId);
+    Task<List<AvailableTagDto>> GetAvailableTagsAsync(string sttId);
+
 
 }

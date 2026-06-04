@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.DTO;
+namespace InventoryControl.DTO;
 
 public class StockTakingCreateDto
 {
@@ -68,4 +68,13 @@ public class StockTakingSessionTagDto
     public string ItemName { get; set; }
     public string LocationId { get; set; }
     public string Location { get; set; }
+}
+
+public class AvailableTagDto
+{
+    public string TagId { get; set; }
+    public string EpcTag { get; set; }
+    public string ItemId { get; set; }
+    public string ItemName { get; set; }
+    public string Status { get; set; }
 }
