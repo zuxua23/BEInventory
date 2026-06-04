@@ -390,7 +390,7 @@ public class PrintTagRegisService : IPrintTagRegisService
     private void ValidateRegistrationStatus(Tag tag)
     {
         if (
-            tag.Status != TagStatus.PRINTED &&
+            tag.Status != TagStatus.PRINTED ||
             tag.Status != TagStatus.OUT
         )
         {
