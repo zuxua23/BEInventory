@@ -228,5 +228,33 @@ public class StockInService : IStockInService
 
         return tag;
     }
-  
+
+    public async Task<List<TagResponseDto>> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto)
+    {
+        if (dto.Codes == null || !dto.Codes.Any())
+            return new List<TagResponseDto>();
+
+        var isRfid = dto.ScannerType == "RFID";
+        var codes = dto.Codes;
+
+        var tags = await _db.Tags
+            .AsNoTracking()
+            .Where(t => isRfid
+                ? codes.Contains(t.EpcTag)
+                : codes.Contains(t.TagId))
+            .Select(t => new TagResponseDto
+            {
+                TagId = t.TagId,
+                ItemId = t.ItemId,
+                Epc = t.EpcTag,
+                ItemName = t.Item.Name,
+                Status = t.Status.ToString(),
+                Location = t.Location != null ? t.Location.Name : null
+            })
+            .ToListAsync();
+
+        DailyFileLogger.Info($"StockIn GetTagsInfoBulk request={codes.Count} found={tags.Count}");
+
+        return tags;
+    }
 }

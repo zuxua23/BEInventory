@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryControl.Controllers;
-[InventoryLock]
+
 [ApiController]
 [Route("api/stockin")]
 public class StockInController : ControllerBase
@@ -19,8 +19,9 @@ public class StockInController : ControllerBase
     }
 
     [HttpPost]
+    [InventoryLock]
     [AuthorizePermissionHybrid("STOCK_IN")]
-    public async Task<IActionResult> StockIn([FromBody] StockInDto dto) 
+    public async Task<IActionResult> StockIn([FromBody] StockInDto dto)
     {
        try
         {
@@ -42,6 +43,21 @@ public class StockInController : ControllerBase
         {
             var result = await _service.GetTagByCodeAsync(code, scannerType);
             if (result == null) return NotFound();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("bulk-info")]
+    [AuthorizePermissionHybrid("TAG_GET")]
+    public async Task<IActionResult> GetTagsInfoBulk([FromBody] TagBulkInfoRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.GetTagsInfoBulkAsync(dto);
             return Ok(result);
         }
         catch (Exception ex)

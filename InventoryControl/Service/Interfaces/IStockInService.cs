@@ -6,4 +6,5 @@ public interface IStockInService
 {
     Task StockInAsync(StockInDto dto, string user);
     Task <TagResponseDto?> GetTagByCodeAsync(string code, string scannerType);
+    Task<List<TagResponseDto>> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto);
 }
