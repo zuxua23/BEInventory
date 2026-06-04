@@ -27,7 +27,8 @@ public class StockInController : ControllerBase
         {
             var user = User.Identity?.Name ?? "system";
             await _service.StockInAsync(dto, user);
-            return Ok(new { message = "Stock In successful" });
+            int count = dto.ScannedCodes?.Count ?? 0;
+            return Ok(new { message = $"Stock In berhasil untuk {count} tag" });
         }
         catch(Exception ex)
         {

@@ -509,7 +509,7 @@ public class PrintTagRegisService : IPrintTagRegisService
 
             var data = await _db.Tags
                 .AsNoTracking()
-                .Where(t => !t.IsDelete)
+                .Where(t => !t.IsDelete && (t.Status == TagStatus.PRINTED || t.Status == TagStatus.OUT))
                 .Select(t =>
                     new TagResponseDto
                     {
