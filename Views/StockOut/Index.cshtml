@@ -1,0 +1,976 @@
+﻿<body class="hold-transition layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-dolly-flatbed nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Stock Out</h1>
+                                <p class="mb-0 text-muted small">Manage stock out process</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Stock Out
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="row mb-4">
+
+                        <div class="col-md-8">
+                            <div class="card card-primary card-outline shadow-lg h-100">
+
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <h5 class="font-weight-bold mb-0">
+                                        <i class="fas fa-file-invoice mr-2 text-primary"></i>
+                                        DO Information
+                                    </h5>
+                                </div>
+
+                                <div class="card-body pt-3">
+
+                                    <div class="form-group">
+                                        <label class="font-weight-semibold">DO Number *</label>
+                                        <select id="doIdSelect" class="form-control select2"></select>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <label class="font-weight-semibold">Reader *</label>
+                                        <select id="rdrIdSelect" class="form-control select2"></select>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow-lg h-100">
+
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle mr-2"></i>Status
+                                    </h6>
+                                </div>
+
+                                <div class="card-body text-center">
+
+                                    <div id="processStatus"
+                                         class="badge badge-secondary p-2 mb-3"
+                                         style="font-size: 1rem;">
+                                        Ready to Start
+                                    </div>
+
+                                    <div class="progress mb-2" style="height: 10px;">
+                                        <div id="scanProgress"
+                                             class="progress-bar bg-success"
+                                             style="width: 0%">
+                                        </div>
+                                    </div>
+
+                                    <small id="progressText" class="text-muted">
+                                        0 / 0 scanned
+                                    </small>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card card-primary card-outline shadow-lg mb-4">
+
+                        <div class="card-header bg-white border-0 pb-0">
+                            <h5 class="font-weight-bold mb-0">
+                                <i class="fas fa-list mr-2 text-primary"></i>
+                                Item List
+                            </h5>
+                            <small class="text-muted">
+                                Required vs Reserved vs Scanned
+                            </small>
+                        </div>
+                        <div class="card-body pt-3">
+
+                            <div class="table-responsive">
+                                <table id="datatablesIndex" class="table table-hover">
+
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Item Code</th>
+                                            <th>Item Name</th>
+                                            <th width="120">Required</th>
+                                            <th width="120">Reserved</th>
+                                            <th width="120">Scanned</th>
+                                            <th width="150">Progress</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="itemList">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-5">
+                                                <i class="fas fa-box-open fa-2x mb-2"></i><br>
+                                                Select DO to load items
+                                            </td>
+                                        </tr>
+                                    </tbody>
+
+                                </table>
+                            </div>
+                            </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-8">
+                            <div class="card card-primary card-outline shadow-lg h-100">
+
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <h5 class="font-weight-bold mb-0">
+                                        <i class="fas fa-tags mr-2 text-primary"></i>
+                                        Scanned Tags
+                                    </h5>
+                                </div>
+
+                                <div class="card-body pt-3">
+                                    <div id="tagList"
+                                         style="max-height: 400px; overflow-y: auto;">
+
+                                        <div class="text-center text-muted py-5">
+                                            <i class="fas fa-qrcode fa-3x mb-3 opacity-50"></i>
+                                            <p>Start scanning to see tags</p>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow-lg h-100">
+
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-qrcode mr-2"></i>RFID Scanner
+                                    </h6>
+                                </div>
+
+                                <div class="card-body d-flex flex-column justify-content-center text-center">
+                                    <button id="settingReaderBtn"
+                                            class="btn btn-info btn-block mb-3"
+                                            onclick="openReaderSetting()">
+                                        <i class="fas fa-cog mr-2"></i>Setting Reader
+                                    </button>
+
+                                    <button id="startScanBtn"
+                                            class="btn btn-warning btn-block mb-3"
+                                            onclick="startScanning()">
+                                        <i class="fas fa-play mr-2"></i>Start Scan
+                                    </button>
+
+                                    <button class="btn btn-danger btn-block"
+                                            onclick="stopScan()">
+                                        <i class="fas fa-stop mr-2"></i>Stop Scan
+                                    </button>
+
+                                    <button id="confirmBtn"
+                                            class="btn btn-success btn-block mt-3"
+                                            onclick="confirmStockOut()"
+                                            disabled>
+                                        <i class="fas fa-check mr-2"></i>Confirm Stock Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    <div class="modal fade" id="readerSettingModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cog mr-2"></i>Reader Setting
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#generalSetting">
+                                General
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#advancedSetting">
+                                Advanced
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div class="tab-pane fade show active" id="generalSetting">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Reader Inventory Setting</strong>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label>Search Mode</label>
+                                            <select id="readerSearchMode" class="form-control">
+                                                <option value="SingleTarget">Single Target</option>
+                                                <option value="DualTarget">Dual Target</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label>Session</label>
+                                            <select id="readerSession" class="form-control">
+                                                <option value="S0">S0</option>
+                                                <option value="S1">S1</option>
+                                                <option value="S2">S2</option>
+                                                <option value="S3">S3</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label>Duplicate Interval</label>
+
+                                            <div class="input-group">
+                                                <input id="readerDuplicateInterval"
+                                                       type="number"
+                                                       class="form-control"
+                                                       min="1"
+                                                       value="2">
+
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">sec</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th width="100">Antenna</th>
+                                            <th width="100">Use</th>
+                                            <th>Tx Power</th>
+                                            <th>Sensitivity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="readerSettingBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="advancedSetting">
+                            <div class="alert alert-warning">
+                                <strong>Warning!</strong>
+                                Advanced setting is applied globally for all RFID readers.
+                                Changing this setting will affect all reader connections in this application.
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Connection Retry</label>
+                                    <input id="advConnectionRetry" type="number" class="form-control" min="1">
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label>Retry Delay</label>
+                                    <div class="input-group">
+                                        <input id="advRetryDelayMs" type="number" class="form-control" min="1">
+
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">ms</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label>Cache TTL</label>
+                                    <div class="input-group">
+                                        <input id="advCacheTtlSeconds" type="number" class="form-control" min="1">
+
+                                        <div class="input-group-append">
+                                            <span class="input-group-text">sec</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <small class="text-muted">
+                                To change advanced settings, update appsettings.json.
+                            </small>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-modern action-btn" onclick="saveReaderSetting()">
+                        <i class="fas fa-save mr-1"></i>Save
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+  
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
+    <script>
+
+        let pollingInterval = null;
+        let currentDo = null;
+        let isScanning = false;
+        let renderedTags = new Set();
+
+        let lastInvalidTag = null;
+        let lastInvalidTime = null;
+        const INVALID_ALERT_COOLDOWN = 10000;
+        let isCompletedShown = false;
+        const invalidSound = new Audio('/sound/out.mp3');
+
+
+        $(document).ready(function () {
+            loadDODropdown();
+            loadReaderDropdown();
+        });
+
+        async function loadDODropdown() {
+
+            const data = await Api.get("/api/pickinglist");
+            if (!data) return Alert.error("Failed to load DO data");
+
+            let options = `<option value="">-- Select DO --</option>`;
+
+            data.forEach(d => {
+                options += `<option value="${d.doId}">${d.doNumber}</option>`;
+            });
+
+            $("#doIdSelect").html(options);
+            initSelect2();
+        }
+
+        async function loadReaderDropdown() {
+
+            const data = await Api.get("/api/reader");
+            if (!data) return Alert.error("Failed to load Reader data");
+
+            let options = `<option value="">-- Select Reader --</option>`;
+
+            data.forEach(r => {
+                options += `
+                    <option value="${r.id}" data-ip="${r.ipAddress}">
+                        ${r.rdrName}
+                    </option>`;
+            });
+
+            $("#rdrIdSelect").html(options);
+            initSelect2();
+        }
+
+        function initSelect2() {
+            $('#rdrIdSelect, #doIdSelect').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        }
+
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
+
+        async function openReaderSetting() {
+            const readerId = $("#rdrIdSelect").val();
+
+            if (!readerId) {
+                return Alert.error("Select reader first");
+            }
+
+            await loadReaderSetting(readerId);
+            await loadRfidAdvancedSetting();
+
+            $("#readerSettingModal").modal("show");
+        }
+
+        async function loadReaderSetting(readerId) {
+            const data = await Api.get(`/api/reader/setting?readerId=${readerId}`);
+
+            if (!data) {
+                return Alert.error("Failed to load reader setting");
+            }
+
+            $("#readerSearchMode").val(data.searchMode);
+            $("#readerSession").val(data.session);
+            $("#readerDuplicateInterval").val(data.duplicateScanInterval);
+
+            const antennas = data.antennas || [];
+
+            const tbody = $("#readerSettingBody");
+            tbody.html("");
+
+            for (let i = 1; i <= 4; i++) {
+                const setting = antennas.find(x => x.antennaNo === i) || {
+                    antennaNo: i,
+                    isEnabled: i === 1,
+                    txPower: 30,
+                    sensitivity: -70
+                };
+
+                tbody.append(`
+                    <tr data-antenna="${i}">
+                        <td>
+                            <strong>Antenna ${i}</strong>
+                        </td>
+
+                        <td class="text-center">
+                            <input type="checkbox"
+                                   class="antenna-enabled"
+                                   ${setting.isEnabled ? "checked" : ""}>
+                        </td>
+
+                        <td>
+                            <div class="input-group">
+                                <input type="number"
+                                       class="form-control tx-power"
+                                       value="${setting.txPower}"
+                                       min="0"
+                                       max="32"
+                                       step="0.5"
+                                           ${!setting.isEnabled ? "disabled" : ""}>
+
+                                <div class="input-group-append">
+                                    <span class="input-group-text">dBm</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="input-group">
+                                <input type="number"
+                                       class="form-control sensitivity"
+                                       value="${setting.sensitivity}"
+                                       step="0.5"
+                                           ${!setting.isEnabled ? "disabled" : ""}>
+
+                                <div class="input-group-append">
+                                    <span class="input-group-text">dBm</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            }
+        }
+
+        $(document).on(
+            "change",
+            ".antenna-enabled",
+            function () {
+
+                const row = $(this).closest("tr");
+
+                const enabled = $(this).is(":checked");
+
+                row.find(".tx-power")
+                    .prop("disabled", !enabled);
+
+                row.find(".sensitivity")
+                    .prop("disabled", !enabled);
+            }
+        );
+
+        async function saveReaderSetting() {
+            const readerId = $("#rdrIdSelect").val();
+
+            if (!readerId) {
+                return Alert.error("Select reader first");
+            }
+
+            const advancedDto = {
+                connectionRetry: parseInt($("#advConnectionRetry").val()),
+                retryDelayMs: parseInt($("#advRetryDelayMs").val()),
+                cacheTTLSeconds: parseInt($("#advCacheTtlSeconds").val())
+            };
+
+            if (
+                isNaN(advancedDto.connectionRetry) ||
+                isNaN(advancedDto.retryDelayMs) ||
+                isNaN(advancedDto.cacheTTLSeconds)
+            ) {
+                return Alert.error(
+                    "Connection Retry, Retry Delay, and Cache TTL are required."
+                );
+            }
+
+            const antennas = [];
+
+            $("#readerSettingBody tr").each(function () {
+                const row = $(this);
+
+                antennas.push({
+                    antennaNo: parseInt(row.data("antenna")),
+                    isEnabled: row.find(".antenna-enabled").is(":checked"),
+                    txPower: parseFloat(row.find(".tx-power").val()) || 0,
+                    sensitivity: parseFloat(row.find(".sensitivity").val()) || 0
+                });
+            });
+
+            const dto = {
+                readerId,
+                searchMode: $("#readerSearchMode").val(),
+                session: $("#readerSession").val(),
+                duplicateScanInterval: parseInt($("#readerDuplicateInterval").val()) || 2,
+                antennas
+            };
+
+            const res = await Api.post("/api/reader/setting", dto);
+
+            if (!res || !res.ok) {
+                return Alert.error(
+                    res?.errorData?.message || "Failed to save reader setting"
+                );
+            }
+
+            const advRes = await Api.post(
+                "/advanced-setting",
+                advancedDto
+            );
+
+            if (!advRes || !advRes.ok) {
+                return Alert.error(
+                    advRes?.errorData?.message || "Failed to save advanced setting"
+                );
+            }
+
+            $("#readerSettingModal").modal("hide");
+
+            await Alert.success("Reader setting saved successfully");
+        }
+
+
+        async function loadRfidAdvancedSetting() {
+            const data = await Api.get("/advanced-setting");
+
+            if (!data) {
+                return Alert.error("Failed to load advanced setting");
+            }
+
+            $("#advConnectionRetry").val(data.connectionRetry ?? data.ConnectionRetry);
+            $("#advRetryDelayMs").val(data.retryDelayMs ?? data.RetryDelayMs);
+            $("#advCacheTtlSeconds").val(
+                data.cacheTTLSeconds ??
+                data.cacheTtlSeconds ??
+                data.CacheTTLSeconds
+            );
+        }
+
+
+        async function startScanning() {
+            if (isScanning) return;
+            const doId = $("#doIdSelect").val();
+            const readerSelect = document.getElementById("rdrIdSelect");
+
+            const readerId = readerSelect.value;
+            const ip = readerSelect.options[readerSelect.selectedIndex]?.dataset.ip;
+
+            if (!doId || !readerId) return Alert.error("Select DO & Reader first");
+            if (!ip) return Alert.error("Reader IP not found");
+
+            currentDo = doId;
+
+            const res = await Api.post("/stockout/start", {
+                doId,
+                readerId,
+                ipAddress: ip
+            });
+
+            if (!res || !res.ok) {
+                if (res?.errorData?.type === "warning") return;
+                return Alert.error("Failed to start stock out scanning");
+            }
+
+            isScanning = true;
+            isCompletedShown = false;
+            renderedTags.clear();
+            lastInvalidTag = null;
+            lastInvalidTime = null;
+
+            $("#startScanBtn").prop("disabled", true);
+            $("#doIdSelect").prop("disabled", true).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", true).trigger("change.select2");
+                $("#confirmBtn").prop("disabled", true);
+
+            $("#processStatus")
+                .text("Scanning...")
+                .removeClass()
+                .addClass("badge badge-warning p-2 mb-3");
+
+            await Alert.success("Stock out scanning started successfully");
+
+            await loadItems(doId);
+            await loadTags();
+
+            startPolling(doId);
+        }
+
+        async function stopScan(showAlert = true) {
+
+            if (showAlert) {
+                $("#confirmBtn").prop("disabled", true);
+            }
+
+            const readerId = $("#rdrIdSelect").val();
+
+            if (!readerId) return;
+
+            const res = await Api.post(`/stockout/stop?readerId=${readerId}`);
+
+            if (res && res.ok) {
+                if (showAlert) {
+                    await Alert.success("Stock out scanning stopped");
+                }
+            } else if (res && !res.ok) {
+                if (res.errorData?.type === "warning") return;
+                return Alert.error("Failed to stop stock out scanning");
+            }
+
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            isScanning = false;
+
+            $("#startScanBtn").prop("disabled", false);
+            $("#doIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", false).trigger("change.select2");
+
+            lastInvalidTag = null;
+            lastInvalidTime = null;
+
+             if (showAlert) {
+                $("#scanProgress").css("width", "0%");
+                $("#progressText").text("0 / 0 scanned");
+
+                $("#processStatus")
+                    .text("Ready")
+                    .removeClass()
+                    .addClass("badge badge-secondary p-2 mb-3");
+            }
+        }
+
+        function startPolling(doId) {
+
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            pollingInterval = setInterval(async () => {
+
+            try {
+
+                const invalid = await Api.get('/stockout/invalid-scan');
+
+                if (invalid?.tagId) {
+                    const now = Date.now();
+
+                    const isSameInvalid =
+                        lastInvalidTag === invalid.tagId &&
+                        lastInvalidTime &&
+                        now - lastInvalidTime < INVALID_ALERT_COOLDOWN;
+
+                    if (!isSameInvalid) {
+                        lastInvalidTag = invalid.tagId;
+                        lastInvalidTime = now;
+
+                        invalidSound.pause();
+                        invalidSound.currentTime = 0;
+
+                        await invalidSound.play();
+
+                        Alert.error(`Invalid Tag : ${invalid.tagId}`);
+                    }
+                }
+
+                const items = await Api.get(`/stockout/items?doId=${doId}`);
+
+                if (!items) return;
+
+                updateItemProgress(items);
+                await updateGlobalProgress(items);
+
+                await loadTags();
+
+            } catch (err) {
+
+                console.error(err);
+            }
+
+        }, 1000);
+    }
+
+        function updateItemProgress(items) {
+
+            items.forEach(item => {
+
+                const row = document.querySelector(`[data-item="${item.itemId}"]`);
+                if (!row) return;
+
+                const percent = item.required
+                    ? (item.scanned / item.required * 100)
+                    : 0;
+
+                if (item.scanned >= item.required) {
+                    row.style.background = "#d4edda";
+                }
+
+                row.querySelector(".progress-bar").style.width = percent + "%";
+                row.querySelector("small").textContent =
+                    `${item.scanned}/${item.required}`;
+
+                document.getElementById(`scan-${item.itemId}`).textContent =
+                    item.scanned;
+            });
+        }
+
+        async function updateGlobalProgress(items) {
+
+            const totalRequired = items.reduce((s, i) => s + i.required, 0);
+            const totalScanned = items.reduce((s, i) => s + i.scanned, 0);
+
+            const percent = totalRequired
+                ? (totalScanned / totalRequired * 100)
+                : 0;
+
+            $("#scanProgress").css("width", percent + "%");
+            $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
+
+            if (totalScanned === totalRequired && totalRequired > 0 && !isCompletedShown) {
+                isCompletedShown = true;
+
+                $("#scanProgress").css("width", "100%");
+                $("#progressText").text(`${totalScanned} / ${totalRequired} scanned`);
+
+                $("#processStatus")
+                    .text("Ready to Confirm")
+                    .removeClass()
+                    .addClass("badge badge-info p-2 mb-3");
+
+                $("#confirmBtn").prop("disabled", false);
+
+
+                Alert.success("All tags scanned. Please confirm stock out to update database.");
+            }
+        }
+
+
+         async function confirmStockOut() {
+            if (!currentDo) {
+                return Alert.error("Select DO first");
+            }
+
+            const result = await Alert.confirm(
+                "Confirm Stock Out?",
+                "All scanned tags will be updated to OUT and this DO will be completed."
+            );
+
+            if (!result) return;
+
+            const res = await Api.post(`/stockout/confirm?doId=${currentDo}`);
+
+            if (!res || !res.ok) {
+                return Alert.error(
+                    res?.errorData?.message || "Failed to confirm stock out"
+                );
+            }
+
+            $("#confirmBtn").prop("disabled", true);
+
+                await stopScan(false);
+
+            $("#processStatus")
+                .text("Completed")
+                .removeClass()
+                .addClass("badge badge-success p-2 mb-3");
+
+            await Alert.success("Stock out confirmed successfully.");
+
+            $("#doIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#rdrIdSelect").prop("disabled", false).trigger("change.select2");
+            $("#startScanBtn").prop("disabled", false);
+        }
+
+
+        async function loadTags() {
+            if (!currentDo) return;
+
+            const tags = await Api.get(`/stockout/tags?doId=${currentDo}`);
+            if (!tags) return;
+
+            const tagList = $("#tagList");
+
+            if (tags.length === 0) {
+                tagList.html(`
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-qrcode fa-3x mb-3 opacity-50"></i>
+                        <p>Start scanning to see tags</p>
+                    </div>
+                `);
+                return;
+            }
+
+            if (renderedTags.size === 0) {
+                tagList.html("");
+            }
+
+            tags.forEach(tag => {
+                const key = tag.tagId;
+
+                if (renderedTags.has(key)) return;
+
+                renderedTags.add(key);
+
+                tagList.prepend(`
+                    <div class="tag-item scanned mb-2 p-2 border rounded">
+                        <div class="d-flex align-items-center">
+                            <div class="tag-icon tag-scanned mr-2">✓</div>
+                            <div>
+                                <div class="font-weight-bold small">${tag.tagId}</div>
+                                <div class="text-muted small">${tag.itemId}</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        async function loadItems(doId) {
+
+            const items = await Api.get(`/stockout/items?doId=${doId}`);
+            if (!items) return;
+
+            const tbody = $("#itemList");
+            tbody.html("");
+
+            if (items.length === 0) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No items available
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            items.forEach(item => {
+
+                const percent = item.required
+                    ? (item.scanned / item.required * 100)
+                    : 0;
+
+                tbody.append(`
+                    <tr data-item="${item.itemId}">
+                        <td><strong>${item.itemCode}</strong></td>
+                        <td>${item.itemName}</td>
+                        <td><span class="badge badge-primary">${item.required}</span></td>
+                        <td><span class="badge badge-warning">${item.reserved}</span></td>
+                        <td>
+                            <span class="badge badge-success" id="scan-${item.itemId}">
+                                ${item.scanned}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar bg-info"
+                                     style="width:${percent}%"></div>
+                            </div>
+                            <small>${item.scanned}/${item.required}</small>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        $("#doIdSelect").on("change", function () {
+            if (isScanning) return;
+
+            const doId = $(this).val();
+            if (!doId) return;
+
+            currentDo = doId;
+            renderedTags.clear();
+
+            loadItems(doId);
+        });
+
+        $('#readerSettingModal').on('hidden.bs.modal', function () {
+
+            $("#readerSettingBody").empty();
+
+            $("#advConnectionRetry").val("");
+            $("#advRetryDelayMs").val("");
+            $("#advCacheTtlSeconds").val("");
+
+            $('.nav-tabs a[href="#generalSetting"]').tab('show');
+        });
+
+    </script>
+
+</body>

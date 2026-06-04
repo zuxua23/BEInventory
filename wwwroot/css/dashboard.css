@@ -1,0 +1,702 @@
+﻿/* =========================================================
+   DASHBOARD UI - LIGHT INDUSTRIAL STYLE
+========================================================= */
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.container-fluid {
+    max-width: 100% !important;
+    overflow-x: hidden;
+}
+
+.content-wrapper .container-fluid {
+    padding-left: 22px;
+    padding-right: 22px;    
+}
+
+.dash-content-wrapper {
+    background: #f5f7fb;
+    min-height: 100vh;
+
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.dash-content-header {
+    background: #ffffff;
+    border-bottom: 1px solid #edf1f7;
+    padding: 16px 0;
+}
+
+/* Header Layout */
+.dash-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.dash-page-header-left,
+.dash-page-header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Header Icon */
+.dash-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #eef2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #4f6ef7;
+}
+
+/* Header Text */
+.dash-page-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.dash-page-sub {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+/* Sync Status */
+.dash-sync-pill {
+    padding: 7px 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #4f6ef7;
+}
+
+.dash-sync-dot {
+    font-size: 7px;
+    color: #22c55e;
+}
+
+/* =========================================================
+   KPI SECTION
+========================================================= */
+
+.dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.dash-kpi-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 110px;
+    padding: 22px 24px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+    .dash-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+    }
+
+/* KPI Gradient Variants */
+.dash-kpi-blue {
+    background: linear-gradient(135deg, #4F46E5 0%, #6885ff 100%);
+}
+
+.dash-kpi-teal {
+    background: linear-gradient(135deg, #06b6d4 0%, #22c9b0 100%);
+}
+
+.dash-kpi-violet {
+    background: linear-gradient(135deg, #7c3aed 0%, #9f67ff 100%);
+}
+
+.dash-kpi-amber {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+/* KPI Content */
+.dash-kpi-label {
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #edf1f7;
+}
+
+.dash-kpi-num {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.dash-kpi-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.dash-main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.dash-left-col,
+.dash-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.dash-card {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #edf1f7;
+    border-radius: 18px;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+    .dash-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+/* Card Header */
+.dash-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient( 135deg, #EEF2FF, #E0F2FE );
+}
+
+.dash-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Card Dot */
+.dash-card-dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.dash-card-dot-gray {
+    background: #92400e;
+}
+
+.dash-card-dot-blue {
+    background: #3b82f6;
+}
+
+.dash-card-dot-green {
+    background: #22c55e;
+}
+
+.dash-card-dot-orange {
+    background: #f59e0b;
+}
+
+.dash-card-dot-violet {
+    background: #7c3aed;
+}
+
+/* Card Text */
+.dash-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.dash-card-subtitle {
+    font-size: 14px;
+    font-weight: 550;
+    color: #1e293b;
+}
+
+/* Special Card */
+.dash-card-recent {
+    height: 490px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.dash-table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 420px;
+}
+
+.dash-table-fixed {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.dash-table-fixed-small {
+    height: 320px;
+    overflow-y: auto;
+}
+
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    /* Table Head */
+    .dash-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 14px 20px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: #F8FAFC;
+        color: #475569;
+        border-bottom: 2px solid #E2E8F0;
+    }
+
+    /* Table Body */
+    .dash-table tbody td {
+        padding: 16px 20px;
+        font-size: 13px;
+        vertical-align: middle;
+        color: #334155;
+    }
+
+    .dash-table tbody tr {
+        border-bottom: 1px solid #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+        .dash-table tbody tr:hover {
+            background: #F1F5F9;
+        }
+
+.dash-table-empty {
+    padding: 24px !important;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+/* =========================================================
+   ITEM DETAIL
+========================================================= */
+
+.dash-item-cell,
+.dash-activity-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-item-cell {
+    gap: 3px;
+}
+
+.dash-activity-cell {
+    gap: 1px;
+}
+
+.dash-item-name,
+.dash-activity-action {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.dash-item-sub,
+.dash-activity-entity {
+    font-size: 13px;
+    color: #4f6ef7;
+    font-weight: 600;
+}
+
+.dash-activity-time {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.dash-do-num {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4f6ef7;
+}
+
+/* =========================================================
+   STOCK BADGE
+========================================================= */
+
+.dash-stock-col {
+    text-align: center;
+}
+
+.dash-stock-number {
+    display: inline-block;
+    min-width: 40px;
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #0f172a;
+}
+
+.dash-stock-critical,
+.dash-stock-low,
+.dash-stock-good {
+    padding: 6px 12px;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.dash-stock-critical {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.dash-stock-low {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.dash-stock-good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* =========================================================
+   STATUS SECTION
+========================================================= */
+
+.dash-status-users-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.dash-status-content {
+    padding: 18px 20px;
+    display: grid;
+    flex-direction: column;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.dash-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dash-status-height {
+    min-height: auto;
+}
+
+.dash-status-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.dash-status-time,
+.dash-status-online {
+    font-size: 14px;
+    font-weight: 600;
+    color: #16a34a;
+}
+
+.dash-status-online {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dash-online-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 1.8s infinite;
+}
+
+/* =========================================================
+   ACTIVE USERS
+========================================================= */
+
+.dash-users-body {
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.dash-users-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #4f6ef7;
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+}
+
+.dash-users-num {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.dash-users-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4f6ef7;
+}
+
+.dash-users-trend {
+    font-size: 12px;
+    font-weight: 700;
+    color: #16a34a;
+}
+
+/* =========================================================
+   CHART
+========================================================= */
+
+.dash-chart-card {
+    flex: 1;
+    min-height: 408px;
+}
+
+.dash-chart-card-tag {
+    flex: 1;
+    min-height: 490px;
+}
+
+.dash-stock-chart {
+    position: relative;
+    height: 340px;
+    padding: 16px 20px;
+    margin-top: 1px;
+    border-radius: 16px;
+    background: linear-gradient( 180deg, #f8fbff 0%, #ffffff 100% );
+}
+
+.dash-chart-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    color: #94a3b8;
+    transform: translate(-50%, -50%);
+}
+
+    .dash-chart-placeholder i {
+        margin-bottom: 12px;
+        font-size: 32px;
+    }
+
+.dash-stock-total {
+    margin: 8px 0 0;
+    padding: 4px 4px;
+    border-radius: 16px;
+    text-align: center;
+    background: linear-gradient( 180deg, #f8fafc 0%, #ffffff 100% );
+    border: 1px solid #dbe4f0;
+}
+
+
+.dash-stock-total-label {
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.dash-stock-total-value {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    color: #0f172a;
+}
+
+.dash-stock-total-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+}
+.dash-stock-chart canvas {
+    max-height: 360px;
+}
+
+.dash-chart-compact {
+    height: 430px;
+}
+
+.dash-chart-compact canvas {
+    max-height: 310px;
+}
+/* =========================================================
+   BADGE
+========================================================= */
+
+.dash-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dash-badge-prep {
+    background: #EEF2FF;
+    color: #4F46E5;
+    font-weight: 600;
+}
+
+.dash-badge-done {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.dash-badge-draft {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+    .dash-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .dash-page-title {
+        font-size: 20px;
+    }
+
+    .dash-kpi-num {
+        font-size: 28px;
+    }
+
+    .dash-stock-chart {
+        height: 360px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-status-users-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .content-wrapper .container-fluid {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .dash-page-header {
+        align-items: flex-start;
+    }
+
+    .dash-kpi-card {
+        min-height: 100px;
+    }
+
+    .dash-stock-chart {
+        height: 320px;
+    }
+
+    .dash-stock-total-value {
+        font-size: 26px;
+    }
+}

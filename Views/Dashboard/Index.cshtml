@@ -1,0 +1,795 @@
+
+<body class="hold-transition layout-fixed layout-navbar-fixed">
+    <div class="wrapper">
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_DashboardStyle")
+
+        <div class="content-wrapper dash-content-wrapper">
+            <section class="content-header dash-content-header">
+                <div class="container-fluid">
+                    <div class="dash-page-header">
+                        <div class="dash-page-header-left">
+                            <div class="dash-header-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h1 class="dash-page-title">Dashboard</h1>
+                                <p class="dash-page-sub">Overview of system activity</p>
+                            </div>
+                        </div>
+                        <div class="dash-page-header-right">
+                            <span class="dash-sync-pill">
+                                <i class="fas fa-circle dash-sync-dot"></i>
+                                Last sync: <span id="lastSync">—</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="dash-kpi-grid">
+                        <div class="dash-kpi-card dash-kpi-teal">
+                            <div>
+                                <div class="dash-kpi-label">Total Tags</div>
+                                <div class="dash-kpi-num" id="totalTags">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-blue">
+                            <div>
+                                <div class="dash-kpi-label">Total Items</div>
+                                <div class="dash-kpi-num" id="totalItems">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-violet">
+                            <div>
+                                <div class="dash-kpi-label">Gate Readers</div>
+                                <div class="dash-kpi-num" id="totalReaders">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                        </div>
+
+                        <div class="dash-kpi-card dash-kpi-amber">
+                            <div>
+                                <div class="dash-kpi-label">Open Picking List</div>
+                                <div class="dash-kpi-num" id="totalPicking">—</div>
+                            </div>
+                            <div class="dash-kpi-icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dash-main-grid">
+                        <div class="dash-left-col">
+
+                            <div class="dash-card mt-3">
+
+                                <div class="dash-card dash-card-recent">
+
+                                    <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                        <div class="dash-card-header-left">
+
+                                            <span class="dash-card-dot dash-card-dot-gray"></span>
+
+                                            <span class="dash-card-title">
+                                                Recent System Activity
+                                            </span>
+
+                                        </div>
+
+                                        <span class="dash-card-subtitle">
+                                            Live operational activity feed
+                                        </span>
+
+                                    </div>
+
+                                    <div class="dash-table-wrap dash-table-fixed">
+
+                                        <table class="dash-table dash-table-sm">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Time</th>
+                                                    <th>Activity</th>
+                                                    <th class="dash-stock-col">User</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="recentActivity">
+
+                                                <tr>
+                                                    <td colspan="3" class="dash-table-empty">
+                                                        Loading recent activity...
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div class="dash-card mt-3">
+                                <div class="dash-card dash-card-recent">
+
+                                    <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                        <div class="dash-card-header-left">
+
+                                                <span class="dash-card-dot dash-card-dot-orange"></span>
+                                                <span class="dash-card-title">
+                                                     Low Stock Alert
+                                                </span>
+                                        </div>
+
+                                            <span class="dash-card-subtitle">
+                                                Inventory items below minimum stock
+                                            </span>
+                                    </div>
+
+                                    <div class="dash-table-wrap dash-table-fixed">
+                                        <table class="dash-table dash-table-sm">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="dash-stock-col">Available</th>
+                                                    <th class="dash-stock-col">Condition</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="itemStockBody">
+                                                <tr>
+                                                    <td colspan="3" class="dash-table-empty">
+                                                        Loading inventory...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dash-right-col">
+                            <div class="dash-card dash-chart-card-tag mt-3">
+
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+
+                                    <div class="dash-card-header-left">
+
+                                            <span class="dash-card-dot dash-card-dot-blue"></span>
+
+                                            <span class="dash-card-title">
+                                                Tag Status Distribution
+                                            </span>
+                                    </div>
+
+                                    <span class="dash-card-subtitle">
+                                        RFID tag condition summary
+                                    </span>
+
+                                </div>
+
+                                <div class="dash-stock-chart">
+
+                                    <canvas id="tagStatusChart"></canvas>
+
+                                    <div class="dash-stock-total" id="tagStatusTotalInfo">
+
+                                        <div class="dash-stock-total-label">
+                                            Total Tags
+                                        </div>
+
+                                        <div class="dash-stock-total-value">
+                                            0
+                                        </div>
+
+                                        <div class="dash-stock-total-sub">
+                                            Across all monitored items
+                                        </div>
+
+                                    </div>
+
+                                    <div class="dash-chart-placeholder" id="tagStatusChartPlaceholder">
+                                        <i class="fas fa-chart-bar"></i>
+
+                                        <p>Loading inventory analytics...</p>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="dash-card dash-chart-card mt-3">    
+
+                                <div class="dash-card-header d-flex justify-content-between align-items-center">
+                                    <div class="dash-card-header-left">
+                                        <span class="dash-card-dot dash-card-dot-orange"></span>
+                                        <span class="dash-card-title">
+                                            Picking List Status
+                                        </span>
+                                    </div>
+
+                                    <span class="dash-card-subtitle">
+                                        Delivery order progress summary
+                                    </span>
+                                </div>
+
+                                <div class="dash-stock-chart dash-chart-compact">
+                                    <canvas id="pickingStatusChart"></canvas>
+                                    <div class="dash-stock-total" id="pickingStatusTotalInfo">
+
+                                        <div class="dash-stock-total-label">
+                                            Total Picking List
+                                        </div>
+
+                                        <div class="dash-stock-total-value">
+                                            0
+                                        </div>
+
+                                        <div class="dash-stock-total-sub">
+                                            Across all delivery orders
+                                        </div>
+
+                                    </div>
+                                    <div class="dash-chart-placeholder" id="pickingChartPlaceholder">
+                                        <i class="fas fa-clipboard-list"></i>
+                                        <p>Loading picking analytics...</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        @Html.Partial("_Footer")
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script>
+        $(document).ready(function () {
+            loadDashboard();
+            loadStockData();
+            loadTagStatusChart();
+            loadPickingStatusChart();
+        });
+
+        async function loadDashboard() {
+
+            try {
+
+                const [
+                        items,
+                        tagStatus,
+                        readers,
+                        pickingStatus,
+                        activities
+                ] = await Promise.all([
+
+                        fetch("/api/item", { credentials: "include" }),
+
+                        fetch("/api/tag/status-count", { credentials: "include" }),
+
+                        fetch("/api/reader", { credentials: "include" }),
+
+                        fetch("/api/pickinglist/count-do", { credentials: "include" }),
+
+                        fetch("/api/logs/recent-activity", { credentials: "include" })
+                ]);
+
+                const itemData = await items.json();
+
+                const tagStatusData = await tagStatus.json();
+
+                const rdrData = await readers.json();
+
+                const pickingStatusData = await pickingStatus.json();
+
+                const activityData = await activities.json();
+
+                $("#totalItems").text(itemData.length);
+
+                $("#totalTags").text(tagStatusData.total);
+
+                $("#totalReaders").text(rdrData.length);
+
+                $("#totalPicking").text(pickingStatusData.active);
+
+                const syncTime = new Date().toLocaleString();
+
+                $("#lastSync").text(syncTime);
+
+                $("#lastSyncStatus").text(syncTime);
+
+
+        let activityHtml = "";
+
+        if (activityData.length === 0) {
+
+            activityHtml = `
+                <tr>
+                    <td colspan="3"
+                        class="dash-table-empty">
+                        No recent activity found.
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            activityData.forEach(a => {
+
+                let badgeClass =
+                    "dash-badge-prep";
+
+                if (a.action.includes("DELETE")) {
+                    badgeClass =
+                        "dash-badge-draft";
+                }
+
+                if (a.action.includes("LOGIN")) {
+                    badgeClass =
+                        "dash-badge-done";
+                }
+
+                activityHtml += `
+                    <tr>
+                        <td>
+                            <div class="dash-activity-time">
+                                <span class="dash-do-num">
+                                    ${a.time}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dash-activity-cell">
+                                <div class="dash-activity-action">
+                                    ${a.action}
+                                </div>
+                                <div class="dash-activity-entity">
+                                    ${a.entity}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="dash-stock-col">
+                            <span class="dash-badge ${badgeClass}">
+                                ${a.user}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        $("#recentActivity")
+            .html(activityHtml);
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Dashboard failed to load",
+                    text: "Please check your connection and try again."
+                });
+            }
+        }
+
+        function createDoughnutGradient(ctx, colorTop, colorBottom) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+            gradient.addColorStop(0, colorTop);
+            gradient.addColorStop(1, colorBottom);
+            return gradient;
+        }
+
+        let tagStatusChart = null;
+
+        async function loadTagStatusChart() {
+
+            try {
+
+                const res = await fetch("/api/tag/status-count", {
+                    credentials: "include"
+                });
+
+                const data = await res.json();
+
+                $("#tagStatusTotalInfo").html(`
+                    <div class="dash-stock-total-label">
+                        Total Tags
+                    </div>
+
+                    <div class="dash-stock-total-value">
+                        ${data.total}
+                    </div>
+
+                    <div class="dash-stock-total-sub">
+                        ${data.inStock} in stock ·
+                        ${data.reserved} reserved ·
+                        ${data.out} out ·
+                        ${data.others} others
+                    </div>
+                `);
+
+                const ctx = document.getElementById("tagStatusChart");
+
+                if (!ctx) return;
+
+                if (tagStatusChart) {
+                    tagStatusChart.destroy();
+                }
+
+                if (data.total <= 0) {
+                    $("#tagStatusChartPlaceholder").show();
+                    return;
+                }
+
+                $("#tagStatusChartPlaceholder").hide();
+
+                const chartCtx = ctx.getContext("2d");
+
+            const tagColors = [
+                createDoughnutGradient(chartCtx, "#4ade80", "#22c55e"), // In Stock
+                createDoughnutGradient(chartCtx, "#fbbf24", "#f59e0b"), // Reserved
+                createDoughnutGradient(chartCtx, "#fb7185", "#ec4899"), // Out
+                createDoughnutGradient(chartCtx, "#818cf8", "#6366f1")  // Others
+            ];
+
+                tagStatusChart = new Chart(ctx, {
+                    type: "doughnut",
+
+                    data: {
+                        labels: [
+                            "In Stock",
+                            "Reserved",
+                            "Out",
+                            "Others"
+                        ],
+                        datasets: [{
+                            data: [
+                                data.inStock,
+                                data.reserved,
+                                data.out,
+                                data.others
+                            ],
+                            backgroundColor: tagColors,
+                            borderColor: "#ffffff",
+                            borderWidth: 3,
+                            borderRadius: 10,
+                            spacing: 2,
+                            hoverOffset: 8
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "60%",
+
+                        layout: {
+                            padding: 8
+                        },
+
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: "circle",
+                                    boxWidth: 9,
+                                    boxHeight: 9,
+                                    padding: 18,
+                                    color: "#64748b",
+                                    font: {
+                                        size: 12,
+                                        weight: "500"
+                                    }
+                                }
+                            },
+
+                            tooltip: {
+                                backgroundColor: "rgba(15,23,42,.92)",
+                                titleColor: "#ffffff",
+                                bodyColor: "#e2e8f0",
+                                cornerRadius: 12,
+                                padding: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function (context) {
+                                        const label = context.label || "";
+                                        const value = context.raw || 0;
+                                        return `${label}: ${value} tag`;
+                                    }
+                                }
+                            },
+
+                            datalabels: {
+                                color: "#ffffff",
+                                font: {
+                                    weight: "700",
+                                    size: 12
+                                },
+                                formatter: function (value, context) {
+                                    const total = context.chart.data.datasets[0].data
+                                        .reduce((sum, val) => sum + val, 0);
+
+                                    if (value <= 0 || total <= 0) return "";
+
+                                    const percentage = (value / total) * 100;
+
+                                    return percentage >= 10
+                                        ? percentage.toFixed(0) + "%"
+                                        : "";
+                                }
+                            }
+                        }
+                    },
+
+                    plugins: [ChartDataLabels]
+                });
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Tag status chart failed",
+                    text: "Unable to load tag status data."
+                });
+            }
+        }
+
+        let pickingStatusChart = null;
+
+        async function loadPickingStatusChart() {
+
+            try {
+
+                const res = await fetch("/api/pickinglist/count-do", {
+                    credentials: "include"
+                });
+
+                const data = await res.json();
+
+                $("#pickingStatusTotalInfo").html(`
+                    <div class="dash-stock-total-label">
+                        Total Picking List
+                    </div>
+
+                    <div class="dash-stock-total-value">
+                        ${data.total}
+                    </div>
+
+                    <div class="dash-stock-total-sub">
+                        ${data.draft} draft ·
+                        ${data.preparation} preparation ·
+                        ${data.completed} completed
+                    </div>
+                `);
+
+                const ctx = document.getElementById("pickingStatusChart");
+
+                if (!ctx) return;
+
+                if (pickingStatusChart) {
+                    pickingStatusChart.destroy();
+                }
+
+                if (data.total <= 0) {
+                    $("#pickingChartPlaceholder").show();
+                    return;
+                }
+
+                $("#pickingChartPlaceholder").hide();
+
+                const chartCtx = ctx.getContext("2d");
+
+                const pickingColors = [
+                    createDoughnutGradient(chartCtx, "#818cf8", "#6366f1"),
+                    createDoughnutGradient(chartCtx, "#fbbf24", "#f97316"),
+                    createDoughnutGradient(chartCtx, "#4ade80", "#22c55e")
+                ];
+
+                pickingStatusChart = new Chart(ctx, {
+                    type: "doughnut",
+
+                    data: {
+                        labels: [
+                            "Draft",
+                            "Preparation",
+                            "Completed"
+                        ],
+                        datasets: [{
+                            data: [
+                                data.draft,
+                                data.preparation,
+                                data.completed
+                            ],
+                            backgroundColor: pickingColors,
+                            borderColor: "#ffffff",
+                            borderWidth: 3,
+                            borderRadius: 10,
+                            spacing: 2,
+                            hoverOffset: 8
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: "60%",
+
+                        layout: {
+                            padding: 8
+                        },
+
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: "circle",
+                                    boxWidth: 9,
+                                    boxHeight: 9,
+                                    padding: 18,
+                                    color: "#64748b",
+                                    font: {
+                                        size: 12,
+                                        weight: "500"
+                                    }
+                                }
+                            },
+
+                            tooltip: {
+                                backgroundColor: "rgba(15,23,42,.92)",
+                                titleColor: "#ffffff",
+                                bodyColor: "#e2e8f0",
+                                cornerRadius: 12,
+                                padding: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function (context) {
+                                        const label = context.label || "";
+                                        const value = context.raw || 0;
+                                        return `${label}: ${value} picking list`;
+                                    }
+                                }
+                            },
+
+                            datalabels: {
+                                color: "#ffffff",
+                                font: {
+                                    weight: "700",
+                                    size: 12
+                                },
+                                formatter: function (value, context) {
+                                    const total = context.chart.data.datasets[0].data
+                                        .reduce((sum, val) => sum + val, 0);
+
+                                    if (value <= 0 || total <= 0) return "";
+
+                                    const percentage = (value / total) * 100;
+
+                                    return percentage >= 10
+                                        ? percentage.toFixed(0) + "%"
+                                        : "";
+                                }
+                            }
+                        }
+                    },
+
+                    plugins: [ChartDataLabels]
+                });
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Picking status chart failed",
+                    text: "Unable to load picking status data."
+                });
+            }
+        }
+
+        async function loadStockData() {
+
+            try {
+
+                const res = await fetch("/api/tag/stock", {
+                    credentials: "include"
+                });
+
+                const data = await res.json();
+
+                const lowStockItems = data
+                    .filter(x => x.totalStock <= x.minimumStock)
+                    .sort((a, b) => a.totalStock - b.totalStock);
+
+                let html = "";
+
+                if (lowStockItems.length === 0) {
+
+                    html = `
+                        <tr>
+                            <td colspan="3" class="dash-table-empty">
+                                No low stock items found.
+                            </td>
+                        </tr>
+                    `;
+
+                } else {
+
+                    lowStockItems.slice(0, 10).forEach(item => {
+
+                        html += `
+                            <tr>
+                                <td>
+                                    <div class="dash-item-cell">
+                                        <div class="dash-item-name">
+                                            ${item.itemName}
+                                        </div>
+                                        <div class="dash-item-sub">
+                                            Minimum stock: ${item.minimumStock}
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="dash-stock-col">
+                                    <span class="dash-stock-number">
+                                        ${item.totalStock}
+                                    </span>
+                                </td>
+
+                                <td class="dash-stock-col">
+                                    <span class="dash-stock-low">
+                                        Low
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                $("#itemStockBody").html(html);
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Inventory analytics failed",
+                    text: "Unable to load inventory data."
+                });
+            }
+        }
+
+    </script>
+</body>

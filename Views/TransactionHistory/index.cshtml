@@ -1,0 +1,303 @@
+<body class="hold-transition layout-fixed">
+
+   
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+       <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-history  nav-icon text-primary" style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Transaction History</h1>
+                                <p class="mb-0 text-muted small">Transaction History Overview</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item"><a href="/dashboard" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-box mr-1"></i>Transaction History</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            
+                            <div class="card card-primary card-outline shadow-lg card-tab">
+                                <div class="card-header bg-white border-0 pb-0">
+
+                                    <div class="custom-tab-menu modern-tabs">
+                                        <button class="custom-tab-item active" data-value="">
+                                            <i class="fas fa-layer-group mr-1"></i> All
+                                        </button>
+                                        <button class="custom-tab-item" data-value="STOCK_IN">
+                                            <i class="fas fa-arrow-down mr-1"></i> Stock In
+                                        </button>
+                                        <button class="custom-tab-item" data-value="STOCK_PREPARATION">
+                                            <i class="fas fa-box-open mr-1"></i> Preparation
+                                        </button>
+                                        <button class="custom-tab-item" data-value="STOCK_OUT">
+                                            <i class="fas fa-arrow-up mr-1"></i> Stock Out
+                                        </button>
+                                    </div>
+                                    <div class="card-title-wrapper d-flex justify-content-between align-items-center mt-3">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-filter mr-2 text-primary"></i>
+                                            Filter Transactions
+                                        </h3>
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <div class="export-buttons-wrapper">
+                                                <button id="btnExportExcel" class="btn export-btn export-excel" title="Export to Excel">
+                                                    <i class="fas fa-file-excel mr-1"></i>
+                                                    Excel
+                                                </button>
+                                                <button id="btnExportCsv" class="btn export-btn export-csv" title="Export to CSV">
+                                                    <i class="fas fa-file-csv mr-1"></i>
+                                                    CSV
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-body pt-3">
+                                    <div class="row filter-row mb-4">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label class="text-muted small font-weight-bold">From Date</label>
+                                                <input type="date" id="filterFromDate" class="form-control form-control-sm">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label class="text-muted small font-weight-bold">To Date</label>
+                                                <input type="date" id="filterToDate" class="form-control form-control-sm">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <div class="w-100 d-flex">
+                                                <button id="btnFilter" class="btn btn-primary btn-sm flex-fill mr-1" title="Filter Data">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                                <button id="btnReset" class="btn btn-default btn-sm flex-fill" title="Reset Filter">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th>Date</th>
+                                                    <th>Transaction Type</th>
+                                                    <th>DO Number</th>
+                                                    <th>Reader Name</th>
+                                                    <th class="text-center">Total Tag</th>
+                                                    <th class="text-center" width="100">Action</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+    <script src="~/helper/export.js"></script>
+
+    <script>
+
+        let table;
+        let currentTxType = "";
+
+        async function fetchTransactions(fromDate, toDate, txType, keyword = "") {
+
+            const params = new URLSearchParams();
+
+            if (fromDate) params.append("fromDate", fromDate);
+            if (toDate) params.append("toDate", toDate);
+            if (txType) params.append("txType", txType);
+                if (keyword) params.append("keyword", keyword);
+            const data = await Api.get(`/api/transaction/history?${params}`);
+
+            if (!data) {
+                Alert.error("Failed to load transactions");
+                return [];
+            }
+
+            return data;
+        }
+
+        $(document).ready(function () {
+
+            loadData();
+
+            $(".custom-tab-item").on("click", function () {
+                $(".custom-tab-item").removeClass("active");
+                $(this).addClass("active");
+
+                currentTxType = $(this).data("value");
+                loadData();
+            });
+
+            $("#btnFilter").on("click", loadData);
+
+            $("#btnReset").on("click", function () {
+                $("#filterFromDate").val("");
+                $("#filterToDate").val("");
+
+                $(".custom-tab-item").removeClass("active");
+                $(".custom-tab-item[data-value='']").addClass("active");
+
+                currentTxType = "";
+                loadData();
+            });
+                    $("#filterFromDate").on("change", function () {
+
+                const fromDate = $(this).val();
+
+                $("#filterToDate").attr("min", fromDate);
+
+                const toDate = $("#filterToDate").val();
+
+                if (toDate && toDate < fromDate) {
+
+                    $("#filterToDate").val(fromDate);
+
+                    Alert.error("To Date cannot be less than From Date");
+                }
+            });
+        });
+
+        async function loadData() {
+
+            const fromDate = $("#filterFromDate").val();
+            const toDate = $("#filterToDate").val();
+                const keyword = table ? table.search() : "";
+                    if (fromDate && toDate && toDate < fromDate) {
+                  return Alert.error("To Date cannot be less than From Date");
+             }
+            const data = await fetchTransactions(fromDate, toDate, currentTxType, keyword);
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                searching: false,
+                columns: [
+                    Table.rowNumber(),
+
+                    {
+                        data: "txDate",
+                        className: "text-nowrap",
+                        render: d => d ? new Date(d).toLocaleDateString("id-ID") : "-"
+                    },
+
+                    {
+                        data: "txType",
+                        render: d => {
+                            if (d === "STOCK_IN") return `<span class="badge badge-success">${d}</span>`;
+                            if (d === "STOCK_PREPARATION") return `<span class="badge badge-warning">${d}</span>`;
+                            if (d === "STOCK_OUT") return `<span class="badge badge-danger">${d}</span>`;
+                            return d;
+                        }
+                    },
+
+                    { data: "doNumber", className: "text-nowrap" },
+                    { data: "readerName", render: d => d || "-" },
+                    {
+                        data: "totalTag",
+                        className: "text-center",
+                        render: d => `
+                            <span class="badge badge-info px-3 py-2"> ${d}
+                            </span>
+                        `
+                    },
+                    Table.action(renderAction)
+
+                ],
+
+                pageLength: 5
+            });
+        }
+
+        function renderAction(data) {
+
+            return `
+                <div class="btn-group btn-group-sm">
+                    <a href="/TransactionHistory/detail?id=${data.id}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>    
+                </div>
+            `;
+        }
+
+        function buildExportUrl(type) {
+
+            const params = new URLSearchParams();
+
+            const fromDate = $("#filterFromDate").val();
+            const toDate = $("#filterToDate").val();
+            const keyword = table.search();
+
+            if (fromDate)
+                params.append("fromDate", fromDate);
+
+            if (toDate)
+                params.append("toDate", toDate);
+
+            if (currentTxType)
+                params.append("txType", currentTxType);
+
+            if (keyword)
+                params.append("keyword", keyword);
+
+            return `/api/transaction/export/${type}?${params}`;
+        }
+
+        Export.bind("#btnExportExcel", {
+            url: () => buildExportUrl("excel"),
+            fileName: "transaction-history.xlsx"
+        });
+
+        Export.bind("#btnExportCsv", {
+            url: () => buildExportUrl("csv"),
+            fileName: "transaction-history.csv"
+        });
+
+     
+
+    </script>
+</body>

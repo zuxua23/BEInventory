@@ -1,0 +1,81 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Remove="wwwroot\dist\adminlte.css" />
+	  <Content Remove="wwwroot\dist\adminlte.css.map" />
+	  <Content Remove="wwwroot\dist\adminlte.min.css" />
+	  <Content Remove="wwwroot\dist\adminlte.min.css.map" />
+	  <Content Remove="wwwroot\dist\js\adminlte.js" />
+	  <Content Remove="wwwroot\dist\js\adminlte.js.map" />
+	  <Content Remove="wwwroot\dist\js\adminlte.min.js" />
+	  <Content Remove="wwwroot\dist\js\adminlte.min.js.map" />
+	  <Content Remove="wwwroot\plugins\datatables\dataTables.bootstrap4.js" />
+	  <Content Remove="wwwroot\plugins\datatables\dataTables.bootstrap4.min.js" />
+	  <Content Remove="wwwroot\plugins\datatables\jquery.dataTables.js" />
+	  <Content Remove="wwwroot\plugins\datatables\jquery.dataTables.min.js" />
+	  <Content Remove="wwwroot\plugins\fontawesome\css\all.css" />
+	  <Content Remove="wwwroot\plugins\fontawesome\css\all.min.css" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.js" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.min.js" />
+	  <Content Remove="wwwroot\plugins\jquery\jquery.min.map" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="appsettings.Production.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="OctaneSDK" Version="5.1.0" />
+		<PackageReference Include="Scrutor" Version="7.0.0" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Serilog.Enrichers.CallerInfo" Version="1.0.6" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Logs\" />
+		<Folder Include="Migrations\" />
+		<Folder Include="wwwroot\lib\jquery-validation-unobtrusive\dist\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\dist\css\adminlte.css" />
+	  <None Include="wwwroot\dist\css\adminlte.css.map" />
+	  <None Include="wwwroot\dist\css\adminlte.min.css" />
+	  <None Include="wwwroot\dist\css\adminlte.min.css.map" />
+	  <None Include="wwwroot\dist\js\adminlte.js" />
+	  <None Include="wwwroot\dist\js\adminlte.js.map" />
+	  <None Include="wwwroot\dist\js\adminlte.min.js" />
+	  <None Include="wwwroot\dist\js\adminlte.min.js.map" />
+	  <None Include="wwwroot\plugins\datatables\dataTables.bootstrap4.js" />
+	  <None Include="wwwroot\plugins\datatables\dataTables.bootstrap4.min.js" />
+	  <None Include="wwwroot\plugins\datatables\jquery.dataTables.js" />
+	  <None Include="wwwroot\plugins\datatables\jquery.dataTables.min.js" />
+	  <None Include="wwwroot\plugins\fontawesome\css\all.css" />
+	  <None Include="wwwroot\plugins\fontawesome\css\all.min.css" />
+	  <None Include="wwwroot\plugins\jquery\jquery.js" />
+	  <None Include="wwwroot\plugins\jquery\jquery.min.js" />
+	  <None Include="wwwroot\plugins\jquery\jquery.min.map" />
+	</ItemGroup>
+
+</Project>

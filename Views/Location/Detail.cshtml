@@ -1,0 +1,199 @@
+@using InventoryControl.Utility
+
+@{
+    var canUpdate = PermissionHelper.HasPermission(Context, "LOCATION_UPDATE");
+}
+<body class="hold-transition  layout-fixed layout-navbar-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-map-marker-alt nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail Location</h1>
+                                <p class="mb-0 text-muted small">Manage your location data</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/location" class="text-muted">
+                                        <i class="fas fa-map mr-1"></i>Location
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>Detail
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
+
+                                <div class="card-header">
+                                    <h3 class="card-title mb-0 font-weight-bold">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit Location Information
+                                    </h3>
+                                </div>
+
+                                <div class="card-body">
+
+                                    <form id="locationForm">
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-hashtag text-muted mr-2"></i>
+                                                Location ID <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="locId" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-tag text-muted mr-2"></i>
+                                                Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="name" class="form-control" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-align-left text-muted mr-2"></i>
+                                                Description
+                                            </label>
+                                            <textarea id="description" class="form-control"></textarea>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+                                        <a href="/location" class="btn btn-secondary btn-modern mr-3 action-btn">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                        @if (canUpdate)
+                                        {
+                                        <button type="button"
+                                                    class="btn btn-primary btn-modern px-5 action-btn"
+                                                onclick="updateLocation()">
+                                            <i class="fas fa-save mr-2"></i>Update
+                                        </button>
+                                        }
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
+    <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        let id = "@ViewData["id"]";
+
+        $(document).ready(function () {
+            loadLocation();
+        });
+
+        async function loadLocation() {
+
+            const loc = await Api.get(`/api/location/${id}`);
+
+            if (!loc) {
+                Alert.error("Failed to load location");
+                return;
+            }
+
+            $("#locId").val(loc.locId);
+            $("#name").val(loc.name);
+            $("#description").val(loc.description);
+
+            if (loc.isSystem) {
+
+                $("#locId").prop("disabled", true);
+                $("#name").prop("disabled", true);
+                $("#description").prop("disabled", true);
+
+                $("#btnUpdate").hide();
+
+                $("#systemBadge").removeClass("d-none");
+            }
+        }
+
+
+        async function updateLocation() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const payload = {
+                locId: $("#locId").val(),
+                name: $("#name").val(),
+                description: $("#description").val()
+            };
+
+        const res = await Api.put(`/api/location/${id}`, payload);
+
+            if (res && res.ok) {
+
+                await Alert.success("Location updated successfully");
+
+                window.location.href = "/location";
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to update location");
+            }
+        }
+
+        $(document).keydown(function (e) {
+            if (e.ctrlKey && e.key === 'Enter') updateLocation();
+            if (e.key === 'Escape') window.location.href = "/location";
+        });
+
+    </script>
+
+</body>
