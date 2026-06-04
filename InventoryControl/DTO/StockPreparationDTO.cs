@@ -15,7 +15,7 @@ public class StockPreparationBulkRequestDto
     public string ScannerType { get; set; } = null!;
     public string LocId { get; set; } = null!;
 }
-
+ 
 public class TagBulkInfoRequestDto
 {
     public List<string> Codes { get; set; } = new();
