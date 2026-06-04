@@ -3,7 +3,6 @@ using InventoryControl.Service.Interfaces;
 using InventoryControl.Database;
 using InventoryControl.DTO;
 using InventoryControl.Models;
-using InventoryControl.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryControl.Service.Implementations;
