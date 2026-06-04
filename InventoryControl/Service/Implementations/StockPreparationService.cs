@@ -436,13 +436,14 @@ public class StockPreparationService : IStockPreparationService
             .Include(t => t.Location)
             .AsQueryable();
 
+        var codes = dto.Codes;
         if (isRfid)
         {
-            query = query.Where(t => dto.Codes.Contains(t.EpcTag));
+            query = query.Where(t => EF.Constant(codes).Contains(t.EpcTag));
         }
         else
         {
-            query = query.Where(t => dto.Codes.Contains(t.TagId));
+            query = query.Where(t => EF.Constant(codes).Contains(t.TagId));
         }
 
         var tags = await query.Select(t => new

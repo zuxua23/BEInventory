@@ -186,7 +186,8 @@ public class StockTakingService : IStockTakingService
 
             if (dto.LocationIds != null && dto.LocationIds.Any())
             {
-                query = query.Where(t => dto.LocationIds.Contains(t.LocationId));
+                var locationIds = dto.LocationIds;
+                query = query.Where(t => EF.Constant(locationIds).Contains(t.LocationId));
             }
 
             var tags = await query.ToListAsync();
@@ -308,7 +309,7 @@ public class StockTakingService : IStockTakingService
             var epcs = dto.Items.Select(x => x.Epc).Distinct().ToList();
 
             var tags = await _db.Tags
-                .Where(t => epcs.Contains(t.EpcTag))
+                .Where(t => EF.Constant(epcs).Contains(t.EpcTag))
                 .ToListAsync();
 
             if (!tags.Any())
@@ -608,7 +609,7 @@ public class StockTakingService : IStockTakingService
             .ToList();
 
         var removeTags = await _db.Tags
-            .Where(t => removeTagIds.Contains(t.Id))
+            .Where(t => EF.Constant(removeTagIds).Contains(t.Id))
             .ToListAsync();
 
         foreach (var tag in removeTags)
@@ -640,7 +641,7 @@ public class StockTakingService : IStockTakingService
         var addTagIds = addManuals.Select(x => x.TagId).Distinct().ToList();
 
         var addTags = await _db.Tags
-            .Where(t => addTagIds.Contains(t.Id))
+            .Where(t => EF.Constant(addTagIds).Contains(t.Id))
             .ToListAsync();
 
         foreach (var add in addManuals)

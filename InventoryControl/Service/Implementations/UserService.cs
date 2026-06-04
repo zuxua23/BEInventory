@@ -237,10 +237,11 @@ public class UserService : IUserService
                 dto.RoleIds.Any()
             )
             {
+                var roleIds = dto.RoleIds;
                 var validRoles =
                     await _db.Roles
                         .Where(r =>
-                            dto.RoleIds.Contains(
+                            EF.Constant(roleIds).Contains(
                                 r.Id
                             ) &&
                             !r.IsDelete
@@ -414,10 +415,11 @@ public class UserService : IUserService
                 dto.Roles.Any()
             )
             {
+                var roleIds = dto.Roles;
                 var validRoles =
                     await _db.Roles
                         .Where(r =>
-                            dto.Roles.Contains(
+                            EF.Constant(roleIds).Contains(
                                 r.Id
                             ) &&
                             !r.IsDelete
