@@ -107,6 +107,15 @@ public class StockTakingController : ControllerBase
         return Ok(new { message = "Stock Taking selesai" });
     }
 
+    [HttpPost("apply-adjustment")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_FINALIZE")]
+    public async Task<IActionResult> ApplyAdjustment(StockTakingFinalizeDto dto)
+    {
+        var user = User.Identity?.Name ?? "system";
+        await _service.ApplyAdjustmentAsync(dto, user);
+        return Ok(new { message = "Adjustment applied" });
+    }
+
     [HttpGet("active")]
     public async Task<IActionResult> GetActive()
     {

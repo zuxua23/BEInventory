@@ -270,7 +270,7 @@ public class StockTakingService : IStockTakingService
                             && x.Action == TakingAction.FOUND);
 
             if (alreadyScanned)
-                return; 
+                return;
 
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
@@ -618,6 +618,40 @@ public class StockTakingService : IStockTakingService
         }
     }
 
+    public async Task ApplyAdjustmentAsync(StockTakingFinalizeDto dto, string user)
+    {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
+        try
+        {
+            var st = await _db.StockTakings
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
+
+            if (st == null)
+                throw new Exception("Stock taking session was not found");
+
+            if (st.Status != TakingStatus.OPEN)
+                throw new Exception("Stock taking session has already been completed");
+
+            var details = await _db.StockTakingDetails
+                .Where(d => d.SttId == dto.SttId)
+                .ToListAsync();
+
+            await ApplyAdjustments(details, dto.SttId, user);
+
+            await _db.SaveChangesAsync();
+            await trx.CommitAsync();
+
+            DailyFileLogger.Info($"StockTaking apply adjustment sukses. Session={dto.SttId}");
+        }
+        catch (Exception ex)
+        {
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("ApplyAdjustmentAsync error", ex);
+            throw;
+        }
+    }
+
     private async Task ApplyAdjustments(List<StockTakingDetail> details, string sttId, string user)
     {
         var removeTagIds = details
@@ -856,7 +890,7 @@ public class StockTakingService : IStockTakingService
 
         return stream.ToArray();
     }
-    private async Task<List<StockTakingCompareExportDto>>GetCompareExportData(string sttId)
+    private async Task<List<StockTakingCompareExportDto>> GetCompareExportData(string sttId)
     {
         var systemData = await _db.StockTakingDetails
             .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
@@ -914,7 +948,7 @@ public class StockTakingService : IStockTakingService
             })
             .Select(g => new
             {
-                ItemId =g.Key.ItemId,
+                ItemId = g.Key.ItemId,
                 Location = g.Key.Location,
                 QtyScan = g.Count()
             })
