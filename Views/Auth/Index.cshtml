@@ -1,0 +1,326 @@
+﻿<body>
+    <div class="particles" id="particles"></div>
+    @Html.Partial("Styles/_LoginStyle")
+
+    <div class="login-container">
+        <div class="login-branding">
+            <div class="logo-container">
+                <img src="@Url.Content("~/img/sato_login.png")" class="login-logo" alt="Inventory Control Logo">
+            </div>
+
+            <div class="branding-content">
+                <h1 class="branding-title">Inventory Control</h1>
+            </div>
+        </div>
+
+        <div class="login-form">
+            <div class="form-header">
+                <h2 class="form-title">Welcome Back</h2>
+                <p class="form-subtitle">Please sign in to continue</p>
+            </div>
+
+            <form id="loginForm" asp-controller="Auth" asp-action="Login" method="post">
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           name="username"
+                           id="username"
+                           placeholder=" "
+                           autocomplete="username">
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <input type="password"
+                           class="form-control"
+                           name="password"
+                           id="password"
+                           placeholder=" "
+                           autocomplete="current-password">
+                    <i class="fas fa-lock input-icon"></i>
+                    <i class="fas fa-eye-slash password-toggle" id="togglePassword"></i>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    Sign In
+                </button>
+                <button type="button" class="btn-config" id="openConfig">
+                    Database Setting
+                </button>
+            </form>
+            <div class="modal" id="configModal">
+                <div class="modal-content">
+                    <h3>Database Configuration</h3>
+
+                    <input type="text" id="server" placeholder="Server (contoh: ip,port)">
+                    <input type="text" id="database" placeholder="Database">
+                    <input type="text" id="userId" placeholder="User Id">
+                    <input type="password" id="passwordDb" placeholder="Password">
+
+                    <div style="margin-top:15px;">
+                        <button onclick="saveConnection()">Save</button>
+                        <button onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
+    @if (TempData["LoginError"] != null)
+    {
+        <script>
+            $(document).ready(function () {
+                Alert.error("@TempData["LoginError"]");
+            });
+        </script>
+    }
+    <script>
+
+        $(document).ready(function () {
+            initialize();
+        });
+
+
+
+        function initialize() {
+
+            $("#username").focus();
+
+            initParticles();
+
+            bindEvents();
+        }
+
+        function bindEvents() {
+
+            $("#togglePassword").on(
+                "click",
+                togglePasswordVisibility
+            );
+
+            $("#openConfig").on(
+                "click",
+                openModal
+            );
+
+            $("#saveConnectionBtn").on(
+                "click",
+                saveConnection
+            );
+
+            $(document).on(
+                "keypress",
+                handleEnterKey
+            );
+
+            $(".form-control")
+                .on("focus", handleInputFocus)
+                .on("blur", handleInputBlur);
+
+            $("#loginBtn").on(
+                    "click",
+                    validateLogin
+            );
+        }
+
+        function validateLogin() {
+
+            const username =
+                $("#username").val().trim();
+
+            const password =
+                $("#password").val().trim();
+
+            if (!username) {
+                Alert.warning("Username tidak boleh kosong");
+                $("#username").focus();
+                return;
+            }
+
+            if (!password) {
+                Alert.warning("Password tidak boleh kosong");
+                $("#password").focus();
+                return;
+            }
+
+            $("#loginForm").submit();
+        }
+
+        function initParticles() {
+
+            const container =
+                document.getElementById("particles");
+
+            if (!container)
+                return;
+
+            for (let i = 0; i < 45; i++) {
+
+                const particle =
+                    document.createElement("div");
+
+                particle.className = "particle";
+
+                particle.style.left =
+                    Math.random() * 100 + "%";
+
+                particle.style.animationDelay =
+                    (Math.random() * 15).toFixed(1) + "s";
+
+                particle.style.animationDuration =
+                    (12 + Math.random() * 10).toFixed(1) + "s";
+
+                particle.style.width =
+                    (2 + Math.random() * 6) + "px";
+
+                particle.style.height =
+                    particle.style.width;
+
+                container.appendChild(particle);
+            }
+        }
+
+        function togglePasswordVisibility() {
+
+            const passwordInput =
+                $("#password");
+
+            const toggleIcon =
+                $("#togglePassword");
+
+            const isPassword =
+                passwordInput.attr("type") === "password";
+
+            passwordInput.attr(
+                "type",
+                isPassword ? "text" : "password"
+            );
+
+            toggleIcon
+                .toggleClass("fa-eye")
+                .toggleClass("fa-eye-slash");
+        }
+
+        function handleEnterKey(e) {
+
+            if (
+                e.key === "Enter" &&
+                !$("#loginBtn").prop("disabled") &&
+                !$(e.target).closest("#configModal").length
+            ) {
+                validateLogin();
+            }
+        }
+
+        function handleInputFocus() {
+
+            $(this)
+                .parent()
+                .css("transform", "scale(1.02)");
+        }
+
+        function handleInputBlur() {
+
+            $(this)
+                .parent()
+                .css("transform", "scale(1)");
+        }
+
+        function openModal() {
+
+            $("#configModal").fadeIn(200);
+        }
+
+        function closeModal() {
+
+            $("#configModal").fadeOut(200);
+        }
+
+        async function saveConnection() {
+
+            const server =
+                $("#server").val().trim();
+
+            const database =
+                $("#database").val().trim();
+
+            const userId =
+                $("#userId").val().trim();
+
+            const password =
+                $("#passwordDb").val().trim();
+
+            if (!server) {
+                Alert.warning("Server tidak boleh kosong");
+                $("#server").focus();
+                return;
+            }
+
+            if (!database) {
+                Alert.warning("Database tidak boleh kosong");
+                $("#database").focus();
+                return;
+            }
+
+            if (!userId) {
+                Alert.warning("User Id tidak boleh kosong");
+                $("#userId").focus();
+                return;
+            }
+
+            if (!password) {
+                Alert.warning("Password database tidak boleh kosong");
+                $("#passwordDb").focus();
+                return;
+            }
+
+            const payload = {
+                server: server,
+                database: database,
+                userId: userId,
+                password: password
+            };
+
+            const res = await Api.post(
+                "/update-connection",
+                payload
+            );
+
+            if (res && res.ok) {
+
+                await Alert.success(
+                    "Connection updated successfully"
+                );
+
+                closeModal();
+
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+
+            } else if (res && !res.ok) {
+
+                if (res.errorData?.type === "warning")
+                    return;
+
+                Alert.error(
+                    "Failed to update connection"
+                );
+            }
+        }
+
+        $(window).on("click", function (e) {
+
+            if ($(e.target).is("#configModal")) {
+                closeModal();
+            }
+        });
+
+    </script>
+</body>

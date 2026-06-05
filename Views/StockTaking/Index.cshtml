@@ -1,0 +1,538 @@
+﻿<body class="hold-transition layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-check  nav-icon text-primary" style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Stock Taking</h1>
+                                <p class="mb-0 text-muted small">Manage stock taking process </p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item"><a href="/dashboard" class="text-muted"><i class="fas fa-home mr-1"></i>Dashboard</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-box mr-1"></i>Stock Taking</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENT -->
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="card card-primary card-outline shadow-sm">
+                        <!-- INPUT (1 BARIS) -->
+                        <div class="card-body">
+                            <div class="row align-items-end">
+
+                                <div class="col-md-5">
+                                    <label class="small font-weight-bold">Remark</label>
+                                    <input id="remarkInput" type="text" class="form-control">
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label class="small font-weight-bold">Location</label>
+                                    <select id="locIdSelect" class="form-control select2" multiple style="width:100%"><option></option></select>
+
+                                </div>
+
+                                <div class="col-md-2 d-flex gap-2">
+                                    <button id="startBtn" class="btn btn-success w-100">
+                                        <i class="fas fa-play mr-1"></i> Start
+                                    </button>
+                                    <button id="endBtn" class="btn btn-danger w-100">
+                                        <i class="fas fa-stop mr-1"></i> End
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLES -->
+                    <div class="card card-primary card-outline shadow-sm">
+                        <div class="card-body">
+
+                            <div class="row">
+
+                                <!-- TABLE 1 -->
+                                <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-clipboard-list  nav-icon text-primary mr-2"></i>
+                                                <h5 class="mb-0">Data System</h5>
+                                            </div>
+
+                                            <small class="text-primary font-weight-bold">
+                                                Total Items: <span id="totalItems">0</span> |
+                                                Total Stock: <span id="totalStock">0</span> pcs
+                                            </small>
+                                        </div>
+                                        <div class="d-flex">
+
+                                            <div class="d-flex align-items-center gap-2">
+
+                                                <button id="exportOriginalExcel" class="btn export-btn export-excel mr-1" title="Export to Excel">
+                                                    <i class="fas fa-file-excel mr-1"></i> Excel
+                                                </button>
+
+                                                <button id="exportOriginalCsv" class="btn export-btn export-csv" title="Export to CSV">
+                                                    <i class="fas fa-file-csv mr-1"></i> CSV
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="table-responsive">
+
+                                        <table id="originalTable" class="table table-bordered table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Stock</th>
+                                                    <th>Lokasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+
+                                <!-- TABLE 2 -->
+                                <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-broadcast-tower nav-icon text-primary mr-2"></i>
+                                                <h5 class="mb-0">Data Scanning</h5>
+                                            </div>
+                                            <small class="text-success font-weight-bold">
+                                                Scanned: <span id="scannedCount">0</span>/<span id="totalData">0</span> |
+                                                Progress: <span id="progressPercent">0%</span>
+                                            </small>
+                                        </div>
+
+
+
+                                        <div class="d-flex">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <select id="filterStatus" class="form-control form-control-sm mr-1">
+                                                    <option value="">All</option>
+                                                    <option value="scanned">Scanned</option>
+                                                    <option value="pending">Pending</option>
+                                                </select>
+
+                                            </div>
+
+                                            <button id="exportCollectExcel" class="btn export-btn export-excel mr-1" title="Export to Excel">
+                                                <i class="fas fa-file-excel mr-1"></i> Excel
+                                            </button>
+
+                                            <button id="exportCollectCsv" class="btn export-btn export-csv" title="Export to CSV">
+                                                <i class="fas fa-file-csv mr-1"></i> CSV
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <table id="collectTable" class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Stock</th>
+                                                <th>Lokasi</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+    <script src="~/helper/export.js"></script>
+
+    <script>
+
+        let currentSttId = null;
+        let refreshInterval = null;
+        let isSessionActive = false;
+
+        let tableOriginal = null;
+        let tableCollect = null;
+
+        $(document).ready(async function () {
+            $("#filterStatus").change(loadScanData);
+
+            tableOriginal = Table.init("#originalTable", { pageLength: 5 });
+            tableCollect = Table.init("#collectTable", { pageLength: 5 });
+
+            resetSummary();
+
+            await loadLocationDropdown();
+
+            await checkActiveSession();
+
+
+            Export.bind("#exportOriginalExcel", {
+                url: () => `/api/stock-taking/export/system/excel?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableOriginal.rows().count() === 0) {
+
+                        Alert.error("No system data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+            Export.bind("#exportOriginalCsv", {
+                url: () => `/api/stock-taking/export/system/csv?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableOriginal.rows().count() === 0) {
+
+                        Alert.error("No system data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+            Export.bind("#exportCollectExcel", {
+                url: () => `/api/stock-taking/export/scan/excel?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableCollect.rows().count() === 0) {
+
+                        Alert.error("No scan data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+            Export.bind("#exportCollectCsv", {
+                url: () => `/api/stock-taking/export/scan/csv?sttId=${currentSttId}`,
+                beforeExport: async () => {
+
+                    if (tableCollect.rows().count() === 0) {
+
+                        Alert.error("No scan data to export");
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+
+        });
+
+        function resetSummary() {
+            $("#totalItems").text("0");
+            $("#totalStock").text("0");
+
+            $("#scannedCount").text("0");
+            $("#totalData").text("0");
+            $("#progressPercent").text("0%");
+        }
+
+        async function loadLocationDropdown() {
+
+            const data = await Api.get("/api/stock-taking/loc");
+            if (!data) return Alert.error("Failed to load locations");
+
+            let options = `<option></option>`;
+
+            data.forEach(r => {
+                options += `<option value="${r.id}">${r.name}</option>`;
+            });
+
+            const select = $("#locIdSelect");
+
+            if (select.hasClass("select2-hidden-accessible")) {
+                select.select2('destroy');
+            }
+
+            select.html(options);
+
+            select.select2({
+                theme: 'bootstrap4',
+                placeholder: "Select location...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body'),
+                closeOnSelect: false
+            });
+
+            select.val([]).trigger('change');
+        }
+
+        async function checkActiveSession() {
+
+            const data = await Api.get("/api/stock-taking/active");
+
+            if (data && data.sttId) {
+
+                currentSttId = data.sttId;
+                isSessionActive = true;
+
+                 $("#remarkInput").val(data.remark);
+
+                 $("#locIdSelect")
+                .val(data.locationIds)
+                .trigger("change");
+
+                loadSystemData();
+                startAutoRefresh();
+
+            } else {
+
+                isSessionActive = false;
+                resetSummary();
+            }
+
+            updateButtonState();
+        }
+
+        $("#startBtn").click(async function () {
+
+            if (isSessionActive)
+                return Alert.error("Active session still exists!");
+
+            const remark = $("#remarkInput").val();
+            const locations = $("#locIdSelect").val();
+
+            const res = await Api.post("/api/stock-taking", {
+                remark,
+                locationIds: locations?.length ? locations : null
+            });
+
+             if (!res?.ok) return;
+            const data = await res.json();
+
+            currentSttId = data.stockTakingId;
+            isSessionActive = true;
+
+            resetSummary();
+
+            updateButtonState();
+            loadSystemData();
+            startAutoRefresh();
+        });
+
+
+
+        async function loadSystemData() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/system/${currentSttId}`);
+            if (!data) return;
+
+            tableOriginal.clear();
+
+            let totalItems = 0;
+            let totalStock = 0;
+
+            data.forEach(x => {
+
+                totalItems++;
+                totalStock += x.qty;
+
+                tableOriginal.row.add([
+                    x.itemId,
+                    x.qty,
+                    x.location
+                ]);
+            });
+
+            tableOriginal.draw();
+
+            $("#totalItems").text(totalItems);
+            $("#totalStock").text(totalStock);
+        }
+
+        async function loadProgress() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/progress/${currentSttId}`);
+
+            if (!data) return;
+
+            $("#scannedCount").text(data.processed);
+            $("#totalData").text(data.total);
+            $("#progressPercent").text(data.progress + "%");
+        }
+
+        async function loadScanData() {
+
+            if (!currentSttId) return;
+
+            const data = await Api.get(`/api/stock-taking/compare/${currentSttId}`);
+            if (!data) return;
+
+                   const filter = $("#filterStatus").val();
+
+            let filteredData = data;
+
+            if (filter === "scanned") {
+                filteredData = data.filter(x => x.qtyScan > 0);
+            }
+
+            if (filter === "pending") {
+                filteredData = data.filter(x => !x.qtyScan || x.qtyScan <= 0);
+            }
+
+            tableCollect.clear();
+
+            let scanned = 0;
+            let total = filteredData.length;
+
+            filteredData.forEach(x => {
+
+                if (x.qtyScan > 0) scanned++;
+
+                let row = tableCollect.row.add([
+                    x.itemId,
+                    x.qtyScan || "-",
+                    x.location || "-",
+                    x.status
+                ]).node();
+
+                if (x.difference  < 0) $(row).addClass("table-danger");
+                else if (x.difference  > 0) $(row).addClass("table-success");
+            });
+
+            tableCollect.draw();
+
+            $("#scannedCount").text(scanned);
+            $("#totalData").text(total);
+
+            let percent = total === 0 ? 0 : Math.round((scanned / total) * 100);
+            $("#progressPercent").text(percent + "%");
+        }
+
+
+        function startAutoRefresh() {
+
+            if (refreshInterval) clearInterval(refreshInterval);
+
+            refreshInterval = setInterval(() => {
+                loadScanData();
+                loadProgress();
+            }, 3000);
+        }
+
+
+        $("#endBtn").click(async function () {
+
+            if (!currentSttId) return;
+
+            const confirm = await Alert.confirm({
+                text: "Finish the stock taking?"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await Api.post(
+                "/api/stock-taking/finalize",
+                {
+                    sttId: currentSttId
+                });
+
+            if (!res?.ok) return;
+
+            await Alert.success("Finished");
+
+            resetStockTakingUI();
+        });
+
+         function resetStockTakingUI() {
+
+            currentSttId = null;
+
+            isSessionActive = false;
+
+            clearInterval(refreshInterval);
+
+            $("#remarkInput").val("");
+
+            $("#locIdSelect")
+                .val([])
+                .trigger("change");
+
+            $("#filterStatus").val("");
+
+            tableOriginal.clear().draw();
+
+            tableCollect.clear().draw();
+
+            resetSummary();
+
+            updateButtonState();
+        }
+
+        function updateButtonState() {
+
+            $("#startBtn").prop("disabled", isSessionActive);
+            $("#endBtn").prop("disabled", !isSessionActive);
+
+            $("#remarkInput").prop("readonly", isSessionActive);
+
+            $("#locIdSelect")
+                .prop("disabled", isSessionActive)
+                .trigger("change.select2");
+        }
+
+    </script>
+
+</body>

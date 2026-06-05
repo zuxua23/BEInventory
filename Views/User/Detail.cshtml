@@ -1,0 +1,428 @@
+@using InventoryControl.Utility
+@{
+    var canUpdate = PermissionHelper.HasPermission(Context, "USER_UPDATE");
+}
+<body class="hold-transition layout-fixed layout-navbar-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-user nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail User</h1>
+                                <p class="mb-0 text-muted small">Manage user information</p>
+                            </div>
+                        </div>
+
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/user" class="text-muted">
+                                        <i class="fas fa-users mr-1"></i>User
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-user mr-1"></i>Detail
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
+
+                                <div class="card-header">
+                                    <h3 class="card-title font-weight-bold mb-0">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit User
+                                    </h3>
+                                </div>
+
+                                <div class="card-body">
+
+                                    <form>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
+                                            <input id="userId" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-user mr-2"></i>Username</label>
+                                            <input id="username" class="form-control">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-id-card mr-2"></i>Full Name</label>
+                                            <input id="fullname" class="form-control">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label><i class="fas fa-user-shield mr-2"></i>Role</label>
+                                            <input id="RoleUpdate" class="form-control" readonly>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+
+                                        <a href="/user"
+                                           class="btn btn-secondary btn-modern mr-2 action-btn">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+
+                                        @if (canUpdate)
+                                        {
+                                            <button class="btn btn-warning btn-modern mr-2 action-btn"
+                                                    data-toggle="modal"
+                                                    data-target="#updatePassword">
+                                                <i class="fas fa-key mr-1"></i>Password
+                                            </button>
+
+                                            <button class="btn btn-info btn-modern mr-2 action-btn"
+                                                    data-toggle="modal"
+                                                    data-target="#roleUpdate">
+                                                <i class="fas fa-plus mr-1"></i>Role
+                                            </button>
+
+                                            <button class="btn btn-primary btn-modern action-btn"
+                                                    onclick="updateUser()">
+                                                <i class="fas fa-save mr-2"></i>Update
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    <div class="modal fade" id="updatePassword">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Update Password</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label><i class="fas fa-lock mr-2"></i>New Password</label>
+                        <input type="password" id="newPassword" class="form-control">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-modern action-btn">
+                        <i class="fas fa-save mr-1"></i>Save
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="roleUpdate">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Update Role User</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <form id="RoleUpdateForm">
+                    <div class="modal-body">
+                    
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-hashtag mr-2"></i>User ID</label>
+                                    <input type="text" name="targetUserId" id="modalUserId" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><i class="fas fa-user-shield mr-2"></i>Current Role</label>
+                                    <input type="text" id="modalCurrentRole" class="form-control" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr> <label>Assign New Roles</label>
+                        <div id="detailContainer">
+                        </div>
+
+                        <button type="button" class="btn btn-success btn-sm mt-2 detail-btn" onclick="addDetail()">
+                            <i class="fas fa-plus mr-1"></i> Add Role
+                        </button>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
+    <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        let id = "@ViewData["id"]";
+
+        $(document).ready(function () {
+            loadUser();
+        });
+
+        function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search role...",
+                width: '100%',
+                dropdownParent: $('#roleUpdate')
+            });
+        }
+
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
+
+        async function loadUser() {
+
+            const user = await Api.get(`/api/user/${id}`);
+
+            if (!user) {
+                Alert.error("Failed to load data");
+                return;
+            }
+
+            $("#userId").val(user.userId);
+            $("#username").val(user.username);
+            $("#fullname").val(user.fullname);
+            $("#RoleUpdate").val(user.roles?.join(", ") || "-");
+        }
+
+
+        async function updateUser() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const payload = {
+                id: id,
+                userId: $("#userId").val(),
+                username: $("#username").val(),
+                fullname: $("#fullname").val()
+            };
+
+            const res = await Api.put(`/api/user/${id}`, payload);
+
+            if (res && res.ok) {
+                await Alert.success("User updated successfully");
+                window.location.href = "/user";
+            } else {
+                Alert.error("Failed to update user");
+            }
+        }
+
+
+        async function updatePassword() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const password = $("#newPassword").val();
+
+            if (!password) {
+                Alert.error("Password cannot be empty");
+                return;
+            }
+
+            const res = await Api.put(`/api/user/${id}/password`, { password });
+
+            if (res && res.ok) {
+
+                $("#updatePassword").modal("hide");
+
+                await Alert.success("Password updated");
+                $("#newPassword").val("");
+
+                loadUser();
+                $("#detailContainer").empty();
+            } else {
+
+                Alert.error("Failed to update password");
+
+            }
+        }
+
+        async function addDetail() {
+
+            const roles = await Api.get("/api/permission");
+            if (!roles) return;
+
+            const rowId = Date.now();
+
+            let options = roles.map(r =>
+                `<option value="${r.id}">${r.name}</option>`
+            ).join("");
+
+            const html = `
+                <div class="detail-item d-flex align-items-center mb-2" id="row_${rowId}">
+                    <div class="flex-grow-1 mr-2">
+                        <select class="form-control select2 role-select">
+                            ${options}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            onclick="$('#row_${rowId}').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            $("#detailContainer").append(html);
+            initSelect2(`#row_${rowId}`);
+        }
+
+
+        $('#roleUpdate').on('shown.bs.modal', async function () {
+
+            $("#modalUserId").val($("#userId").val());
+            $("#modalCurrentRole").val($("#RoleUpdate").val());
+            $("#detailContainer").empty();
+
+            const user = await Api.get(`/api/user/${id}`);
+            const roles = await Api.get("/api/permission");
+
+            if (!user || !roles) return;
+
+            user.roles.forEach(roleName => {
+
+                const role = roles.find(r => r.name === roleName);
+                if (!role) return;
+
+                const rowId = `row_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+                let options = roles.map(r =>
+                    `<option value="${r.id}" ${r.name === roleName ? "selected" : ""}>${r.name}</option>`
+                ).join("");
+
+                const html = `
+                    <div class="detail-item d-flex align-items-center mb-2" id="${rowId}"">
+                        <div class="flex-grow-1 mr-2">
+                            <select class="form-control select2 role-select">
+                                ${options}
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm"
+                               onclick="$('#${rowId}').remove()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                $("#detailContainer").append(html);
+                initSelect2(`#row_${rowId}`);
+            });
+
+            if (user.roles.length === 0) addDetail();
+        });
+
+        $("#RoleUpdateForm").submit(async function (e) {
+            e.preventDefault();
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            let roleIds = [];
+
+            $("#detailContainer .role-select").each(function () {
+                const val = $(this).val();
+                if (val) roleIds.push(val);
+            });
+
+            roleIds = [...new Set(roleIds)];
+            const res = await Api.post("/api/user/update-roles", {
+                userId: id,
+                roles: roleIds
+            });
+
+            if (res && res.ok) {
+
+
+                $("#roleUpdate").modal("hide");
+                await Alert.success("Role updated successfully");
+                loadUser();
+                $("#detailContainer").empty();
+            } else {
+
+                Alert.error("Failed to update role");
+
+            }
+        });
+
+
+        $(document).keydown(function (e) {
+            if (e.ctrlKey && e.key === 'Enter') updateUser();
+            if (e.key === 'Escape') window.location.href = "/user";
+        });
+
+    </script>
+
+</body>

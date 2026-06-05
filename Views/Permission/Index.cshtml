@@ -1,0 +1,337 @@
+﻿@using InventoryControl.Utility
+
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "PERMISSION_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "PERMISSION_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "PERMISSION_DELETE");
+}
+<body class="hold-transition layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-user-shield nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Permission Management</h1>
+                                <p class="mb-0 text-muted small">Manage Permission & Role</p>
+                            </div>
+                        </div>
+
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-user-shield mr-1"></i>Role
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="card card-primary card-outline shadow-lg">
+
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title font-weight-bold mb-0">
+                                    <i class="fas fa-list mr-2 text-primary"></i>
+                                    Role List
+                                </h3>
+                                @if (canCreate)
+                                {
+                                    <button class="btn btn-primary btn-icon-split"
+                                    data-toggle="modal"
+                                    data-target="#modalRole">
+                                        <span class="icon text-white-50">
+                                            <i class="fas fa-plus"></i>
+                                        </span>
+                                        <span class="text">Create</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body pt-3">
+                            <div class="table-responsive">
+                                <table id="datatablesIndex" class="table table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center" width="60">#</th>
+                                            <th class="text-nowrap">Role ID</th>
+                                            <th>Role Name</th>
+                                            <th>Status</th>
+                                            @if (canUpdate || canDelete)
+                                            {
+                                            <th class="text-center" width="160">Actions</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        @Html.Partial("_Footer")
+    </div>
+
+    <div class="modal fade" id="modalRole">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 id="modalRoleTitle">Create Role</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <form id="roleForm">
+                    <input type="hidden" id="roleDbId" name="roleDbId">
+
+                    <div class="modal-body">
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><i class="fas fa-hashtag mr-2"></i>Role Code <span class="text-danger">*</span></label>
+                                    <input type="text" id="roleCode" name="roleCode" class="form-control" required placeholder="Enter role code...">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label><i class="fas fa-tag mr-2"></i>Role Name <span class="text-danger">*</span></label>
+                                    <input type="text" id="roleName" name="roleName" class="form-control" required placeholder="Enter role name...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card card-outline card-primary mb-0">
+                            <div class="card-header bg-white">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <h6 class="font-weight-bold mb-0">
+                                            <i class="fas fa-lock mr-2 text-primary"></i>Setting Permissions
+                                        </h6>
+                                        <small class="text-muted">Minimum select 3 permissions</small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input" id="selectAllCheck" onchange="PermissionComponent.toggleSelectAll(this.checked)">
+                                            <label class="custom-control-label font-weight-bold" for="selectAllCheck">Select All</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="row" id="permissionsContainer">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+    <script src="~/helper/permission.component.js"></script>
+
+    <script>
+
+        const canCreate = @canCreate.ToString().ToLower();
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
+
+        let table;
+
+        $(document).ready(async function () {
+
+            await PermissionComponent.loadModules();
+            PermissionComponent.render("permissionsContainer");
+
+            loadRoles();
+        });
+
+        async function loadRoles() {
+
+            const data = await Api.get("/api/permission");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "code" },
+                    { data: "name" },
+                    {
+                        data: "isActive",
+                        render: d =>
+                            d
+                                ? `<span class="badge badge-success">Active</span>`
+                                : `<span class="badge badge-secondary">Inactive</span>`
+                    },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
+            });
+        }
+
+        function renderAction(data) {
+
+            let buttons = `<div class="btn-group btn-group-sm">`;
+
+            if (canUpdate) {
+                buttons += `
+                    <button class="btn btn-info" onclick="openEditRole('${data.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                `;
+            }
+
+            if (canDelete) {
+                buttons += `
+                    <button class="btn btn-danger" onclick="deleteRole('${data.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+
+            buttons += `</div>`;
+            return buttons;
+        }
+
+        async function openEditRole(id) {
+
+            const role = await Api.get(`/api/permission/${id}`);
+            if (!role) return Alert.error("Failed to load role");
+
+            $("#modalRoleTitle").text("Edit Role");
+            $("#roleDbId").val(role.id);
+
+        $("#roleCode").val(role.roleCode);
+        $("#roleName").val(role.roleName);
+
+            PermissionComponent.render("permissionsContainer", role.permissions);
+
+            $("#modalRole").modal("show");
+        }
+
+        $("#modalRole").on("hidden.bs.modal", function () {
+
+            $("#modalRoleTitle").text("Create Role");
+            $("#roleDbId").val("");
+            $("#roleCode").val("");
+            $("#roleName").val("");
+
+            PermissionComponent.render("permissionsContainer");
+        });
+
+
+        $('#modalRole').on('show.bs.modal', function (e) {
+
+            const isEdit = $("#roleDbId").val();
+
+            if (!isEdit && !canCreate) {
+                e.preventDefault();
+                Alert.error("Access denied");
+            }
+        });
+
+        $("#roleForm").submit(async function (e) {
+            e.preventDefault();
+
+            const codeVal = $("#roleCode").val();
+            const nameVal = $("#roleName").val();
+
+            if (!codeVal) return Alert.error("Role Code is required");
+            if (!nameVal) return Alert.error("Role name is required");
+
+            if (PermissionComponent.countSelected() === 0)
+                return Alert.error("Select at least 1 permission");
+
+            const id = $("#roleDbId").val();
+            const isEdit = !!id;
+
+            const payload = {
+                roleCode: codeVal,
+                roleName: nameVal,
+                permissions: PermissionComponent.getSelected()
+            };
+
+            const res = isEdit
+                ? await Api.put(`/api/permission/${id}`, payload)
+                : await Api.post(`/api/permission`, payload);
+
+            if (res && res.ok) {
+
+                await Alert.success(isEdit ? "Role updated" : "Role created");
+
+                $("#modalRole").modal("hide");
+                loadRoles();
+
+            } else {
+
+                Alert.error("Failed to save role");
+
+            }
+        });
+
+
+        async function deleteRole(id) {
+
+            const confirm = await Alert.deleteConfirm("Role");
+            if (!confirm.isConfirmed) return;
+
+            const res = await Api.delete(`/api/permission/${id}`);
+
+            if (res && res.ok) {
+
+                await Alert.success("Role deleted successfully");
+                loadRoles();
+
+            } else {
+
+                Alert.error("Delete role failed");
+
+            }
+        }
+
+    </script>
+</body>

@@ -1,0 +1,283 @@
+@using InventoryControl.Utility
+
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "LOCATION_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "LOCATION_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "LOCATION_DELETE");
+}
+<body class="hold-transition layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-map nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Location Management</h1>
+                                <p class="mb-0 text-muted small">Manage your location data</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-map mr-1"></i>Location
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="row">
+                        <div class="col-12">
+
+                            <div class="card card-primary card-outline shadow-lg">
+
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Location List
+                                        </h3>
+                                        @if (canCreate)
+                                        {
+                                        <button class="btn btn-primary btn-icon-split"
+                                                data-toggle="modal"
+                                                data-target="#createLocation">
+                                            <span class="icon text-white-50">
+                                                <i class="fas fa-plus"></i>
+                                            </span>
+                                            <span class="text">Create</span>
+                                        </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="card-body pt-3">
+
+                                    <div class="table-responsive">
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th>Location ID</th>
+                                                    <th>Name</th>
+                                                    <th>Description</th>
+                                                    @if (canUpdate || canDelete)
+                                                    {
+                                                        <th class="text-center" width="160">Actions</th>
+                                                    }
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    <div class="modal fade" id="createLocation">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Create Location</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <form id="createLocationForm">
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-hashtag text-muted mr-2"></i>
+                                Location ID <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="locId" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-tag text-muted mr-2"></i>
+                                Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-align-left text-muted mr-2"></i>
+                                Description
+                            </label>
+                            <textarea name="description" class="form-control"></textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
+
+    <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
+
+        let table;
+
+        $(document).ready(function () {
+            loadLocations();
+        });
+
+        async function loadLocations() {
+
+            const data = await Api.get("/api/location");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "locId" },
+                    { data: "name" },
+                    { data: "description" },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
+            });
+        }
+
+        function renderAction(data) {
+
+            let buttons = `<div class="btn-group btn-group-sm">`;
+
+            if (canUpdate && !data.isSystem) {
+                buttons += `
+                    <a href="/location/detail?id=${data.id}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                `;
+            }
+
+            if (canDelete && !data.isSystem) {
+                buttons += `
+                    <button class="btn btn-danger"
+                            onclick="deleteLocation('${data.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+
+            buttons += `</div>`;
+
+            if (data.isSystem) {
+                buttons += `
+                    <span class="badge bg-danger ms-1">
+                        SYSTEM
+                    </span>
+                `;
+            }
+
+            return buttons;
+        }
+
+
+        $("#createLocationForm").submit(async function (e) {
+            e.preventDefault();
+
+            const payload = {
+                locId: e.target.locId.value,
+                name: e.target.name.value,
+                description: e.target.description.value
+            };
+
+            const res = await Api.post("/api/location", payload);
+
+            if (res && res.ok) {
+
+                await Alert.success("Location created successfully");
+
+                $("#createLocation").modal("hide");
+                e.target.reset();
+                loadLocations();
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create location");
+            }
+        });
+
+
+        async function deleteLocation(id) {
+
+                    const confirm = await Alert.deleteConfirm("Location", "This location will be deleted!");
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await Api.delete(`/api/location/${id}`);
+
+            if (res && res.ok) {
+
+                await Alert.success("Location deleted successfully");
+                loadLocations();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to delete location");
+            }
+        }
+
+    </script>
+
+</body>

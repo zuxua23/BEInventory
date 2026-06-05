@@ -1,0 +1,204 @@
+/* =========================================================
+   SIDEBAR — LIGHT INDUSTRIAL STYLE
+   Clean Bright Industrial Theme
+========================================================= */
+
+/* =========================================================
+   MAIN SIDEBAR
+========================================================= */
+
+.sidebar-light-industrial {
+    width: 270px !important;
+    background: linear-gradient( 180deg, #f8fafc 0%, #f1f5f9 70%, #e2e8f0 100% ) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+    /* =========================================================
+   BRAND / LOGO
+========================================================= */
+
+    .sidebar-light-industrial .brand-link {
+        padding: 1rem 1.5rem 0.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+    }
+
+        .sidebar-light-industrial .brand-link:hover {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Logo Image */
+        .sidebar-light-industrial .brand-link img {
+            width: 160px !important;
+            height: auto !important;
+            filter: brightness(1) contrast(1.05) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+            .sidebar-light-industrial .brand-link img:hover {
+                transform: scale(1.04);
+                filter: brightness(1.1) contrast(1.1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05)) !important;
+            }
+
+    /* =========================================================
+   SIDEBAR CONTENT
+========================================================= */
+
+    .sidebar-light-industrial .sidebar {
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .sidebar-light-industrial .nav-sidebar {
+        padding: 0 1.2rem !important;
+    }
+
+    /* =========================================================
+   NAVIGATION LINKS
+========================================================= */
+
+    .sidebar-light-industrial .nav-link {
+        margin-bottom: 0.4rem !important;
+        padding: 0.85rem 1rem !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        background: rgba(255, 255, 255, 0.6) !important;
+        color: #475569 !important;
+        font-weight: 500 !important;
+        transition: all 0.25s ease !important;
+    }
+
+        /* Hover */
+        .sidebar-light-industrial .nav-link:hover {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #1e293b !important;
+            transform: translateX(2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Active */
+        .sidebar-light-industrial .nav-link.active {
+            background: linear-gradient( 135deg, #e2e8f0 0%, #f1f5f9 100% ) !important;
+            color: #1e293b !important;
+            border-color: rgba(59, 130, 246, 0.3) !important;
+            box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+        }
+
+    /* =========================================================
+   NAVIGATION ICONS
+========================================================= */
+
+    .sidebar-light-industrial .nav-icon {
+        width: 22px !important;
+        color: #64748b !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .sidebar-light-industrial .nav-link:hover .nav-icon,
+    .sidebar-light-industrial .nav-link.active .nav-icon {
+        color: #1e293b !important;
+    }
+
+    /* =========================================================
+   TREEVIEW SUBMENU
+========================================================= */
+
+    .sidebar-light-industrial .nav-treeview > .nav-item > .nav-link {
+        margin-bottom: 0.2rem !important;
+        padding-left: 2.5rem !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(0, 0, 0, 0.03) !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        font-size: 0.95rem !important;
+        font-weight: 400 !important;
+    }
+
+    .sidebar-light-industrial .nav-treeview .nav-icon {
+        font-size: 0.85rem !important;
+    }
+
+    /* =========================================================
+   TREEVIEW ARROW
+========================================================= */
+
+    .sidebar-light-industrial .right {
+        color: #94a3b8 !important;
+    }
+
+    /* =========================================================
+   LOGOUT SECTION
+========================================================= */
+
+    /* Logout Container */
+    .sidebar-light-industrial .logout-item,
+    .sidebar-light-industrial .nav-item.mt-auto {
+        margin-top: auto !important;
+        padding-top: 2rem !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+        /* Logout Link */
+        .sidebar-light-industrial .logout-item .nav-link,
+        .sidebar-light-industrial .nav-item.mt-auto .nav-link {
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        }
+
+            /* Logout Hover */
+            .sidebar-light-industrial .logout-item .nav-link:hover,
+            .sidebar-light-industrial .nav-item.mt-auto .nav-link:hover {
+                background: rgba(239, 68, 68, 0.08) !important;
+                border-color: rgba(239, 68, 68, 0.3) !important;
+                color: #dc2626 !important;
+            }
+
+    /* =========================================================
+   CUSTOM SCROLLBAR
+========================================================= */
+
+    .sidebar-light-industrial::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar-light-industrial::-webkit-scrollbar-track {
+        background: rgba(248, 250, 252, 0.8);
+    }
+
+    .sidebar-light-industrial::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.6);
+        border-radius: 3px;
+    }
+
+        .sidebar-light-industrial::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+
+@media (max-width: 992px) {
+    .sidebar-light-industrial {
+        width: 250px !important;
+    }
+
+        .sidebar-light-industrial .brand-link img {
+            width: 140px !important;
+        }
+}
+
+@media (max-width: 768px) {
+    .sidebar-light-industrial {
+        width: 240px !important;
+    }
+
+        .sidebar-light-industrial .brand-link img {
+            width: 130px !important;
+        }
+}
