@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using InventoryControl.DTO;
 using InventoryControl.Service.Interfaces;
@@ -56,8 +56,14 @@ public class LogService : ILogService
                 dto.Entity =
                     Extract(line, "Entity='", "'");
 
+                dto.EntityId =
+                    Extract(line, "EntityId='", "'");
+
                 dto.User =
                     Extract(line, "PerformedBy='", "'");
+
+                dto.Description =
+                    ExtractToEnd(line, "Description='");
 
                 result.Add(dto);
             }
@@ -101,5 +107,35 @@ public class LogService : ILogService
             startIndex,
             endIndex - startIndex
         );
+    }
+
+    private string ExtractToEnd(
+        string source,
+        string start
+    )
+    {
+        var startIndex =
+            source.IndexOf(start);
+
+        if (startIndex == -1)
+        {
+            return "-";
+        }
+
+        startIndex += start.Length;
+
+        var value = source
+            .Substring(startIndex)
+            .TrimEnd();
+
+        if (value.EndsWith("'"))
+        {
+            value = value
+                .Substring(0, value.Length - 1);
+        }
+
+        return string.IsNullOrWhiteSpace(value)
+            ? "-"
+            : value;
     }
 }
