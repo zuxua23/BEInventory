@@ -390,7 +390,7 @@ public class PrintTagRegisService : IPrintTagRegisService
     private void ValidateRegistrationStatus(Tag tag)
     {
         if (
-            tag.Status != TagStatus.PRINTED ||
+            tag.Status != TagStatus.PRINTED &&
             tag.Status != TagStatus.OUT
         )
         {
@@ -399,27 +399,27 @@ public class PrintTagRegisService : IPrintTagRegisService
     }
 
     private const string SBPL_TEMPLATE = @"
-A
-A3V+00000H+0000CS6#F5A1V00384H0913
-ZAPSWKpercobaan1 
-IP0e:h,epc:{epcTag},fsw:1;
-%0H0425V00303P02
-RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
-%0H0656V001162D30,L,07,1,0
-DN0009,{qrTag}
-%0H0083V00303P02
-RH0,SATO0.ttf,0,034,030,{printDate}    
-%0H0684V00053P02
-RH0,SATO0.ttf,0,040,042,1 UNIT
-%0H0083V00275P02
-RH0,SATO0.ttf,0,022,025,Made in Indonesia
-%0H0083V00053P02
-RH0,SATO0.ttf,0,040,042,{itemName}
-%0H0083V00107P02
-RH0,SATO0.ttf,0,041,034,{itemId}
-%0H0083V00150P02
-RH0,SATO0.ttf,0,040,030,{itemDesc}
-Q1Z";
+A
+A3V+00000H+0000CS6#F5A1V00384H0913
+ZAPSWKpercobaan1 
+IP0e:h,epc:{epcTag},fsw:1;
+%0H0425V00303P02
+RH0,SATO0.ttf,0,034,034,SATO LABEL SOLUTIONS
+%0H0656V001162D30,L,07,1,0
+DN0009,{qrTag}
+%0H0083V00303P02
+RH0,SATO0.ttf,0,034,030,{printDate}    
+%0H0684V00053P02
+RH0,SATO0.ttf,0,040,042,1 UNIT
+%0H0083V00275P02
+RH0,SATO0.ttf,0,022,025,Made in Indonesia
+%0H0083V00053P02
+RH0,SATO0.ttf,0,040,042,{itemName}
+%0H0083V00107P02
+RH0,SATO0.ttf,0,041,034,{itemId}
+%0H0083V00150P02
+RH0,SATO0.ttf,0,040,030,{itemDesc}
+Q1Z";
 
     private string BuildSBPL(
         string epcTag,
