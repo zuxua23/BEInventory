@@ -641,4 +641,45 @@ Q1Z";
             throw;
         }
     }
+    
+    public async Task RegisterWithItemAsync(TagRegisterWithItemDto dto, string user)
+    {
+        var tag = await _db.Tags
+            .FirstOrDefaultAsync(t => t.EpcTag == dto.EpcTag && !t.IsDelete);
+    
+        if (tag == null)
+            throw new Exception($"Tag dengan EPC '{dto.EpcTag}' tidak ditemukan.");
+    
+        if (tag.Status != TagStatus.PRINTED && tag.Status != TagStatus.OUT)
+            throw new Exception($"Tag '{tag.TagId}' tidak dapat di-register. Status: {tag.Status}");
+    
+        var item = await _db.Items
+            .FirstOrDefaultAsync(i => i.Id == dto.ItemId && !i.IsDelete);
+    
+        if (item == null)
+            throw new Exception($"Item dengan ID '{dto.ItemId}' tidak ditemukan.");
+    
+        var reference = $"REG-{DateTime.UtcNow:yyyyMMddHHmmss}";
+    
+        tag.ItemId = item.Id;
+        tag.Status = TagStatus.STANDBY;
+        tag.UpdatedBy = user;
+        tag.UpdatedAt = DateTime.UtcNow;
+    
+        _db.Histories.Add(new HistoryPrint
+        {
+            Id = Guid.NewGuid().ToString(),
+            TagId = tag.Id,
+            ItemId = item.Id,
+            Type = HistoryType.REGISTER_TAG,
+            Reference = reference,
+            Action = "STANDBY",
+            CreatedBy = user,
+            CreatedAt = DateTime.UtcNow
+        });
+    
+        await _db.SaveChangesAsync();
+    
+        DailyFileLogger.Info($"Tag '{tag.TagId}' registered to item '{item.Name}' by '{user}'.", user);
+    }
 }
