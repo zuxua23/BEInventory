@@ -1,0 +1,482 @@
+@using InventoryControl.Utility
+@{
+    var canCreate = PermissionHelper.HasPermission(Context, "PICKINGLIST_CREATE");
+    var canUpdate = PermissionHelper.HasPermission(Context, "PICKINGLIST_UPDATE");
+    var canDelete = PermissionHelper.HasPermission(Context, "PICKINGLIST_DELETE");
+}
+<body class="hold-transition layout-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-clipboard-list nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Picking List</h1>
+                                <p class="mb-0 text-muted small">Manage delivery picking process</p>
+                            </div>
+                        </div>
+
+                        <nav aria-label="breadcrumb" class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-clipboard-list mr-1"></i>Picking List
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+
+                    <div class="row">
+                        <div class="col-12">
+
+                            <div class="card card-primary card-outline shadow-lg">
+
+                                <div class="card-header bg-white border-0 pb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="card-title font-weight-bold mb-0">
+                                            <i class="fas fa-list mr-2 text-primary"></i>
+                                            Picking List Data
+                                        </h3>
+                                        @if (canCreate)
+                                        {
+                                            <button class="btn btn-primary btn-icon-split"
+                                            data-toggle="modal"
+                                            data-target="#createPickingList">
+                                                <span class="icon text-white-50">
+                                                    <i class="fas fa-plus"></i>
+                                                </span>
+                                                <span class="text">Create</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="card-body pt-3">
+
+                                    <div class="table-responsive">  
+                                        <table id="datatablesIndex" class="table table-hover">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th class="text-center" width="60">#</th>
+                                                    <th class="text-nowrap">DO Number</th>
+                                                    <th>Status</th>
+                                                    <th>Create Date</th>
+                                                    @if (canUpdate || canDelete)
+                                                    {
+                                                        <th class="text-center" width="160">Actions</th>
+                                                    }
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        @Html.Partial("_Footer")
+    </div>
+
+    <div class="modal fade" id="createPickingList">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5>Create Picking List</h5>
+                    <button class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <form id="createPickingListForm">
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-barcode text-muted mr-2"></i>
+                                DO Number <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="doNumber" class="form-control" required>
+                        </div>
+
+                        <div id="detailContainer"></div>
+
+                        <button type="button" class="btn btn-success btn-sm mt-2 detail-btn" onclick="addDetail()">
+                            <i class="fas fa-plus mr-1"></i>Item
+                        </button>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary action-btn" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-modern action-btn">
+                            <i class="fas fa-save mr-1"></i>Save
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+    <script src="~/helper/table.js"></script>
+
+    <script>
+
+        const canUpdate = @canUpdate.ToString().ToLower();
+        const canDelete = @canDelete.ToString().ToLower();
+
+        let table;
+
+        $(document).ready(function () {
+            loadDO();
+            $(window).trigger('resize');
+        });
+
+
+        async function loadItemDropdown() {
+
+            const data = await Api.get("/api/item");
+            if (!data) return Alert.error("Failed to load items");
+
+            let options = `<option value="">-- Select ITEM --</option>`;
+
+            data.forEach(item => {
+                options += `<option value="${item.id}">${item.itemName}</option>`;
+            });
+
+            $(".item-select").each(function () {
+                if ($(this).children().length <= 1) {
+                    $(this).html(options);
+                }
+            });
+        }
+
+        function initSelect2(parent = document) {
+            $(parent).find('.select2').select2({
+                theme: 'bootstrap4',
+                placeholder: "Search...",
+                width: '100%',
+                dropdownParent: $('#createPickingList')
+            });
+        }
+
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        });
+
+        async function loadDO() {
+
+            const data = await Api.get("/api/pickinglist");
+            if (!data) return;
+
+            table = Table.init("#datatablesIndex", {
+                data: data,
+                columns: [
+                    Table.rowNumber(),
+                    { data: "doNumber", className: "text-nowrap" },
+                    { data: "status" },
+                    {
+                        data: "createdAt",
+                        render: d => {
+                            if (!d) return "-";
+                            return new Date(d).toLocaleString("id-ID");
+                        }
+                    },
+                    Table.action(renderAction, canUpdate || canDelete)
+                ]
+            });
+        }
+
+        function renderAction(data) {
+
+            let buttons = `<div class="btn-group btn-group-sm">`;
+
+            if (canUpdate) {
+                buttons += `
+                    <a href="/pickinglist/detail?id=${data.doId}" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                `;
+            }
+
+            if (canDelete) {
+                buttons += `
+                    <button class="btn btn-danger"
+                            onclick="deletePickingList('${data.doId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+
+            buttons += `</div>`;
+            return buttons;
+        }
+
+        $(document).on("click", ".remove-item", async function () {
+
+            const confirm = await Alert.confirm({
+                text: "Delete item?"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            let row = $(this).closest(".detail-item");
+            row.remove();
+
+            if ($("#detailContainer .detail-item").length === 0) {
+                $("#detailContainer").html("");
+            }
+        });
+
+        function addDetail() {
+
+            if ($("#detailContainer .item-header").length === 0) {
+                $("#detailContainer").append(`
+                    <div class="row mb-2 item-header font-weight-bold">
+                        <div class="col">Item</div>
+                        <div class="col">Qty</div>
+                        <div class="col-2 text-center">Action</div>
+                    </div>
+                `);
+            }
+
+        $("#detailContainer").append(`
+            <div class="detail-item card border-0 shadow-sm mb-3 p-3">
+
+                <div class="row align-items-start">
+
+                    <div class="col-md-5 d-flex flex-column">
+                        <select class="form-control select2 item-select" required>
+                        </select>
+                                        <small class="stock-info mt-1 d-block" style="min-height:20px;"></small>
+
+                    </div>
+
+                    <div class="col-md-5 d-flex flex-column">
+                        <input class="form-control qty"
+                               type="number"
+                               placeholder="Enter qty"
+                               min="1"
+                               step="1">
+                                         <small class="text-danger qty-error mt-1 d-block"
+                       style="min-height:20px;"></small>
+                    </div>
+
+            <div class="col-md-2 d-flex justify-content-center align-items-center">
+
+                        <button type="button"
+                                class="btn btn-danger btn-sm remove-item px-3">
+                            <i class="fas fa-trash"></i>
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `);
+
+            loadItemDropdown();
+            initSelect2($("#detailContainer"));
+        }
+
+        $(document).on("change", ".item-select", async function () {
+
+            const row = $(this).closest(".detail-item");
+            const itemId = $(this).val();
+
+            if (!itemId) return;
+
+            const stock = await Api.get(`/api/item/${itemId}/available-stock`);
+
+            if (stock == null) {
+
+            row.find(".stock-info")
+                .html(`
+                    <span class="font-weight-bold text-primary">
+                        ${stock}
+                    </span>
+                `);
+                return;
+            }
+
+            row.find(".stock-info")
+                .html(`
+                    Available Stock:
+                    <span class="font-weight-bold text-primary">
+                        ${stock}
+                    </span>
+                `);
+
+            row.find(".qty")
+                .attr("max", stock);
+        });
+
+        $(document).on("input", ".qty", function () {
+
+            const qty = parseInt($(this).val()) || 0;
+            const max = parseInt($(this).attr("max")) || 0;
+
+            const errorEl = $(this)
+                .closest(".d-flex")
+                .find(".qty-error");
+
+            if (qty > max) {
+
+                $(this).addClass("is-invalid");
+
+                errorEl.text(`Qty exceeds available stock (${max})`);
+
+            } else {
+
+                $(this).removeClass("is-invalid");
+
+                errorEl.text("");
+            }
+        });
+
+        $("#createPickingListForm").submit(async function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+
+            let details = [];
+            let isValid = true;
+
+            $("#detailContainer .detail-item").each(function () {
+
+                const itemId = $(this).find(".item-select").val();
+                const qty = parseInt($(this).find(".qty").val());
+
+                if (!itemId) return;
+
+                if (!qty || qty <= 0) {
+                    Alert.error("Qty must be greater than 0");
+                    throw new Error("Invalid qty");
+                }
+
+                details.push({
+                    itemId,
+                    qtyRequired: qty
+                });
+            });
+
+            if (details.length === 0) {
+                return Alert.error("Please add at least one item");
+            }
+
+            if (!isValid) {
+                return Alert.error("Please fill all item and quantity correctly");
+            }
+
+            const duplicate = details.some(
+                (x, i) =>
+                    details.findIndex(y => y.itemId === x.itemId) !== i
+            );
+
+            if (duplicate) {
+                Alert.error("Duplicate item is not allowed");
+                return;
+            }
+
+            if ($(".is-invalid").length > 0) {
+                Alert.error("Please fix invalid qty");
+                return;
+            }
+
+            const payload = {
+                doNumber: form.doNumber.value,
+                details
+            };
+
+            Swal.fire({
+                title: "Saving...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await Api.post("/api/pickinglist", payload);
+
+            if (res && res.ok) {
+
+                await Alert.success("Picking list created successfully");
+
+                $("#createPickingList").modal("hide");
+                form.reset();
+                $("#detailContainer").html("");
+                loadDO();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to create picking list");
+            }
+        });
+
+        async function deletePickingList(id) {
+
+            const confirm = await Alert.deleteConfirm("Picking List");
+            if (!confirm.isConfirmed) return;
+
+            const res = await Api.delete(`/api/pickinglist/${id}`);
+
+            if (res && res.ok) {
+
+                await Alert.success("Deleted successfully");
+                loadDO();
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to delete picking list");
+            }
+        }
+
+        $(window).on('resize', function () {
+            clearTimeout(window.datatableResizeTimeout);
+            window.datatableResizeTimeout = setTimeout(function () {
+                if (table) {
+                    table.columns.adjust().responsive.recalc();
+                }
+            }, 250);
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && table) {
+                setTimeout(() => table.columns.adjust().responsive.recalc(), 100);
+            }
+        });
+
+    </script>
+
+</body>

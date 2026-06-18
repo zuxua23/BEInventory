@@ -1,0 +1,201 @@
+@using InventoryControl.Utility
+@{
+        var canUpdate = PermissionHelper.HasPermission(Context, "READER_UPDATE");
+}
+
+<body class="hold-transition layout-fixed layout-navbar-fixed">
+
+    <div class="wrapper">
+
+        @Html.Partial("_Navbar")
+        @Html.Partial("_Sidebar")
+        @Html.Partial("Styles/_ViewsStyle")
+
+        <div class="content-wrapper">
+
+            <section class="content-header">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+
+                        <div class="d-flex align-items-center">
+                            <div class="header-icon mr-3">
+                                <i class="fas fa-broadcast-tower nav-icon text-primary"
+                                   style="font-size: 2.25rem; opacity: 0.8;"></i>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-dark font-weight-bold">Detail Reader</h1>
+                                <p class="mb-0 text-muted small">Manage reader device information</p>
+                            </div>
+                        </div>
+
+                        <nav class="modern-breadcrumb">
+                            <ol class="breadcrumb bg-transparent p-0 mb-0">
+                                <li class="breadcrumb-item">
+                                    <a href="/dashboard" class="text-muted">
+                                        <i class="fas fa-home mr-1"></i>Dashboard
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="/reader" class="text-muted">
+                                        <i class="fas fa-broadcast-tower mr-1"></i>Reader
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    <i class="fas fa-info-circle mr-1"></i>Detail
+                                </li>
+                            </ol>
+                        </nav>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+
+                            <div class="card form-card shadow-lg p-2 p-sm-3 p-md-4">
+
+                                <div class="card-header">
+                                    <h3 class="card-title mb-0 font-weight-bold">
+                                        <i class="fas fa-edit mr-2 text-primary"></i>
+                                        Edit Reader Information
+                                    </h3>
+                                </div>
+
+                                <div class="card-body">
+
+                                    <form id="readerForm">
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-hashtag text-muted mr-2"></i>
+                                                Reader ID
+                                            </label>
+                                            <input id="rdrId" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-tag text-muted mr-2"></i>
+                                                Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="rdrName" class="form-control" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-map-marker-alt text-muted mr-2"></i>
+                                                Location
+                                            </label>
+                                            <input type="hidden" id="locId">
+                                            <input id="locationName" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>
+                                                <i class="fas fa-network-wired text-muted mr-2"></i>
+                                                IP Address <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="ipAddress" class="form-control" required>
+                                        </div>
+
+                                    </form>
+
+                                    <div class="d-flex justify-content-end pt-3 border-top">
+                                        <a href="/reader" class="btn btn-secondary btn-modern mr-3 action-btn">
+                                            <i class="fas fa-times mr-1"></i>Cancel
+                                        </a>
+                                        @if (canUpdate)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-primary btn-modern px-5 action-btn"
+                                            onclick="updateReader()">
+                                                <i class="fas fa-save mr-2"></i>Update
+                                            </button>
+                                        }
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        @Html.Partial("_Footer")
+
+    </div>
+
+    @Html.Partial("_BaseScript")
+
+    <script src="~/helper/api.js"></script>
+    <script src="~/helper/alert.js"></script>
+
+    <script>
+        const canUpdate = @canUpdate.ToString().ToLower();
+        let id = "@ViewData["id"]";
+
+        $(document).ready(function () {
+            loadReader();
+        });
+
+        async function loadReader() {
+
+            const data = await Api.get(`/api/reader/${id}`);
+
+            if (!data) {
+                Alert.error("Failed to load data");
+                return;
+            }
+
+            $("#rdrId").val(data.rdrId);
+            $("#rdrName").val(data.rdrName);
+            $("#locId").val(data.locId);
+            $("#locationName").val(data.locationName);
+            $("#ipAddress").val(data.ipAddress);
+        }
+
+        async function updateReader() {
+
+            if (!canUpdate) {
+                Alert.error("You do not have permission to update");
+                return;
+            }
+
+            const payload = {
+                rdrId: $("#rdrId").val(),
+                rdrName: $("#rdrName").val(),
+                locId: $("#locId").val(),
+                ipAddress: $("#ipAddress").val()
+            };
+
+            const res = await Api.put(`/api/reader/${id}`, payload);
+
+            if (res && res.ok) {
+
+                await Alert.success("Reader updated successfully");
+                window.location.href = "/reader";
+
+
+            } else if (res && !res.ok) {
+                  if (res.errorData?.type === "warning")
+                  return;
+
+                Alert.error("Failed to update reader");
+            }
+        }
+
+        $(document).keydown(function (e) {
+            if (e.ctrlKey && e.key === 'Enter') updateReader();
+            if (e.key === 'Escape') window.location.href = "/reader";
+        });
+
+    </script>
+
+</body>
