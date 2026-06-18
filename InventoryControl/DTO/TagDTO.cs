@@ -52,3 +52,9 @@ public class StockQRDto
     public string? Location { get; set; }
     public int TotalStock { get; set; }
 }
+
+public class TagRegisterWithItemDto
+{
+    public string EpcTag { get; set; } = null!;
+    public string ItemId { get; set; } = null!;
+}
