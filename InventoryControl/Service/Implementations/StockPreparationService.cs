@@ -378,7 +378,7 @@ public class StockPreparationService : IStockPreparationService
             .Include(x => x.Details)
             .ThenInclude(d => d.Item)
             .Where(x => !x.IsDelete &&
-                (x.Status == DoStatus.DRAFT || x.Status == DoStatus.PREPARATION))
+                (x.Status == DoStatus.DRAFT))
             .Select(x => new DOResponseDto
             {
                 DoId = x.DoId,
@@ -454,7 +454,7 @@ public class StockPreparationService : IStockPreparationService
             EpcTag = t.EpcTag,
             ItemId = t.ItemId,
             ItemName = t.Item != null ? t.Item.Name : null,
-            Status = t.Status.ToString(),
+            Status = t.Status == TagStatus.IN_STOCK ? "IN_STOCK" : null,
             Location = t.Location != null ? t.Location.Name : null
         }).ToListAsync();
 
