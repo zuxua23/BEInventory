@@ -110,7 +110,7 @@ public class StockInService : IStockInService
             foreach (var tag in tags)
             {
                 if (
-                    tag.Status != TagStatus.STANDBY &&
+                    tag.Status != TagStatus.STANDBY ||
                     tag.Status != TagStatus.PRINTED
                 )
                 {

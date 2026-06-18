@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Models;
+namespace InventoryControl.Models;
 
 public enum TagStatus
 {
