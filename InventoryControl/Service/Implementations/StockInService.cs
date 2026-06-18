@@ -215,6 +215,7 @@ public class StockInService : IStockInService
         var tag = await _db.Tags
             .AsNoTracking()
             .Where(t => scannerType == "RFID" ? t.EpcTag == code : t.TagId == code)
+            .Where(t => t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED)
             .Select(t => new TagResponseDto
             {
                 TagId = t.TagId,
@@ -242,6 +243,8 @@ public class StockInService : IStockInService
         query = isRfid
             ? query.Where(t => EF.Constant(codes).Contains(t.EpcTag))
             : query.Where(t => EF.Constant(codes).Contains(t.TagId));
+
+        query = query.Where(t => t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED);
 
         var tags = await query
             .Select(t => new TagResponseDto
