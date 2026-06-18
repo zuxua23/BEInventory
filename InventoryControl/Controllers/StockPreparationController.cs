@@ -77,7 +77,7 @@ public class StockPreparationController : ControllerBase
 
     [HttpPost("bulk-info")]
     [AuthorizePermissionHybrid("STOCK_PREPARATION")]
-    public async Task<IActionResult> GetTagsInfoBulk([FromBody] TagBulkInfoRequestDto dto)
+    public async Task<IActionResult> GetTagsInfoBulk([FromBody] PrepTagBulkInfoRequestDto dto)
     {
         try
         {

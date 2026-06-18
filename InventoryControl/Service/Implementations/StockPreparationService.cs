@@ -430,23 +430,30 @@ public class StockPreparationService : IStockPreparationService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<object> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto)
+    public async Task<object> GetTagsInfoBulkAsync(PrepTagBulkInfoRequestDto dto)
     {
+        var doItemIds = await _db.DOs
+            .Where(d => d.DoId == dto.DoId && !d.IsDelete)
+            .SelectMany(d => d.Details.Select(det => det.ItemId))
+            .ToListAsync();
+
+        if (!doItemIds.Any())
+            throw new Exception("DO not found or has no items");
+
         var isRfid = dto.ScannerType == "RFID";
+        var codes = dto.Codes;
+
         var query = _db.Tags
             .Include(t => t.Item)
             .Include(t => t.Location)
+            .Where(t => t.Status == TagStatus.IN_STOCK)
+            .Where(t => EF.Constant(doItemIds).Contains(t.ItemId))
             .AsQueryable();
 
-        var codes = dto.Codes;
         if (isRfid)
-        {
             query = query.Where(t => EF.Constant(codes).Contains(t.EpcTag));
-        }
         else
-        {
             query = query.Where(t => EF.Constant(codes).Contains(t.TagId));
-        }
 
         var tags = await query.Select(t => new
         {
@@ -454,7 +461,7 @@ public class StockPreparationService : IStockPreparationService
             EpcTag = t.EpcTag,
             ItemId = t.ItemId,
             ItemName = t.Item != null ? t.Item.Name : null,
-            Status = t.Status == TagStatus.IN_STOCK ? "IN_STOCK" : null,
+            Status = "IN_STOCK",
             Location = t.Location != null ? t.Location.Name : null
         }).ToListAsync();
 

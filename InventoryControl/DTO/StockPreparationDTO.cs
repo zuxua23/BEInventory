@@ -21,3 +21,10 @@ public class TagBulkInfoRequestDto
     public List<string> Codes { get; set; } = new();
     public string ScannerType { get; set; } = "RFID";
 }
+
+public class PrepTagBulkInfoRequestDto
+{
+    public List<string> Codes { get; set; } = new();
+    public string ScannerType { get; set; } = "RFID";
+    public string DoId { get; set; } = null!;
+}
