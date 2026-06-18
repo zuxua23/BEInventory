@@ -82,4 +82,13 @@ public class PrintTagRegisController: ControllerBase
         var data = await _service.GetAllAsync();
         return Ok(data);
     }
+    
+    [HttpPost("register-with-item")]
+    [AuthorizePermissionHybrid("TAG_REGISTER")]
+    public async Task<IActionResult> RegisterWithItem([FromBody] TagRegisterWithItemDto dto)
+    {
+        var user = HttpContext.Session.GetString("UserId") ?? "system";
+        await _service.RegisterWithItemAsync(dto, user);
+        return Ok(new { message = "Tag berhasil di-standby-kan" });
+    }
 }
