@@ -270,7 +270,7 @@ public class StockTakingService : IStockTakingService
                             && x.Action == TakingAction.FOUND);
 
             if (alreadyScanned)
-                return; 
+                return;
 
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
@@ -429,7 +429,7 @@ public class StockTakingService : IStockTakingService
         };
     }
 
-    public async Task ManualAddAsync(StockTakingManualAddDto dto)
+    public async Task ManualAddAsync(StockTakingManualAddDto dto, string user)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
 
@@ -467,7 +467,6 @@ public class StockTakingService : IStockTakingService
             if (alreadyUsed)
                 throw new Exception("Tag sudah digunakan dalam sesi stock taking ini");
 
-            // Ambil locationId dari snapshot SYSTEM sesi ini
             var sessionLocationId = await _db.StockTakingDetails
                 .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.SYSTEM)
                 .Join(_db.Tags,
@@ -476,9 +475,9 @@ public class StockTakingService : IStockTakingService
                     (std, t) => t.LocationId)
                 .FirstOrDefaultAsync();
 
-            // Update tag langsung saat confirm
             tag.Status = TagStatus.IN_STOCK;
             tag.ItemId = !string.IsNullOrEmpty(dto.ItemId) ? dto.ItemId : tag.ItemId;
+            tag.UpdatedBy = user;
             tag.UpdatedAt = DateTime.UtcNow;
             if (sessionLocationId != null)
                 tag.LocationId = sessionLocationId;
@@ -501,6 +500,7 @@ public class StockTakingService : IStockTakingService
                 Type = HistoryType.STOCK_ADJUSTMENT,
                 Reference = dto.SttId,
                 Action = "ADD_MANUAL",
+                CreatedBy = user,
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -509,7 +509,7 @@ public class StockTakingService : IStockTakingService
 
             DailyFileLogger.Info(
                 $"ManualAdd success. SttId={dto.SttId}, Tag={tag.TagId}, EPC={tag.EpcTag}, " +
-                $"Status→IN_STOCK, Location={tag.LocationId}"
+                $"Status→IN_STOCK, Location={tag.LocationId}, User={user}"
             );
         }
         catch (Exception ex)
@@ -610,7 +610,7 @@ public class StockTakingService : IStockTakingService
                     difference == 0
                         ? "MATCH"
                         : "MISSING"
-                            };
+            };
         });
     }
     public async Task FinalizeAsync(StockTakingFinalizeDto dto, string user)
@@ -717,7 +717,12 @@ public class StockTakingService : IStockTakingService
 
             if (tag == null) continue;
 
-            if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED) continue;
+            // Tag sudah IN_STOCK berarti ManualAddAsync sudah update saat confirm — skip re-update
+            // tapi tetap catat history kalau belum ada
+            if (tag.Status != TagStatus.STANDBY &&
+                tag.Status != TagStatus.PRINTED &&
+                tag.Status != TagStatus.OUT &&
+                tag.Status != TagStatus.IN_STOCK) continue;
 
             tag.Status = TagStatus.IN_STOCK;
             tag.ItemId = add.ItemId;
@@ -896,7 +901,7 @@ public class StockTakingService : IStockTakingService
 
         return stream.ToArray();
     }
-    private async Task<List<StockTakingCompareExportDto>>GetCompareExportData(string sttId)
+    private async Task<List<StockTakingCompareExportDto>> GetCompareExportData(string sttId)
     {
         var systemData = await _db.StockTakingDetails
             .Where(x => x.SttId == sttId && x.Action == TakingAction.SYSTEM)
@@ -954,7 +959,7 @@ public class StockTakingService : IStockTakingService
             })
             .Select(g => new
             {
-                ItemId =g.Key.ItemId,
+                ItemId = g.Key.ItemId,
                 Location = g.Key.Location,
                 QtyScan = g.Count()
             })
@@ -981,7 +986,7 @@ public class StockTakingService : IStockTakingService
                     difference == 0
                         ? "MATCH"
                         : "MISSING"
-                            };
+            };
         }).ToList();
     }
 
@@ -1206,7 +1211,7 @@ public class StockTakingService : IStockTakingService
                         Remark = item.Remark
                     });
                 }
-                else if (action == "ADD_MANUAL" || action == "MANUAL_ADD") 
+                else if (action == "ADD_MANUAL" || action == "MANUAL_ADD")
                 {
                     if (string.IsNullOrWhiteSpace(item.NewTagId))
                         throw new Exception("NewTagId is required for ADD_MANUAL action");
@@ -1223,8 +1228,9 @@ public class StockTakingService : IStockTakingService
                     if (tag == null)
                         throw new Exception($"Replacement tag {item.NewTagId} was not found");
 
-                    if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED)
-                        throw new Exception("Replacement tag must be in STANDBY or PRINTED status");
+                    // Status validation skipped — ManualAddAsync already updated tag to IN_STOCK
+                    // at the moment user confirmed in the dialog. OperatorSubmit only records
+                    // the ADD_MANUAL action as audit trail for the batch submit.
 
                     if (tag.ItemId != null && tag.ItemId != item.ItemId)
                         throw new Exception("Replacement tag item does not match selected item");

@@ -94,8 +94,20 @@ public class StockTakingController : ControllerBase
     [AuthorizePermissionHybrid("STOCK_TAKING_MANUAL")]
     public async Task<IActionResult> ManualAdd(StockTakingManualAddDto dto)
     {
-        await _service.ManualAddAsync(dto);
-        return Ok(new { message = "Manual add dicatat" });
+        try
+        {
+            var user = User.Identity?.Name ?? "system";
+            await _service.ManualAddAsync(dto, user);
+            return Ok(new { message = "Manual add dicatat" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = ex.Message,
+                detail = ex.InnerException?.Message
+            });
+        }
     }
 
     [HttpPost("finalize")]
