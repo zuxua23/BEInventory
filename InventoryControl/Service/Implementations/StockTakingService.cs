@@ -1,4 +1,4 @@
-namespace InventoryControl.Service.Implementations;
+﻿namespace InventoryControl.Service.Implementations;
 
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
@@ -399,87 +399,127 @@ public class StockTakingService : IStockTakingService
             throw;
         }
     }
+    public async Task<ValidateManualTagResultDto> ValidateManualTagAsync(string epcTag, string sttId)
+    {
+        var tag = await _db.Tags
+            .Include(t => t.Item)
+            .FirstOrDefaultAsync(t => t.EpcTag == epcTag || t.TagId == epcTag);
+
+        if (tag == null)
+            throw new Exception("Tag tidak ditemukan");
+
+        if (tag.Status != TagStatus.OUT &&
+            tag.Status != TagStatus.PRINTED &&
+            tag.Status != TagStatus.STANDBY)
+            throw new Exception($"Tag dengan status '{tag.Status}' tidak bisa digunakan untuk manual add. Harus OUT, PRINTED, atau STANDBY");
+
+        var alreadyUsed = await _db.StockTakingDetails
+            .AnyAsync(x => x.SttId == sttId && x.TagId == tag.Id);
+
+        if (alreadyUsed)
+            throw new Exception("Tag sudah digunakan dalam sesi stock taking ini");
+
+        return new ValidateManualTagResultDto
+        {
+            TagId = tag.TagId,
+            EpcTag = tag.EpcTag,
+            Status = tag.Status.ToString(),
+            ItemId = tag.ItemId,
+            ItemName = tag.Item?.Name
+        };
+    }
+
     public async Task ManualAddAsync(StockTakingManualAddDto dto)
     {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
         try
         {
             var st = await _db.StockTakings
                 .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
 
             if (st == null)
-                throw new Exception("Stock taking session was not found");
+                throw new Exception("Stock taking session tidak ditemukan");
 
             if (st.Status != TakingStatus.OPEN)
-                throw new Exception("Stock taking session has already been completed");
+                throw new Exception("Stock taking session sudah selesai");
 
             var tag = await _db.Tags
                 .FirstOrDefaultAsync(x =>
-                    x.TagId == dto.NewTagId ||
-                    x.EpcTag == dto.NewTagId
+                    x.EpcTag == dto.NewTagId ||
+                    x.TagId == dto.NewTagId
                 );
 
             if (tag == null)
-                throw new Exception("Replacement tag was not found");
+                throw new Exception("Tag tidak ditemukan");
 
-            if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED)
-                throw new Exception("Replacement tag must be in STANDBY or PRINTED status");
+            if (tag.Status != TagStatus.STANDBY &&
+                tag.Status != TagStatus.PRINTED &&
+                tag.Status != TagStatus.OUT)
+                throw new Exception($"Status tag '{tag.Status}' tidak eligible. Harus STANDBY, PRINTED, atau OUT");
 
-            if (tag.ItemId != null && tag.ItemId != dto.ItemId)
-                throw new Exception("Replacement tag item does not match selected item");
+            if (tag.ItemId != null && !string.IsNullOrEmpty(dto.ItemId) && tag.ItemId != dto.ItemId)
+                throw new Exception("Item pada tag tidak sesuai dengan item yang dipilih");
 
             var alreadyUsed = await _db.StockTakingDetails
-                .AnyAsync(x =>
-                    x.SttId == dto.SttId &&
-                    x.TagId == tag.Id
-                );
+                .AnyAsync(x => x.SttId == dto.SttId && x.TagId == tag.Id);
 
             if (alreadyUsed)
-                throw new Exception("Replacement tag is already used in this stock taking session");
+                throw new Exception("Tag sudah digunakan dalam sesi stock taking ini");
 
-            var systemTagId = await _db.StockTakingDetails
-                .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.SYSTEM && x.ItemId == dto.ItemId)
-                .Select(x => x.TagId)
+            // Ambil locationId dari snapshot SYSTEM sesi ini
+            var sessionLocationId = await _db.StockTakingDetails
+                .Where(x => x.SttId == dto.SttId && x.Action == TakingAction.SYSTEM)
+                .Join(_db.Tags,
+                    std => std.TagId,
+                    t => t.Id,
+                    (std, t) => t.LocationId)
                 .FirstOrDefaultAsync();
 
-            string? locationId = null;
-            if (systemTagId != null)
-                locationId = await _db.Tags
-                    .Where(t => t.Id == systemTagId)
-                    .Select(t => t.LocationId)
-                    .FirstOrDefaultAsync();
-
+            // Update tag langsung saat confirm
             tag.Status = TagStatus.IN_STOCK;
-            tag.ItemId = dto.ItemId;
+            tag.ItemId = !string.IsNullOrEmpty(dto.ItemId) ? dto.ItemId : tag.ItemId;
             tag.UpdatedAt = DateTime.UtcNow;
-            if (locationId != null)
-                tag.LocationId = locationId;
+            if (sessionLocationId != null)
+                tag.LocationId = sessionLocationId;
 
             _db.StockTakingDetails.Add(new StockTakingDetail
             {
                 StdId = Guid.NewGuid().ToString(),
                 SttId = dto.SttId,
                 TagId = tag.Id,
-                ItemId = dto.ItemId,
+                ItemId = tag.ItemId,
                 Remark = dto.Remark,
                 Action = TakingAction.ADD_MANUAL
             });
 
+            _db.Histories.Add(new HistoryPrint
+            {
+                Id = Guid.NewGuid().ToString(),
+                TagId = tag.Id,
+                ItemId = tag.ItemId,
+                Type = HistoryType.STOCK_ADJUSTMENT,
+                Reference = dto.SttId,
+                Action = "ADD_MANUAL",
+                CreatedAt = DateTime.UtcNow
+            });
+
             await _db.SaveChangesAsync();
+            await trx.CommitAsync();
 
             DailyFileLogger.Info(
-                $"StockTaking manual replacement recorded. SttId={dto.SttId}, NewTag={tag.TagId}, Item={dto.ItemId}"
+                $"ManualAdd success. SttId={dto.SttId}, Tag={tag.TagId}, EPC={tag.EpcTag}, " +
+                $"Status→IN_STOCK, Location={tag.LocationId}"
             );
         }
         catch (Exception ex)
         {
-            DailyFileLogger.Error(
-                "An error occurred in ManualAddAsync StockTaking",
-                ex
-            );
-
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("ManualAddAsync error", ex);
             throw;
         }
     }
+
 
     public async Task<object> GetCompareAsync(string sttId)
     {

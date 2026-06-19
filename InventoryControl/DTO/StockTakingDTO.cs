@@ -93,3 +93,17 @@ public class StockTakingOperatorSubmitItemDto
     public string? ItemId { get; set; }
     public string? Remark { get; set; }
 }
+public class ValidateManualTagDto
+{
+    public string EpcTag { get; set; }
+    public string SttId { get; set; }
+}
+
+public class ValidateManualTagResultDto
+{
+    public string TagId { get; set; }
+    public string EpcTag { get; set; }
+    public string Status { get; set; }
+    public string ItemId { get; set; }
+    public string ItemName { get; set; }
+}

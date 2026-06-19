@@ -10,7 +10,8 @@ public interface IStockTakingService
     Task<List<Tag>> GetStockDataAsync();
     Task ScanAsync(StockTakingScanDto dto);
     Task RemoveAsync(StockTakingRemoveDto dto);
-    Task ManualAddAsync(StockTakingManualAddDto dto);
+    Task<ValidateManualTagResultDto> ValidateManualTagAsync(string epcTag, string sttId);
+    Task ManualAddAsync(StockTakingManualAddDto dto); 
     Task FinalizeAsync(StockTakingFinalizeDto dto, string user);
     Task BulkScanAsync(StockTakingBulkScanDto dto);
     Task<object> GetCompareAsync(string sttId);

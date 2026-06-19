@@ -223,4 +223,26 @@ public class StockTakingController : ControllerBase
             return StatusCode(500, new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
+    [HttpGet("validate-tag")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_MANUAL")]
+    public async Task<IActionResult> ValidateManualTag(
+    [FromQuery] string epc,
+    [FromQuery] string sttId)
+    {
+        try
+        {
+            var result = await _service.ValidateManualTagAsync(epc, sttId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = ex.Message,
+                detail = ex.InnerException?.Message
+            });
+        }
+    }
+
+
 }
