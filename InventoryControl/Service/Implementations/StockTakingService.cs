@@ -96,30 +96,29 @@ public class StockTakingService : IStockTakingService
 
     public async Task<List<StockTakingSessionTagDto>> GetSessionTagsAsync(string sttId)
     {
-        var data = await _db.StockTakingDetails
-            .Where(std => std.SttId == sttId && std.Action == TakingAction.SYSTEM)
-            .Join(_db.Tags,
-                std => std.TagId,
-                tag => tag.Id,
-                (std, tag) => tag)
-            .Join(_db.Items,
-                tag => tag.ItemId,
-                item => item.Id,
-                (tag, item) => new { tag, item })
-            .Join(_db.Locations,
-                ti => ti.tag.LocationId,
-                loc => loc.Id,
-                (ti, loc) => new StockTakingSessionTagDto
-                {
-                    TagId = ti.tag.TagId,
-                    EpcTag = ti.tag.EpcTag,
-                    ItemId = ti.tag.ItemId,
-                    ItemCode = ti.item.ItmId,
-                    ItemName = ti.item.Name,
-                    LocationId = loc.Id,
-                    Location = loc.Name
-                })
-            .ToListAsync();
+        var data = await (from std in _db.StockTakingDetails
+                          where std.SttId == sttId && std.Action == TakingAction.SYSTEM
+                          join tag in _db.Tags on std.TagId equals tag.Id
+                          join item in _db.Items on tag.ItemId equals item.Id
+                          join loc in _db.Locations on tag.LocationId equals loc.Id
+                          // Kita cari action terakhir yang dilakuin ke tag ini (FOUND / REMOVE / ADD_MANUAL)
+                          let latestAction = _db.StockTakingDetails
+                              .Where(x => x.SttId == sttId && x.TagId == tag.Id && x.Action != TakingAction.SYSTEM)
+                              .OrderByDescending(x => x.Id) // atau CreatedAt kalau ada
+                              .Select(x => x.Action.ToString())
+                              .FirstOrDefault()
+                          select new StockTakingSessionTagDto
+                          {
+                              TagId = tag.TagId,
+                              EpcTag = tag.EpcTag,
+                              ItemId = tag.ItemId,
+                              ItemCode = item.ItmId,
+                              ItemName = item.Name,
+                              LocationId = loc.Id,
+                              Location = loc.Name,
+                              // Kalau ada action baru, pakai itu. Kalau kosong, berarti masih SYSTEM
+                              Action = latestAction ?? "SYSTEM"
+                          }).ToListAsync();
 
         DailyFileLogger.Info($"GetSessionTagsAsync SttId={sttId} count={data.Count}");
 
@@ -405,19 +404,16 @@ public class StockTakingService : IStockTakingService
             .Include(t => t.Item)
             .FirstOrDefaultAsync(t => t.EpcTag == epcTag || t.TagId == epcTag);
 
-        if (tag == null)
-            throw new Exception("Tag tidak ditemukan");
+        if (tag == null) return null;
 
         if (tag.Status != TagStatus.OUT &&
             tag.Status != TagStatus.PRINTED &&
-            tag.Status != TagStatus.STANDBY)
-            throw new Exception($"Tag dengan status '{tag.Status}' tidak bisa digunakan untuk manual add. Harus OUT, PRINTED, atau STANDBY");
+            tag.Status != TagStatus.STANDBY) return null;
 
         var alreadyUsed = await _db.StockTakingDetails
             .AnyAsync(x => x.SttId == sttId && x.TagId == tag.Id);
 
-        if (alreadyUsed)
-            throw new Exception("Tag sudah digunakan dalam sesi stock taking ini");
+        if (alreadyUsed) return null;
 
         return new ValidateManualTagResultDto
         {
@@ -457,9 +453,6 @@ public class StockTakingService : IStockTakingService
                 tag.Status != TagStatus.PRINTED &&
                 tag.Status != TagStatus.OUT)
                 throw new Exception($"Status tag '{tag.Status}' tidak eligible. Harus STANDBY, PRINTED, atau OUT");
-
-            if (tag.ItemId != null && !string.IsNullOrEmpty(dto.ItemId) && tag.ItemId != dto.ItemId)
-                throw new Exception("Item pada tag tidak sesuai dengan item yang dipilih");
 
             var alreadyUsed = await _db.StockTakingDetails
                 .AnyAsync(x => x.SttId == dto.SttId && x.TagId == tag.Id);
@@ -717,8 +710,6 @@ public class StockTakingService : IStockTakingService
 
             if (tag == null) continue;
 
-            // Tag sudah IN_STOCK berarti ManualAddAsync sudah update saat confirm — skip re-update
-            // tapi tetap catat history kalau belum ada
             if (tag.Status != TagStatus.STANDBY &&
                 tag.Status != TagStatus.PRINTED &&
                 tag.Status != TagStatus.OUT &&
@@ -1089,7 +1080,7 @@ public class StockTakingService : IStockTakingService
 
         var tags = await _db.Tags
             .Where(t =>
-                (t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED) &&
+                (t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED || t.Status == TagStatus.OUT) &&
                 !t.IsDelete &&
                 EF.Constant(sessionItemIds).Contains(t.ItemId))
             .Join(_db.Items,
@@ -1227,13 +1218,6 @@ public class StockTakingService : IStockTakingService
 
                     if (tag == null)
                         throw new Exception($"Replacement tag {item.NewTagId} was not found");
-
-                    // Status validation skipped — ManualAddAsync already updated tag to IN_STOCK
-                    // at the moment user confirmed in the dialog. OperatorSubmit only records
-                    // the ADD_MANUAL action as audit trail for the batch submit.
-
-                    if (tag.ItemId != null && tag.ItemId != item.ItemId)
-                        throw new Exception("Replacement tag item does not match selected item");
 
                     var alreadyUsed = await _db.StockTakingDetails
                         .AnyAsync(x =>

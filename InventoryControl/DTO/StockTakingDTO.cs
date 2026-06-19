@@ -68,6 +68,7 @@ public class StockTakingSessionTagDto
     public string ItemName { get; set; }
     public string LocationId { get; set; }
     public string Location { get; set; }
+    public string Action { get; set; }
 }
 
 public class AvailableTagDto
