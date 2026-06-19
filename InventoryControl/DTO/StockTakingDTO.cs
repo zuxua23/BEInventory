@@ -78,3 +78,18 @@ public class AvailableTagDto
     public string ItemName { get; set; }
     public string Status { get; set; }
 }
+public class StockTakingOperatorSubmitDto
+{
+    public string SttId { get; set; }
+    public List<StockTakingOperatorSubmitItemDto> Items { get; set; } = new();
+}
+
+public class StockTakingOperatorSubmitItemDto
+{
+    public string Action { get; set; }
+    public string? Epc { get; set; }
+    public string? TagId { get; set; }
+    public string? NewTagId { get; set; }
+    public string? ItemId { get; set; }
+    public string? Remark { get; set; }
+}

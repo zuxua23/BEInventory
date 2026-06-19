@@ -209,5 +209,18 @@ public class StockTakingController : ControllerBase
         var data = await _service.GetProgressAsync(sttId);
         return Ok(data);
     }
-
+    [HttpPost("operator-submit")]
+    [AuthorizePermissionHybrid("STOCK_TAKING_SCAN")]
+    public async Task<IActionResult> OperatorSubmit(StockTakingOperatorSubmitDto dto)
+    {
+        try
+        {
+            await _service.OperatorSubmitAsync(dto);
+            return Ok(new { message = "Operator stock taking data berhasil disimpan" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message, detail = ex.InnerException?.Message });
+        }
+    }
 }

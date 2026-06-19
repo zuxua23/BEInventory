@@ -8,7 +8,7 @@ public static class Api
             name: "api-ping",
             pattern: "/api/ping",
             defaults: new { controller = "Auth", action = "Ping" })
-            .WithMetadata(new HttpMethodMetadata(new[] { "GET" })); 
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         app.MapControllerRoute(
             name: "api-login",
@@ -146,16 +146,22 @@ public static class Api
             pattern: "/api/search-item/{code}",
             defaults: new { controller = "SearchItem", action = "GetDetail" })
             .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+
+        app.MapControllerRoute(
+            name: "api-tag-validate-epc",
+            pattern: "/api/tag/validate-epc",
+            defaults: new { controller = "PrintTagRegis", action = "ValidateEpc" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+
         app.MapControllerRoute(
             name: "api-register-with-item",
             pattern: "/api/tag/register-with-item",
             defaults: new { controller = "PrintTagRegis", action = "RegisterWithItem" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
-    
         app.MapControllerRoute(
-            name: "api-item-get",
-            pattern: "/api/item",
-            defaults: new { controller = "ItemApi", action = "Get" })
-            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
+            name: "api-stocktaking-operator-submit",
+            pattern: "/api/stock-taking/operator-submit",
+            defaults: new { controller = "StockTaking", action = "OperatorSubmit" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
     }
 }

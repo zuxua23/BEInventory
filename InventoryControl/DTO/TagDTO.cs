@@ -1,5 +1,4 @@
-﻿namespace InventoryControl.DTO;
-
+namespace InventoryControl.DTO;
 
 public class TagResponseDto
 {
@@ -15,6 +14,7 @@ public class TagRegistrationDto
 {
     public List<string> TagIds { get; set; } = new();
 }
+
 public class PrintTagDto
 {
     public string ItemId { get; set; } = null!;
@@ -51,6 +51,15 @@ public class StockQRDto
     public string? ItemName { get; set; }
     public string? Location { get; set; }
     public int TotalStock { get; set; }
+}
+
+public class TagInfoDto
+{
+    public string TagId { get; set; } = null!;
+    public string EpcTag { get; set; } = null!;
+    public string? ItemId { get; set; }
+    public string? ItemName { get; set; }
+    public string Status { get; set; } = null!;
 }
 
 public class TagRegisterWithItemDto

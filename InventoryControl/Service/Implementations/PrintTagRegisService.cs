@@ -85,7 +85,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                     printCommands.Add(
                         BuildSBPL(
                             qrTag: tag.TagId,
-                            epcTag:tag.EpcTag,
+                            epcTag: tag.EpcTag,
                             printDate:
                                 DateTime.Now
                                     .ToString(
@@ -233,7 +233,7 @@ public class PrintTagRegisService : IPrintTagRegisService
                 );
             }
 
-            _db.Histories.AddRange( histories );
+            _db.Histories.AddRange(histories);
 
             await _db.SaveChangesAsync();
 
@@ -244,7 +244,7 @@ public class PrintTagRegisService : IPrintTagRegisService
         catch (Exception ex)
         {
             DailyFileLogger.Error(
-                "An error occurred during tag registration process.",ex, user
+                "An error occurred during tag registration process.", ex, user
             );
 
             throw;
@@ -261,7 +261,7 @@ public class PrintTagRegisService : IPrintTagRegisService
         }
     }
 
-    private async Task<Item> GetItemAsync( string itemId )
+    private async Task<Item> GetItemAsync(string itemId)
     {
         var item = await _db.Items
             .FirstOrDefaultAsync(x =>
@@ -279,7 +279,7 @@ public class PrintTagRegisService : IPrintTagRegisService
         return item;
     }
 
-    private async Task<Location>GetStagingLocationAsync()
+    private async Task<Location> GetStagingLocationAsync()
     {
         var location = await _db.Locations
             .FirstOrDefaultAsync(x =>
@@ -324,7 +324,7 @@ public class PrintTagRegisService : IPrintTagRegisService
     {
         var printerName = _config["PrinterSettings:PrinterName"];
 
-        await RawPrinterHelper.SendStringToPrinterAsync( printerName,sbpl);
+        await RawPrinterHelper.SendStringToPrinterAsync(printerName, sbpl);
 
         await Task.CompletedTask;
     }
@@ -394,7 +394,7 @@ public class PrintTagRegisService : IPrintTagRegisService
             tag.Status != TagStatus.OUT
         )
         {
-            throw new Exception( $"Tag '{tag.TagId}' cannot be registered." );
+            throw new Exception($"Tag '{tag.TagId}' cannot be registered.");
         }
     }
 
@@ -641,31 +641,57 @@ Q1Z";
             throw;
         }
     }
-    
+
+    public async Task<List<TagInfoDto>> ValidateEpcAsync(TagBulkInfoRequestDto dto)
+    {
+        var isRfid = dto.ScannerType == "RFID";
+        var codes = dto.Codes;
+
+        var query = _db.Tags
+            .Include(t => t.Item)
+            .AsNoTracking()
+            .AsQueryable();
+
+        query = isRfid
+            ? query.Where(t => EF.Constant(codes).Contains(t.EpcTag) && !t.IsDelete)
+            : query.Where(t => EF.Constant(codes).Contains(t.TagId) && !t.IsDelete);
+
+        var tags = await query.Select(t => new TagInfoDto
+        {
+            TagId = t.TagId,
+            EpcTag = t.EpcTag,
+            ItemId = t.ItemId,
+            ItemName = t.Item != null ? t.Item.Name : null,
+            Status = t.Status.ToString()
+        }).ToListAsync();
+
+        return tags;
+    }
+
     public async Task RegisterWithItemAsync(TagRegisterWithItemDto dto, string user)
     {
         var tag = await _db.Tags
             .FirstOrDefaultAsync(t => t.EpcTag == dto.EpcTag && !t.IsDelete);
-    
+
         if (tag == null)
-            throw new Exception($"Tag dengan EPC '{dto.EpcTag}' tidak ditemukan.");
-    
+            throw new Exception($"Tag with EPC '{dto.EpcTag}' not found.");
+
         if (tag.Status != TagStatus.PRINTED && tag.Status != TagStatus.OUT)
-            throw new Exception($"Tag '{tag.TagId}' tidak dapat di-register. Status: {tag.Status}");
-    
+            throw new Exception($"Tag '{tag.TagId}' cannot be registered. Current status: {tag.Status}");
+
         var item = await _db.Items
-            .FirstOrDefaultAsync(i => i.Id == dto.ItemId && !i.IsDelete);
-    
+            .FirstOrDefaultAsync(i => (i.Id == dto.ItemId || i.ItmId == dto.ItemId) && !i.IsDelete);
+
         if (item == null)
-            throw new Exception($"Item dengan ID '{dto.ItemId}' tidak ditemukan.");
-    
+            throw new Exception($"Item with ID '{dto.ItemId}' not found.");
+
         var reference = $"REG-{DateTime.UtcNow:yyyyMMddHHmmss}";
-    
+
         tag.ItemId = item.Id;
         tag.Status = TagStatus.STANDBY;
         tag.UpdatedBy = user;
         tag.UpdatedAt = DateTime.UtcNow;
-    
+
         _db.Histories.Add(new HistoryPrint
         {
             Id = Guid.NewGuid().ToString(),
@@ -677,9 +703,11 @@ Q1Z";
             CreatedBy = user,
             CreatedAt = DateTime.UtcNow
         });
-    
+
         await _db.SaveChangesAsync();
-    
-        DailyFileLogger.Info($"Tag '{tag.TagId}' registered to item '{item.Name}' by '{user}'.", user);
+
+        DailyFileLogger.Info(
+            $"Tag '{tag.TagId}' registered to item '{item.Name}' by '{user}'.", user);
     }
+
 }

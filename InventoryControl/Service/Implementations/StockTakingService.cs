@@ -1064,4 +1064,167 @@ public class StockTakingService : IStockTakingService
 
         return tags;
     }
+    public async Task OperatorSubmitAsync(StockTakingOperatorSubmitDto dto)
+    {
+        using var trx = await _db.Database.BeginTransactionAsync();
+
+        try
+        {
+            var st = await _db.StockTakings
+                .FirstOrDefaultAsync(x => x.SttId == dto.SttId);
+
+            if (st == null)
+                throw new Exception("Stock taking session was not found");
+
+            if (st.Status != TakingStatus.OPEN)
+                throw new Exception("Stock taking session has already been completed");
+
+            if (dto.Items == null || !dto.Items.Any())
+                throw new Exception("No operator data to submit");
+
+            foreach (var item in dto.Items)
+            {
+                var action = item.Action?.Trim().ToUpper();
+
+                if (action == "FOUND")
+                {
+                    if (string.IsNullOrWhiteSpace(item.Epc))
+                        throw new Exception("EPC is required for FOUND action");
+
+                    var tag = await _db.Tags
+                        .FirstOrDefaultAsync(t => t.EpcTag == item.Epc);
+
+                    if (tag == null)
+                        throw new Exception($"Tag with EPC {item.Epc} was not found");
+
+                    var existsInSystem = await _db.StockTakingDetails
+                        .AnyAsync(x =>
+                            x.SttId == dto.SttId &&
+                            x.TagId == tag.Id &&
+                            x.Action == TakingAction.SYSTEM
+                        );
+
+                    if (!existsInSystem)
+                        throw new Exception($"Tag {tag.TagId} is not included in stock taking snapshot");
+
+                    var alreadyFound = await _db.StockTakingDetails
+                        .AnyAsync(x =>
+                            x.SttId == dto.SttId &&
+                            x.TagId == tag.Id &&
+                            x.Action == TakingAction.FOUND
+                        );
+
+                    if (alreadyFound) continue;
+
+                    _db.StockTakingDetails.Add(new StockTakingDetail
+                    {
+                        StdId = Guid.NewGuid().ToString(),
+                        SttId = dto.SttId,
+                        TagId = tag.Id,
+                        ItemId = tag.ItemId,
+                        Action = TakingAction.FOUND,
+                        Remark = item.Remark
+                    });
+                }
+                else if (action == "REMOVE")
+                {
+                    if (string.IsNullOrWhiteSpace(item.TagId))
+                        throw new Exception("TagId is required for REMOVE action");
+
+                    var tag = await _db.Tags
+                        .FirstOrDefaultAsync(t => t.TagId == item.TagId);
+
+                    if (tag == null)
+                        throw new Exception($"Tag {item.TagId} was not found");
+
+                    var existsInSystem = await _db.StockTakingDetails
+                        .AnyAsync(x =>
+                            x.SttId == dto.SttId &&
+                            x.TagId == tag.Id &&
+                            x.Action == TakingAction.SYSTEM
+                        );
+
+                    if (!existsInSystem)
+                        throw new Exception($"Tag {item.TagId} is not included in this stock taking snapshot");
+
+                    var alreadyRemove = await _db.StockTakingDetails
+                        .AnyAsync(x =>
+                            x.SttId == dto.SttId &&
+                            x.TagId == tag.Id &&
+                            x.Action == TakingAction.REMOVE
+                        );
+
+                    if (alreadyRemove) continue;
+
+                    _db.StockTakingDetails.Add(new StockTakingDetail
+                    {
+                        StdId = Guid.NewGuid().ToString(),
+                        SttId = dto.SttId,
+                        TagId = tag.Id,
+                        ItemId = tag.ItemId,
+                        Action = TakingAction.REMOVE,
+                        Remark = item.Remark
+                    });
+                }
+                else if (action == "ADD_MANUAL" || action == "MANUAL_ADD") 
+                {
+                    if (string.IsNullOrWhiteSpace(item.NewTagId))
+                        throw new Exception("NewTagId is required for ADD_MANUAL action");
+
+                    if (string.IsNullOrWhiteSpace(item.ItemId))
+                        throw new Exception("ItemId is required for ADD_MANUAL action");
+
+                    var tag = await _db.Tags
+                        .FirstOrDefaultAsync(x =>
+                            x.TagId == item.NewTagId ||
+                            x.EpcTag == item.NewTagId
+                        );
+
+                    if (tag == null)
+                        throw new Exception($"Replacement tag {item.NewTagId} was not found");
+
+                    if (tag.Status != TagStatus.STANDBY && tag.Status != TagStatus.PRINTED)
+                        throw new Exception("Replacement tag must be in STANDBY or PRINTED status");
+
+                    if (tag.ItemId != null && tag.ItemId != item.ItemId)
+                        throw new Exception("Replacement tag item does not match selected item");
+
+                    var alreadyUsed = await _db.StockTakingDetails
+                        .AnyAsync(x =>
+                            x.SttId == dto.SttId &&
+                            x.TagId == tag.Id
+                        );
+
+                    if (alreadyUsed) continue;
+
+                    _db.StockTakingDetails.Add(new StockTakingDetail
+                    {
+                        StdId = Guid.NewGuid().ToString(),
+                        SttId = dto.SttId,
+                        TagId = tag.Id,
+                        ItemId = item.ItemId,
+                        Action = TakingAction.ADD_MANUAL,
+                        Remark = item.Remark
+                    });
+                }
+                else
+                {
+                    throw new Exception($"Invalid action: {item.Action}");
+                }
+            }
+
+            await _db.SaveChangesAsync();
+            await trx.CommitAsync();
+
+            DailyFileLogger.Info(
+                $"Operator submit success. SttId={dto.SttId}, Count={dto.Items.Count}"
+            );
+        }
+        catch (Exception ex)
+        {
+            await trx.RollbackAsync();
+            DailyFileLogger.Error("OperatorSubmitAsync error", ex);
+            throw;
+        }
+    }
 }
