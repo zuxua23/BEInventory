@@ -108,15 +108,15 @@ public class StockPreparationService : IStockPreparationService
                 );
             }
 
-            if (tag.Status != TagStatus.ALLOCATED)
+            if (tag.Status != TagStatus.IN_STOCK)
             {
                 DailyFileLogger.Warn(
-                    $"Tag '{tag.TagId}' is not in ALLOCATED status. Current status='{tag.Status}'.",
+                    $"Tag '{tag.TagId}' is not in stock in status. Current status='{tag.Status}'.",
                     user
                 );
 
                 throw new Exception(
-                    $"Tag '{tag.TagId}' is not in ALLOCATED status."
+                    $"Tag '{tag.TagId}' is not in stock in status."
                 );
             }
 
@@ -287,8 +287,8 @@ public class StockPreparationService : IStockPreparationService
 
             foreach (var tag in tags)
             {
-                if (tag.Status != TagStatus.ALLOCATED)
-                    throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be ALLOCATED");
+                if (tag.Status != TagStatus.IN_STOCK)
+                    throw new Exception($"Tag {tag.TagId} status is {tag.Status}, must be Stock IN");
 
                 var detail = doData.Details.FirstOrDefault(d => d.ItemId == tag.ItemId);
                 if (detail == null)

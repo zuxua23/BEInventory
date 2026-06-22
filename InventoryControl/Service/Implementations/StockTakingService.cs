@@ -101,10 +101,8 @@ public class StockTakingService : IStockTakingService
                           join tag in _db.Tags on std.TagId equals tag.Id
                           join item in _db.Items on tag.ItemId equals item.Id
                           join loc in _db.Locations on tag.LocationId equals loc.Id
-                          // Kita cari action terakhir yang dilakuin ke tag ini (FOUND / REMOVE / ADD_MANUAL)
                           let latestAction = _db.StockTakingDetails
                               .Where(x => x.SttId == sttId && x.TagId == tag.Id && x.Action != TakingAction.SYSTEM)
-                              .OrderByDescending(x => x.Id) // atau CreatedAt kalau ada
                               .Select(x => x.Action.ToString())
                               .FirstOrDefault()
                           select new StockTakingSessionTagDto
@@ -116,7 +114,6 @@ public class StockTakingService : IStockTakingService
                               ItemName = item.Name,
                               LocationId = loc.Id,
                               Location = loc.Name,
-                              // Kalau ada action baru, pakai itu. Kalau kosong, berarti masih SYSTEM
                               Action = latestAction ?? "SYSTEM"
                           }).ToListAsync();
 
