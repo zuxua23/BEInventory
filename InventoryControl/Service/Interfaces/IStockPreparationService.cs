@@ -9,4 +9,6 @@ public interface IStockPreparationService
     Task<List<DOResponseDto>> GetDoDraftAsync();
     Task<DOResponseDto?> GetDoDetailAsync(string id);
     Task<object> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto);
+    Task<List<AvailableTagDto>> GetAvailableTagsForDoAsync(string doId);
+
 }

@@ -89,4 +89,18 @@ public class StockPreparationController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    [HttpGet("available-tags/{doId}")]
+    [AuthorizePermissionHybrid("STOCK_PREPARATION")]
+    public async Task<IActionResult> GetAvailableTagsForDo(string doId)
+    {
+        try
+        {
+            var result = await _service.GetAvailableTagsForDoAsync(doId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

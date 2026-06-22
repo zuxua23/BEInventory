@@ -91,6 +91,11 @@ public static class Api
             pattern: "/api/preparation/bulk-info",
             defaults: new { controller = "StockPreparation", action = "GetTagsInfoBulk" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
+        app.MapControllerRoute(
+            name: "api-preparation-available-tags",
+            pattern: "/api/preparation/available-tags/{doId}",
+            defaults: new { controller = "StockPreparation", action = "GetAvailableTagsForDo" })
+            .WithMetadata(new HttpMethodMetadata(new[] { "GET" }));
 
         // ─── Stock Taking (legacy routes — keep as-is) ──────────────────────
         app.MapControllerRoute(
@@ -178,7 +183,6 @@ public static class Api
             defaults: new { controller = "StockTaking", action = "ManualAdd" })
             .WithMetadata(new HttpMethodMetadata(new[] { "POST" }));
 
-        // BARU — validate tag untuk manual add dialog
         app.MapControllerRoute(
             name: "api-stock-taking-validate-tag",
             pattern: "/api/stock-taking/validate-tag",

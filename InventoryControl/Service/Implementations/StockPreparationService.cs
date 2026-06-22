@@ -460,4 +460,41 @@ public class StockPreparationService : IStockPreparationService
 
         return tags;
     }
+    public async Task<List<AvailableTagDto>> GetAvailableTagsForDoAsync(string doId)
+    {
+        var doData = await _db.DOs
+            .Include(d => d.Details)
+            .FirstOrDefaultAsync(d => d.DoId == doId && !d.IsDelete);
+
+        if (doData == null)
+            throw new Exception($"Delivery order '{doId}' not found.");
+
+        if (doData.Details == null || !doData.Details.Any())
+            return new List<AvailableTagDto>();
+
+        var itemIds = doData.Details.Select(d => d.ItemId).ToList();
+
+        var tags = await _db.Tags
+            .Include(t => t.Item)
+            .Where(t =>
+                EF.Constant(itemIds).Contains(t.ItemId) &&
+                t.Status == TagStatus.IN_STOCK &&
+                !t.IsDelete)
+            .Select(t => new AvailableTagDto
+            {
+                EpcTag = t.EpcTag,
+                TagId = t.TagId,
+                ItemId = t.ItemId,
+                ItemName = t.Item != null ? t.Item.Name : null,
+                Status = t.Status.ToString()
+            })
+            .ToListAsync();
+
+        DailyFileLogger.Info(
+            $"Pre-fetch available tags for DO '{doId}': {tags.Count} IN_STOCK tags found for {itemIds.Count} items."
+        );
+
+        return tags;
+    }
+
 }
