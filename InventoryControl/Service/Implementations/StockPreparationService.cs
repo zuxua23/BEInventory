@@ -125,18 +125,6 @@ public class StockPreparationService : IStockPreparationService
                     d.ItemId == tag.ItemId
                 );
 
-            if (detail == null)
-            {
-                DailyFileLogger.Warn(
-                    $"Item '{tag.ItemId}' does not exist in DO '{dto.DoId}'.",
-                    user
-                );
-
-                throw new Exception(
-                    "Item does not exist in delivery order."
-                );
-            }
-
             var reservedCount =
                 await _db.TransactionDetails
                     .Where(td =>

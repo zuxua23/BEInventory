@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.DTO;
+namespace InventoryControl.DTO;
 
 public class PickingListDTO
 {
@@ -37,4 +37,13 @@ public class DOTagResponseDto
     public string TagId { get; set; }
 
     public string EpcTag { get; set; }
+}
+
+public class DOStatusCountDto
+{
+    public int Draft { get; set; }
+    public int Preparation { get; set; }
+    public int Completed { get; set; }
+    public int Active { get; set; }
+    public int Total { get; set; }
 }

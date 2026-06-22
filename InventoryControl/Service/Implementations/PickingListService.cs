@@ -1,4 +1,4 @@
-﻿namespace InventoryControl.Service.Implementations;
+namespace InventoryControl.Service.Implementations;
 
 using Azure.Core;
 using InventoryControl.Database;
@@ -27,7 +27,47 @@ public class PickingListService : IPickingListService
             );
 
             var result = await _db.DOs
-                .Where(x => !x.IsDelete)
+             .AsNoTracking()
+             .Where(x => !x.IsDelete)
+             .Select(x => new DOResponseDto
+             {
+                 DoId = x.DoId,
+                 DoNumber = x.DoNumber,
+                 ScannerType = x.ScannerType,
+                 Status = x.Status.ToString(),
+                 CreatedAt = x.CreatedAt
+             })
+             .OrderByDescending(x => x.CreatedAt)
+             .ToListAsync();
+
+            DailyFileLogger.Info(
+                $"Successfully retrieved {result.Count} delivery order(s)."
+            );
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                "An error occurred while retrieving delivery orders.",
+                ex
+            );
+
+            throw;
+        }
+    }
+
+    public async Task<List<DOResponseDto>> GetDoItemAsync()
+    {
+        try
+        {
+            DailyFileLogger.Info(
+                "Retrieving all delivery order items."
+            );
+
+            var result = await _db.DOs
+                .Where(x =>
+                    !x.IsDelete && x.Status == DoStatus.PREPARATION)
                 .Include(x => x.Details)
                     .ThenInclude(d => d.Item)
                 .Include(x => x.Details)
@@ -68,6 +108,46 @@ public class PickingListService : IPickingListService
         {
             DailyFileLogger.Error(
                 "An error occurred while retrieving delivery orders.",
+                ex
+            );
+
+            throw;
+        }
+    }
+
+
+    public async Task<DOStatusCountDto> GetDOStatusCountAsync()
+    {
+        try
+        {
+            DailyFileLogger.Info("Retrieving delivery order count by status.");
+
+            var data = await _db.DOs
+                .AsNoTracking()
+                .Where(x => !x.IsDelete)
+                .GroupBy(x => 1)
+                .Select(g => new DOStatusCountDto
+                {
+                    Draft = g.Count(x => x.Status == DoStatus.DRAFT),
+
+                    Preparation = g.Count(x => x.Status == DoStatus.PREPARATION),
+
+                    Completed = g.Count(x => x.Status == DoStatus.COMPLETED),
+
+                    Active = g.Count(x =>
+                        x.Status == DoStatus.DRAFT ||
+                        x.Status == DoStatus.PREPARATION),
+
+                    Total = g.Count()
+                })
+                .FirstOrDefaultAsync();
+
+            return data ?? new DOStatusCountDto();
+        }
+        catch (Exception ex)
+        {
+            DailyFileLogger.Error(
+                "An error occurred while retrieving delivery order count by status.",
                 ex
             );
 
@@ -122,7 +202,7 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task CreateAsync( PickingListDTO request, string createdBy )
+    public async Task CreateAsync(PickingListDTO request, string createdBy)
     {
         using var transaction = await _db.Database.BeginTransactionAsync();
 
@@ -162,74 +242,53 @@ public class PickingListService : IPickingListService
             };
             var doDetails = new List<DODetail>();
 
-            var doDetailTags = new List<DODetailTag>();
-
             foreach (var requestDetail in request.Details)
             {
                 var qtyRequired = requestDetail.QtyRequired ?? 0;
 
                 if (qtyRequired <= 0)
                 {
-                    throw new Exception(
-                        "Qty required must be greater than 0."
-                    );
+                    throw new Exception("Qty required must be greater than 0.");
                 }
 
-                var availableTags = await _db.Tags
-                    .Where(x =>
+                var itemName = await _db.Items
+                    .Where(x => x.Id == requestDetail.ItemId)
+                    .Select(x => x.Name)
+                    .FirstOrDefaultAsync();
+
+                if (itemName == null)
+                {
+                    throw new Exception("Item not found.");
+                }
+
+                var availableStock = await _db.Tags
+                    .CountAsync(x =>
                         x.ItemId == requestDetail.ItemId &&
                         x.Status == TagStatus.IN_STOCK &&
                         !x.IsDelete
-                    )
-                    .OrderBy(x => x.TagId)
-                    .Take(qtyRequired)
-                    .ToListAsync();
+                    );
 
-                if (availableTags.Count < qtyRequired)
+                if (availableStock < qtyRequired)
                 {
-                    var itemName = await _db.Items
-                        .Where(x => x.Id == requestDetail.ItemId)
-                        .Select(x => x.Name)
-                        .FirstOrDefaultAsync();
-
                     throw new Exception(
-                        $"Item '{itemName}' only has {availableTags.Count} available tag(s). Requested: {qtyRequired}."
+                        $"Item '{itemName}' only has {availableStock} available tag(s). Requested: {qtyRequired}."
                     );
                 }
-                var doDetail = new DODetail
+
+                doDetails.Add(new DODetail
                 {
                     DoDetailId = Guid.NewGuid().ToString(),
                     DoId = doEntity.DoId,
                     ItemId = requestDetail.ItemId,
                     QtyRequired = qtyRequired
-                };
-
-                foreach (var tag in availableTags)
-                {
-                    tag.Status = TagStatus.ALLOCATED;
-                    tag.UpdatedBy = createdBy;
-                    tag.UpdatedAt = DateTime.UtcNow;
-
-                    doDetailTags.Add(new DODetailTag
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        DoDetailId = doDetail.DoDetailId,
-                        TagId = tag.Id,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-
-                doDetails.Add(doDetail);
+                });
             }
 
-            _db.DOs.Add(doEntity);
 
+            _db.DOs.Add(doEntity);
             _db.DODetails.AddRange(doDetails);
 
-            _db.DODetailTags.AddRange(doDetailTags);
-
             await _db.SaveChangesAsync();
-
             await transaction.CommitAsync();
 
             DailyFileLogger.Info(
@@ -260,7 +319,7 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task UpdateAsync(string id, PickingListDTO dto,string updatedBy)
+    public async Task UpdateAsync(string id, PickingListDTO dto, string updatedBy)
     {
         using var transaction = await _db.Database.BeginTransactionAsync();
 
@@ -300,32 +359,27 @@ public class PickingListService : IPickingListService
                     "Delivery order can only be updated in DRAFT status."
                 );
             }
-            // RELEASE OLD TAGS
-            var oldRelations = await _db.DODetailTags
-                .Include(x => x.Tag)
-                .Include(x => x.DODetail)
-                .Where(x => x.DODetail.DoId == id)
-                .ToListAsync();
+            var doNumberExists = await _db.DOs
+              .AnyAsync(x =>
+                  x.DoNumber == dto.DoNumber &&
+                  x.DoId != id &&
+                  !x.IsDelete
+              );
 
-            foreach (var relation in oldRelations)
+            if (doNumberExists)
             {
-                relation.Tag.Status = TagStatus.IN_STOCK;
-                relation.Tag.UpdatedBy = updatedBy;
-                relation.Tag.UpdatedAt = DateTime.UtcNow;
+                throw new Exception("Delivery order number already exists.");
             }
+
             var oldDoNumber = doEntity.DoNumber;
 
-            _db.DODetailTags.RemoveRange(oldRelations);
-
             _db.DODetails.RemoveRange(doEntity.Details);
-            // UPDATE
+
             doEntity.DoNumber = dto.DoNumber;
             doEntity.UpdatedBy = updatedBy;
             doEntity.UpdatedAt = DateTime.UtcNow;
 
             var newDetails = new List<DODetail>();
-
-            var newDetailTags = new List<DODetailTag>();
 
             foreach (var requestDetail in dto.Details)
             {
@@ -333,66 +387,45 @@ public class PickingListService : IPickingListService
 
                 if (qtyRequired <= 0)
                 {
-                    throw new Exception(
-                        "Qty required must be greater than 0."
-                    );
+                    throw new Exception("Qty required must be greater than 0.");
                 }
 
-                var availableTags = await _db.Tags
-                    .Where(x =>
+                var itemName = await _db.Items
+                    .Where(x => x.Id == requestDetail.ItemId)
+                    .Select(x => x.Name)
+                    .FirstOrDefaultAsync();
+
+                if (itemName == null)
+                {
+                    throw new Exception("Item not found.");
+                }
+
+                var availableStock = await _db.Tags
+                    .CountAsync(x =>
                         x.ItemId == requestDetail.ItemId &&
                         x.Status == TagStatus.IN_STOCK &&
                         !x.IsDelete
-                    )
-                    .OrderBy(x => x.TagId)
-                    .Take(qtyRequired)
-                    .ToListAsync();
+                    );
 
-                if (availableTags.Count < qtyRequired)
+                if (availableStock < qtyRequired)
                 {
-                    var itemName = await _db.Items
-                        .Where(x => x.Id == requestDetail.ItemId)
-                        .Select(x => x.Name)
-                        .FirstOrDefaultAsync();
-
                     throw new Exception(
-                        $"Item '{itemName}' only has {availableTags.Count} available tag(s). Requested: {qtyRequired}."
+                        $"Item '{itemName}' only has {availableStock} available tag(s). Requested: {qtyRequired}."
                     );
                 }
 
-
-                var doDetail = new DODetail
+                newDetails.Add(new DODetail
                 {
                     DoDetailId = Guid.NewGuid().ToString(),
                     DoId = doEntity.DoId,
                     ItemId = requestDetail.ItemId,
                     QtyRequired = qtyRequired
-                };
-
-                foreach (var tag in availableTags)
-                {
-                    tag.Status = TagStatus.ALLOCATED;
-                    tag.UpdatedBy = updatedBy;
-                    tag.UpdatedAt = DateTime.UtcNow;
-
-                    newDetailTags.Add(new DODetailTag
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        DoDetailId = doDetail.DoDetailId,
-                        TagId = tag.Id,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-
-                newDetails.Add(doDetail);
+                });
             }
 
             _db.DODetails.AddRange(newDetails);
 
-            _db.DODetailTags.AddRange(newDetailTags);
-
             await _db.SaveChangesAsync();
-
             await transaction.CommitAsync();
 
             DailyFileLogger.Info(
@@ -420,7 +453,7 @@ public class PickingListService : IPickingListService
         }
     }
 
-    public async Task DeleteAsync(string id, string deletedBy )
+    public async Task DeleteAsync(string id, string deletedBy)
     {
         using var transaction = await _db.Database.BeginTransactionAsync();
 
@@ -449,30 +482,27 @@ public class PickingListService : IPickingListService
                 );
             }
 
-            // RELEASE TAGS
-            var relations = await _db.DODetailTags
-                .Include(x => x.Tag)
-                .Include(x => x.DODetail)
-                .Where(x => x.DODetail.DoId == id)
-                .ToListAsync();
+            if (doData.Status != DoStatus.DRAFT)
+            {
+                DailyFileLogger.Warn(
+                    $"Delete failed. Delivery order '{doData.DoNumber}' cannot be deleted because status is '{doData.Status}'.",
+                    deletedBy
+                );
+
+                throw new Exception("Only draft delivery order can be deleted.");
+            }
+
+            var now = DateTime.UtcNow;
+
             var details = await _db.DODetails
                 .Where(x => x.DoId == id)
                 .ToListAsync();
 
             _db.DODetails.RemoveRange(details);
 
-            foreach (var relation in relations)
-            {
-                relation.Tag.Status = TagStatus.IN_STOCK;
-                relation.Tag.UpdatedBy = deletedBy;
-                relation.Tag.UpdatedAt = DateTime.UtcNow;
-            }
-
-            _db.DODetailTags.RemoveRange(relations);
-
             doData.IsDelete = true;
             doData.UpdatedBy = deletedBy;
-            doData.UpdatedAt = DateTime.UtcNow;
+            doData.UpdatedAt = now;
 
             await _db.SaveChangesAsync();
 
@@ -504,5 +534,15 @@ public class PickingListService : IPickingListService
 
             throw;
         }
+    }
+
+    public async Task<int> GetAvailableStockForEditAsync(string itemId, string? doId)
+    {
+        return await _db.Tags
+            .CountAsync(x =>
+                x.ItemId == itemId &&
+                x.Status == TagStatus.IN_STOCK &&
+                !x.IsDelete
+            );
     }
 }
