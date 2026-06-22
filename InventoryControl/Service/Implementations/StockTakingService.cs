@@ -90,7 +90,10 @@ public class StockTakingService : IStockTakingService
             session.Status,
             LocationIds = locationIds,
             Locations = locationNames,
-            Location = string.Join(", ", locationNames)
+            Location = string.Join(", ", locationNames),
+            CreatedAt = session.CreatedAt.HasValue
+                ? session.CreatedAt.Value.ToString("dd/MM/yyyy")
+                : "-"
         };
     }
 
