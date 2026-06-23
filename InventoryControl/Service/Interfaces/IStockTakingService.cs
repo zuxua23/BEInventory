@@ -24,5 +24,5 @@ public interface IStockTakingService
     Task<string> ExportCompareCsvAsync(string sttId);
     Task<object> GetProgressAsync(string sttId);
     Task<List<AvailableTagDto>> GetAvailableTagsAsync(string sttId);
-    Task OperatorSubmitAsync(StockTakingOperatorSubmitDto dto);
+    Task OperatorSubmitAsync(StockTakingOperatorSubmitDto dto, string updatedBy);
 }

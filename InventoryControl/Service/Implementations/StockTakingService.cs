@@ -1100,7 +1100,7 @@ public class StockTakingService : IStockTakingService
 
         return tags;
     }
-    public async Task OperatorSubmitAsync(StockTakingOperatorSubmitDto dto)
+    public async Task OperatorSubmitAsync(StockTakingOperatorSubmitDto dto, string updatedBy)
     {
         using var trx = await _db.Database.BeginTransactionAsync();
 
@@ -1201,7 +1201,12 @@ public class StockTakingService : IStockTakingService
                         Action = TakingAction.REMOVE,
                         Remark = item.Remark
                     });
+
+                    tag.IsDelete = true;
+                    tag.UpdatedBy = updatedBy;
+                    tag.UpdatedAt = DateTime.UtcNow;
                 }
+
                 else if (action == "ADD_MANUAL" || action == "MANUAL_ADD")
                 {
                     if (string.IsNullOrWhiteSpace(item.NewTagId))
@@ -1246,9 +1251,7 @@ public class StockTakingService : IStockTakingService
             await _db.SaveChangesAsync();
             await trx.CommitAsync();
 
-            DailyFileLogger.Info(
-                $"Operator submit success. SttId={dto.SttId}, Count={dto.Items.Count}"
-            );
+            DailyFileLogger.Info($"Operator submit success. SttId={dto.SttId}, Count={dto.Items.Count}");
         }
         catch (Exception ex)
         {
@@ -1257,4 +1260,5 @@ public class StockTakingService : IStockTakingService
             throw;
         }
     }
+
 }

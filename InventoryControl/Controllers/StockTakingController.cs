@@ -227,7 +227,8 @@ public class StockTakingController : ControllerBase
     {
         try
         {
-            await _service.OperatorSubmitAsync(dto);
+            var user = User.Identity?.Name ?? "system";
+            await _service.OperatorSubmitAsync(dto, user);  
             return Ok(new { message = "Operator stock taking data berhasil disimpan" });
         }
         catch (Exception ex)
@@ -235,6 +236,7 @@ public class StockTakingController : ControllerBase
             return StatusCode(500, new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
+
     [HttpGet("validate-tag")]
     [AuthorizePermissionHybrid("STOCK_TAKING_MANUAL")]
     public async Task<IActionResult> ValidateManualTag(
