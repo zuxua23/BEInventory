@@ -1,8 +1,8 @@
-﻿using InventoryControl.DTO;
+using InventoryControl.DTO;
 using InventoryControl.Services.Interfaces;
+using InventoryControl.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using System.Text.Json;
 
 namespace InventoryControl.Controllers;
@@ -21,10 +21,12 @@ public class AuthController : Controller
         ViewData["pages"] = "Auth";
         return View();
     }
+
     public IActionResult Ping()
     {
         return Ok(new { status = "ok", message = "Server is Connected" });
     }
+
     public async Task<IActionResult> Login(LoginDTO dto)
     {
         try
@@ -33,13 +35,14 @@ public class AuthController : Controller
 
             HttpContext.Session.SetString("UserId", result.UserId.ToString());
             HttpContext.Session.SetString("Username", result.Username);
+            HttpContext.Session.SetString("Fullname", result.Fullname);   
             HttpContext.Session.SetString("Roles", JsonSerializer.Serialize(result.Roles));
             HttpContext.Session.SetString("Permissions", JsonSerializer.Serialize(result.Permissions));
             HttpContext.Session.SetString("is_login", "OK");
 
             return Redirect("/dashboard");
         }
-        catch (Exception e)
+        catch (Exception)
         {
             TempData["LoginError"] = "Username atau password salah.";
             return RedirectToAction("Index");
@@ -52,7 +55,6 @@ public class AuthController : Controller
         return RedirectToAction("Index");
     }
 
-
     public async Task<IActionResult> LoginHT([FromBody] LoginDTO dto)
     {
         try
@@ -60,12 +62,20 @@ public class AuthController : Controller
             var result = await _authService.ValidateUserAsync(dto);
             var token = await _authService.GenerateTokenAsync(result);
 
+            DailyFileLogger.Audit(
+                action: "LOGIN_ANDROID",
+                entity: "USER",
+                entityId: result.UserId,
+                performedBy: result.Fullname,
+                description: "User login via Android/HT device."
+            );
 
             return Ok(new
             {
                 token = token,
                 token_type = "Bearer",
                 user = result.Username,
+                fullname = result.Fullname,    
                 roles = result.Roles,
                 permissions = result.Permissions
             });
