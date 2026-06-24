@@ -58,9 +58,16 @@ public class StockTakingService : IStockTakingService
     public async Task<object?> GetActiveAsync()
     {
         var session = await _db.StockTakings
-            .Where(x => x.Status == TakingStatus.OPEN)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
+        .Where(x => x.Status == TakingStatus.OPEN)
+        .Where(x => _db.StockTakingDetails
+            .Where(std => std.SttId == x.SttId && std.Action == TakingAction.SYSTEM)
+            .Any(sys => !_db.StockTakingDetails 
+                .Any(scan => scan.SttId == x.SttId 
+                          && scan.TagId == sys.TagId 
+                          && scan.Action != TakingAction.SYSTEM))
+            )
+        .OrderByDescending(x => x.CreatedAt)
+        .FirstOrDefaultAsync();
 
         if (session == null)
             return null;
