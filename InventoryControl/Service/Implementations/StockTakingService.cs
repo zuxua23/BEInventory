@@ -1184,7 +1184,7 @@ public class StockTakingService : IStockTakingService
                         .AnyAsync(x =>
                             x.SttId == dto.SttId &&
                             x.TagId == tag.Id &&
-                            x.Action == TakingAction.SYSTEM
+                            (x.Action == TakingAction.SYSTEM || x.Action == TakingAction.ADD_MANUAL)
                         );
 
                     if (!existsInSystem)
