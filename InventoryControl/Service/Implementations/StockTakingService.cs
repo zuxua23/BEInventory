@@ -1234,7 +1234,8 @@ public class StockTakingService : IStockTakingService
                     var alreadyUsed = await _db.StockTakingDetails
                         .AnyAsync(x =>
                             x.SttId == dto.SttId &&
-                            x.TagId == tag.Id
+                            x.TagId == tag.Id &&
+                            x.Action != TakingAction.SYSTEM
                         );
 
                     if (alreadyUsed) continue;
