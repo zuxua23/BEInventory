@@ -435,6 +435,7 @@ public class StockPreparationService : IStockPreparationService
         {
             query = query.Where(t => EF.Constant(codes).Contains(t.TagId));
         }
+        query = query.Where(t => t.Status == TagStatus.IN_STOCK);
 
         var tags = await query.Select(t => new
         {
