@@ -235,14 +235,11 @@ public class StockInService : IStockInService
         if (dto.Codes == null || !dto.Codes.Any())
             return new List<TagResponseDto>();
 
-        var isRfid = dto.ScannerType == "RFID";
         var codes = dto.Codes;
 
         var query = _db.Tags.AsNoTracking();
 
-        query = isRfid
-            ? query.Where(t => EF.Constant(codes).Contains(t.EpcTag))
-            : query.Where(t => EF.Constant(codes).Contains(t.TagId));
+        query = query.Where(t => EF.Constant(codes).Contains(t.EpcTag) || EF.Constant(codes).Contains(t.TagId));
 
         query = query.Where(t => t.Status == TagStatus.STANDBY || t.Status == TagStatus.PRINTED);
 

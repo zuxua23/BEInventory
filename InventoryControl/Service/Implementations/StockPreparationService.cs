@@ -420,21 +420,14 @@ public class StockPreparationService : IStockPreparationService
 
     public async Task<object> GetTagsInfoBulkAsync(TagBulkInfoRequestDto dto)
     {
-        var isRfid = dto.ScannerType == "RFID";
         var query = _db.Tags
             .Include(t => t.Item)
             .Include(t => t.Location)
             .AsQueryable();
 
         var codes = dto.Codes;
-        if (isRfid)
-        {
-            query = query.Where(t => EF.Constant(codes).Contains(t.EpcTag));
-        }
-        else
-        {
-            query = query.Where(t => EF.Constant(codes).Contains(t.TagId));
-        }
+        query = query.Where(t => EF.Constant(codes).Contains(t.EpcTag) || EF.Constant(codes).Contains(t.TagId));
+        query = query.Where(t => t.Status == TagStatus.IN_STOCK);
 
         var tags = await query.Select(t => new
         {
@@ -442,7 +435,7 @@ public class StockPreparationService : IStockPreparationService
             EpcTag = t.EpcTag,
             ItemId = t.ItemId,
             ItemName = t.Item != null ? t.Item.Name : null,
-            Status = t.Status == TagStatus.IN_STOCK ? "IN_STOCK" : null,
+            Status = t.Status.ToString(),
             Location = t.Location != null ? t.Location.Name : null
         }).ToListAsync();
 
