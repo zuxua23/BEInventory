@@ -8,4 +8,5 @@ public class ActivityLogDto
     public string EntityId { get; set; }
     public string User { get; set; }
     public string Description { get; set; }
+    public string? Source { get; set; }
 }

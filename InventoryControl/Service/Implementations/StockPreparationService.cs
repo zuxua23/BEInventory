@@ -435,6 +435,7 @@ public class StockPreparationService : IStockPreparationService
         {
             query = query.Where(t => EF.Constant(codes).Contains(t.TagId));
         }
+        query = query.Where(t => t.Status == TagStatus.IN_STOCK);
 
         var tags = await query.Select(t => new
         {
@@ -442,7 +443,7 @@ public class StockPreparationService : IStockPreparationService
             EpcTag = t.EpcTag,
             ItemId = t.ItemId,
             ItemName = t.Item != null ? t.Item.Name : null,
-            Status = t.Status == TagStatus.IN_STOCK ? "IN_STOCK" : null,
+            Status = t.Status.ToString(),
             Location = t.Location != null ? t.Location.Name : null
         }).ToListAsync();
 
